@@ -1,0 +1,11 @@
+bibentry("Journal",
+   title = "Bayesian First Aid",
+   author = person("Rasmus", "Bååth"),
+   journal = "",
+   year   = 2013,
+   url    = "",
+
+   mheader = "No citation yet...",
+
+   mfooter = "..."
+)
