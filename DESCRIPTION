@@ -13,4 +13,8 @@ URL: http://www.sumsar.net
 License: GPL-3
 LazyData: true
 Collate:
-    'BayesianFirstAid-package.r'
+    'BayesianFirstAid-package.R'
+    'bfa_binom_test.R'
+    'generic_functions.R'
+    'hdi_of_mcmc.R'
+    'plot_post.R'
