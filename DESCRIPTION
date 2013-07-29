@@ -18,3 +18,4 @@ Collate:
     'generic_functions.R'
     'hdi_of_mcmc.R'
     'plot_post.R'
+    'bfa_t_test.R'

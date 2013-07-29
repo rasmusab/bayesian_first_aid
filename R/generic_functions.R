@@ -19,3 +19,7 @@ model_diagram <- function(fit) {
 model_code <- function(fit) {
   UseMethod("model_code")
 }
+
+bfa_t_test <- function(x, ...) {
+  UseMethod("bfa_t_test")
+}
