@@ -1,4 +1,3 @@
-
 #' Generate MCMC samples from the Bayesian First Aid binomial model using JAGS.
 #' 
 #' Descritions description description
