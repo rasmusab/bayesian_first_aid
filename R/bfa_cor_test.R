@@ -28,8 +28,12 @@ jags_cor_test <- function(x1, x2) {
     }
   "
   
+  data_list = list(x = cbind(x1, x2), n = length(x1))
+  # Use robust estimates of the parameters as initial values
+  inits_list = list(mu=c(median(x1), median(x2)), rho=cor(x1, x2, method="spearman"), 
+                    sigma = c(mad(x1), mad(x2)))
   jags_model <- jags.model(textConnection(model_string), data=list(x = cbind(x1, x2), n = length(x1)), n.adapt= 1000, 
-                           inits = list(mu=c(median(x1), median(x2)), rho=cor(x1, x2, method="spearman"), sigma = c(mad(x1), mad(x2))))
+                          inits = inits_list)
   update(jags_model, 1000)
   mcmc_samples <- coda.samples(jags_model, c("mu", "rho", "sigma", "nu"), n.iter=1000)
   mcmc_samples

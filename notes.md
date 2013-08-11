@@ -16,6 +16,6 @@ Tests to include:
   * var.test
     - Same as t.test but change the output to reflect the comparison between the variances.
   * poisson.test
-    - Robustify the poisson test by using a negative-binomial distribution but construct it by pasting together a Poisson with a gamma distributed mean as on p. 253 in the Bugs book.
+    - Just fit a standard poisson distribution. The poisson.test is quite limited...
   
 

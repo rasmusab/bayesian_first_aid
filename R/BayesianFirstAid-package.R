@@ -4,5 +4,5 @@
 #'
 #' @name BayesianFirstAid
 #' @docType package
-#' @import rjags coda
+#' @import coda rjags
 NULL

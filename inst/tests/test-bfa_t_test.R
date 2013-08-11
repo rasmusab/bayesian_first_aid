@@ -14,17 +14,17 @@ test_that("bfa_t_test.default accepts the same format as t.test.default", {
 # })
 
 test_that("bfa_t_test returns bfa_t_test* object of the right class", {
-  x <- rnorm(30)
-  y <- rnorm(30)
+  x <- rnorm(10)
+  y <- rnorm(10)
   
   test_that(bfa_t_test(x, y), is_a("bfa_two_sample_t_test"))
   test_that(bfa_t_test(x), is_a("bfa_one_sample_t_test"))
   test_that(bfa_t_test(x, y, paired=TRUE), is_a("bfa_paired_t_test"))
 })
 
-test_that("the three jags_* functions returns 'mcmc.list' objects", {
-  x <- rnorm(30)
-  y <- rnorm(30, mean=1, sd=2)
+test_that("the three jags_*_t_test functions returns 'mcmc.list' objects", {
+  x <- rnorm(10)
+  y <- rnorm(10, mean=1, sd=2)
   
   expect_that(jags_one_sample_t_test(x), is_a("mcmc.list"))
   expect_that(jags_two_sample_t_test(x, y), is_a("mcmc.list"))
