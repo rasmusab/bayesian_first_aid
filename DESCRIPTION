@@ -11,6 +11,7 @@ Depends:
 URL: http://www.sumsar.net
 License: GPL-3
 LazyData: true
+VignetteBuilder: knitr
 Collate:
     'BayesianFirstAid-package.R'
     'bfa_binom_test.R'

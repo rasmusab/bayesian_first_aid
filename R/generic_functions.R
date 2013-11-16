@@ -20,6 +20,10 @@ model_code <- function(fit) {
   UseMethod("model_code")
 }
 
-bfa_t_test <- function(x, ...) {
-  UseMethod("bfa_t_test")
+bfa.t.test <- function(x, ...) {
+  UseMethod("bfa.t.test")
+}
+
+bfa.cor.test <- function(x, ...) {
+  UseMethod("bfa.cor.test")
 }

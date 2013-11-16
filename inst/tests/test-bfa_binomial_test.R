@@ -1,8 +1,12 @@
 context("BFA binomial test")
 
-test_that("bfa_binom_test accepts the same format as binom.test", {
+test_that("bfa.binom.test accepts the same format as binom.test and returns a bfa_binom_test object", {
   
   ## These examples are from the binom.test documentation.
-  bfa_binom_test(c(682, 243), p = 3/4)
-  bfa_binom_test(682, 682 + 243, p = 3/4)
+  test_that(bfa.binom.test(c(682, 243), p = 3/4), is_a("bfa_binom_test"))
+  test_that(bfa.binom.test(682, 682 + 243, p = 3/4), is_a("bfa_binom_test"))
+})
+
+test_that("jags_binom_test returns an mcmc.list object", {
+  expect_that(jags_binom_test(5, 10), is_a("mcmc.list"))
 })

@@ -1,6 +1,6 @@
 # ...
 
-jags_one_sample_t_test <- function(x) {
+jags_one_sample_t_test <- function(x, n.adapt= 1000, n.chains=3, n.update = 1000, n.iter=1000, thin=1) {
   model_string <- "
     model {
       for(i in 1:length(x)) {
@@ -24,28 +24,28 @@ jags_one_sample_t_test <- function(x) {
   )
   
   # Initial values of MCMC chains based on data:
-  inits_list <- list(mu= mean(x), sigma = sd(x), nuMinusOne = 4)
+  inits_list <- list(mu= mean(x, trim=0.2), sigma = mad(x), nuMinusOne = 4)
   
   jagsModel = jags.model(textConnection(model_string) , data=data_list , inits=inits_list , 
-                         n.chains=3 , n.adapt=500)
+                         n.chains=n.chains , n.adapt=n.adapt)
   # Burn-in
-  update( jagsModel , 1000, progress.bar="none")
+  update( jagsModel , n.update, progress.bar="none")
   # running the model.
   # Later increase the number of n.iter steps to 33333
   codaSamples = coda.samples( jagsModel , variable.names=c("mu", "sigma", "nu"),
-                              n.iter=333 , thin=3)
+                              n.iter=n.iter, thin=thin)
   codaSamples
 }
 
 #' Adapted from John Kruschke's original BEST code.
-jags_two_sample_t_test <- function(x1, x2) {
+jags_two_sample_t_test <- function(x, y, n.adapt= 1000, n.chains=3, n.update = 1000, n.iter=1000, thin=1) {
   model_string <- "
     model {
-      for(i in 1:length(x1)) {
-        x1[i] ~ dt( mu[1] , tau[1] , nu )
+      for(i in 1:length(x)) {
+        x[i] ~ dt( mu[1] , tau[1] , nu )
       }
-      for(i in 1:length(x2)) {
-        x2[i] ~ dt( mu[2] , tau[2] , nu )
+      for(i in 1:length(y)) {
+        y[i] ~ dt( mu[2] , tau[2] , nu )
       }
 
       mu[1] ~ dnorm( mean_mu , precision_mu )
@@ -60,40 +60,40 @@ jags_two_sample_t_test <- function(x1, x2) {
 
   # Specify the data in a list, for later shipment to JAGS:
   data_list <- list(
-    x1 = x1 ,
-    x2 = x2 ,
-    mean_mu = mean(c(x1, x2)) ,
-    precision_mu = 1 / (sd(c(x1, x2))^2 * 1000000),
-    sigmaLow = sd(c(x1, x2)) / 1000 ,
-    sigmaHigh = sd(c(x1, x2)) * 1000 
+    x = x ,
+    y = y ,
+    mean_mu = mean(c(x, y)) ,
+    precision_mu = 1 / (sd(c(x, y))^2 * 1000000),
+    sigmaLow = sd(c(x, y)) / 1000 ,
+    sigmaHigh = sd(c(x, y)) * 1000 
   )
   
   # Initial values of MCMC chains based on data:
   inits_list <- list(
-    mu = c(mean(x1), mean(x2)),
-    sigma = c(sd(x1), sd(x2)),
+    mu = c(mean(x), mean(y)),
+    sigma = c(sd(x), sd(y)),
     nuMinusOne = 4 
   )
   
   jagsModel = jags.model(textConnection(model_string) , data=data_list , inits=inits_list , 
-                          n.chains=3 , n.adapt=500)
+                          n.chains=n.chains , n.adapt=n.adapt)
   # Burn-in
-  update( jagsModel , 1000, progress.bar="none")
+  update( jagsModel , n.update, progress.bar="none")
   # running the model.
   # Later increase the number of n.iter steps to 33333
   codaSamples = coda.samples( jagsModel , variable.names=c("mu", "sigma", "nu"),
-                              n.iter=333 , thin=3)
+                              n.iter=n.iter , thin=thin)
   codaSamples
 }
 
-jags_paired_t_test <- function(x, y) {
+jags_paired_t_test <- function(x, y, n.adapt= 1000, n.chains=3, n.update = 1000, n.iter=1000, thin=1) {
   x_diff <- y - x
-  jags_one_sample_t_test(y - x)  
+  jags_one_sample_t_test(y - x, n.adapt, n.chains, n.update, n.iter, thin)  
 }
 
 
 # Stand in function untill I include the code from the original t.test function
-bfa_t_test.default <- function(x, y = NULL, paired = FALSE) {
+bfa.t.test.default <- function(x, y = NULL, paired = FALSE) {
   if(is.null(y)) {
     mcmc_samples <- jags_one_sample_t_test(x)
     bfa_object <- list(mcmc_samples = mcmc_samples, x = x)
@@ -101,49 +101,53 @@ bfa_t_test.default <- function(x, y = NULL, paired = FALSE) {
     return()
   } else if(paired) {
     mcmc_samples <- jags_paired_t_test(x, y)
-    bfa_object <- list(mcmc_samples = mcmc_samples, x1 = x, x2 = y, 
+    bfa_object <- list(mcmc_samples = mcmc_samples, x = x, y = y, 
                        x_diff = y - x)
     class(bfa_object) <- "bfa_paired_t_test"
   } else { # is two sample t.test
     mcmc_samples <- jags_two_sample_t_test(x, y)
-    bfa_object <- list(mcmc_samples = mcmc_samples, x1 = x, x2 = y)
+    bfa_object <- list(mcmc_samples = mcmc_samples, x = x, y = y)
     class(bfa_object) <- "bfa_two_sample_t_test"
   }
   
   return(bfa_object)
 }
 
-bfa_t_test.formula <- function() {
+bfa.t.test.formula <- function() {
   
 }
 
 ### One sample t-test S3 methods ###
 
-print.bfa_one_sample_t_test <- function(x) {
+print.bfa_one_sample_t_test <- function(bfa_result) {
   cat("\n --- Bayesian first aid binomial test ---\n\n")
-  print(summary(x$mcmc_samples))
+  print(summary(bfa_result$mcmc_samples))
 }
 
-summary.bfa_one_sample_t_test <- function(object) {
+summary.bfa_one_sample_t_test <- function(bfa_result) {
   cat("\nSummary\n")
-  print(object)
+  print(bfa_result)
 }
 
-plot.bfa_one_sample_t_test <- function(x) {
-  plot(x$mcmc_samples)
+plot.bfa_one_sample_t_test <- function(bfa_result) {
+  plot(bfa_result$mcmc_samples)
 }
 
-model_diagram.bfa_one_sample_t_test <- function(x) {
+diagnostics.bfa_one_sample_t_test <- function(bfa_result) {
+  plot(bfa_result$mcmc_samples)
+}
+
+model_diagram.bfa_one_sample_t_test <- function(bfa_result) {
   print(jags_binom_test)
 }
 
-model_code.bfa_one_sample_t_test <- function(x) {
+model_code.bfa_one_sample_t_test <- function(bfa_result) {
   print(jags_binom_test)
 }
 
 ### Two sample t-test S3 methods ###
 
-print.bfa_two_sample_t_test <- function(x) {
+print.bfa_two_sample_t_test <- function(bfa_result) {
   cat("\n --- Bayesian first aid two sample t-test ---\n\n")
   
   # Define matrix for storing summary info:
@@ -154,7 +158,7 @@ print.bfa_two_sample_t_test <- function(x) {
                     "pcgtZero" ) 
   ))
   
-  mcmcChain <- as.matrix(x$mcmc_samples)
+  mcmcChain <- as.matrix(bfa_result$mcmc_samples)
   summaryInfo[ "mu1" , ] = mcmcSummary( mcmcChain[,"mu[1]"] )
   summaryInfo[ "mu2" , ] = mcmcSummary( mcmcChain[,"mu[2]"] )
   summaryInfo[ "muDiff" , ] = mcmcSummary( mcmcChain[,"mu[1]"]
@@ -168,8 +172,8 @@ print.bfa_two_sample_t_test <- function(x) {
   summaryInfo[ "nu" , ] = mcmcSummary( mcmcChain[,"nu"] )
   summaryInfo[ "nuLog10" , ] = mcmcSummary( log10(mcmcChain[,"nu"]) )
   
-  N1 = length(x$x1)
-  N2 = length(x$x2)
+  N1 = length(x$x)
+  N2 = length(x$y)
   effSzChain = ( ( mcmcChain[,"mu[1]"] - mcmcChain[,"mu[2]"] ) 
                  / sqrt( ( mcmcChain[,"sigma[1]"]^2 + mcmcChain[,"sigma[2]"]^2 ) / 2 ) ) 
   summaryInfo[ "effSz" , ] = mcmcSummary( effSzChain , compVal=0 )
@@ -180,42 +184,50 @@ print.bfa_two_sample_t_test <- function(x) {
   return( summaryInfo )
 }
 
-summary.bfa_two_sample_t_test <- function(object) {
-  print(object)
+summary.bfa_two_sample_t_test <- function(bfa_result) {
+  print(bfa_result)
 }
 
-plot.bfa_two_sample_t_test <- function(x) {
-  plot(x$mcmc_samples)
+plot.bfa_two_sample_t_test <- function(bfa_result) {
+  plot(bfa_result$mcmc_samples)
 }
 
-model_diagram.bfa_two_sample_t_test <- function(x) {
+diagnostics.bfa_two_sample_t_test <- function(bfa_result) {
+  plot(bfa_result$mcmc_samples)
+}
+
+model_diagram.bfa_two_sample_t_test <- function(bfa_result) {
   print(jags_two_sample_t_test)
 }
 
-model_code.bfa_two_sample_t_test <- function(x) {
+model_code.bfa_two_sample_t_test <- function(bfa_result) {
   print(jags_two_sample_t_test)
 }
 
 ### Paired samples t-test S3 methods ###
 
-print.bfa_paired_t_test <- function(x) {
+print.bfa_paired_t_test <- function(bfa_result) {
   cat("\n --- Bayesian first aid binomial test ---\n\n")
-  print(summary(x$mcmc_samples))
+  print(summary(bfa_result$mcmc_samples))
 }
 
-summary.bfa_paired_t_test <- function(object) {
+summary.bfa_paired_t_test <- function(bfa_result) {
   cat("\nSummary\n")
-  print(object)
+  print(bfa_result)
 }
 
-plot.bfa_paired_t_test <- function(x) {
-  plot(x$mcmc_samples)
+plot.bfa_paired_t_test <- function(bfa_result) {
+  plot(bfa_result$mcmc_samples)
 }
 
-model_diagram.bfa_paired_t_test <- function(x) {
+model_diagram.bfa_paired_t_test <- function(bfa_result) {
   print(jags_binom_test)
 }
 
-model_code.bfa_paired_t_test <- function(x) {
+diagnostics.bfa_paired_t_test <- function(bfa_result) {
+  plot(bfa_result$mcmc_samples)
+}
+
+model_code.bfa_paired_t_test <- function(bfa_result) {
   print(jags_binom_test)
 }
