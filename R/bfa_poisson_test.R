@@ -17,9 +17,10 @@ jags_one_sample_poisson_test <- function(x, t, n.adapt= 1000, n.chains=3, n.iter
     }
   "
   
-  jags_model <- jags.model(textConnection(model_string), data=list(x = x, t = t), n.adapt= n.adapt, 
-                          inits = list(rate = x / t), n.chains = n.chains)
-  mcmc_samples <- coda.samples(jags_model, c("rate"), n.iter=n.iter)
+  jags_model <- jags.model(textConnection(model_string), data=list(x = x, t = t), n.adapt= 0, 
+                          inits = list(rate = x / t), n.chains = n.chains, quiet=TRUE)
+  adapt(jags_model, n.adapt,  progress.bar="none", end.adaptation=TRUE)
+  mcmc_samples <- coda.samples(jags_model, c("rate"), n.iter=n.iter, progress.bar="none")
   mcmc_samples
 }
 
@@ -37,9 +38,10 @@ jags_two_sample_poisson_test <- function(x1, t1, x2, t2, n.adapt= 1000, n.chains
   "
   data_list = list(x1 = x1, t1 = t1, x2 = x2, t2 = t2)
   init_list = list(rate1 = x1 / t1, rate2 = x2 / t2)
-  jags_model <- jags.model(textConnection(model_string), data = data_list, n.chains= n.chains, n.adapt=  n.adapt, 
-                           inits = init_list)
-  mcmc_samples <- coda.samples(jags_model, c("rate1", "rate2", "rate_diff", "rate_ratio"), n.iter=n.iter)
+  jags_model <- jags.model(textConnection(model_string), data = data_list, n.chains= n.chains, n.adapt=  0, 
+                           inits = init_list, quiet=TRUE)
+  adapt(jags_model, n.adapt,  progress.bar="none", end.adaptation=TRUE)
+  mcmc_samples <- coda.samples(jags_model, c("rate1", "rate2", "rate_diff", "rate_ratio"), n.iter=n.iter, progress.bar="none")
   mcmc_samples
 }
 

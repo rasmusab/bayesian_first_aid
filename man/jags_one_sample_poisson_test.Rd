@@ -2,7 +2,8 @@
 \alias{jags_one_sample_poisson_test}
 \title{Generate MCMC samples from the Bayesian First Aid one sample poisson model using JAGS.}
 \usage{
-  jags_one_sample_poisson_test(x, t)
+  jags_one_sample_poisson_test(x, t, n.adapt = 1000,
+    n.chains = 3, n.iter = 1000)
 }
 \arguments{
   \item{x}{the number of events}

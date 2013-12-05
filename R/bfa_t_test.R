@@ -26,14 +26,15 @@ jags_one_sample_t_test <- function(x, n.adapt= 1000, n.chains=3, n.update = 1000
   # Initial values of MCMC chains based on data:
   inits_list <- list(mu= mean(x, trim=0.2), sigma = mad(x), nuMinusOne = 4)
   
-  jagsModel = jags.model(textConnection(model_string) , data=data_list , inits=inits_list , 
-                         n.chains=n.chains , n.adapt=n.adapt)
+  jags_model = jags.model(textConnection(model_string) , data=data_list , inits=inits_list , 
+                         n.chains=n.chains , n.adapt=0, quiet=TRUE)
+  adapt(jags_model, n.adapt,  progress.bar="none", end.adaptation=TRUE)
   # Burn-in
-  update( jagsModel , n.update, progress.bar="none")
+  update( jags_model , n.update, progress.bar="none")
   # running the model.
   # Later increase the number of n.iter steps to 33333
-  codaSamples = coda.samples( jagsModel , variable.names=c("mu", "sigma", "nu"),
-                              n.iter=n.iter, thin=thin)
+  codaSamples = coda.samples( jags_model , variable.names=c("mu", "sigma", "nu"),
+                              n.iter=n.iter, thin=thin, progress.bar="none")
   codaSamples
 }
 
@@ -75,14 +76,15 @@ jags_two_sample_t_test <- function(x, y, n.adapt= 1000, n.chains=3, n.update = 1
     nuMinusOne = 4 
   )
   
-  jagsModel = jags.model(textConnection(model_string) , data=data_list , inits=inits_list , 
-                          n.chains=n.chains , n.adapt=n.adapt)
+  jags_model = jags.model(textConnection(model_string) , data=data_list , inits=inits_list , 
+                          n.chains=n.chains , n.adapt=0, quiet=TRUE)
+  adapt(jags_model, n.adapt,  progress.bar="none", end.adaptation=TRUE)
   # Burn-in
-  update( jagsModel , n.update, progress.bar="none")
+  update( jags_model , n.update, progress.bar="none")
   # running the model.
   # Later increase the number of n.iter steps to 33333
-  codaSamples = coda.samples( jagsModel , variable.names=c("mu", "sigma", "nu"),
-                              n.iter=n.iter , thin=thin)
+  codaSamples = coda.samples( jags_model , variable.names=c("mu", "sigma", "nu"),
+                              n.iter=n.iter , thin=thin, progress.bar="none")
   codaSamples
 }
 

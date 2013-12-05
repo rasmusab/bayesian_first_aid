@@ -1,0 +1,41 @@
+<!--
+%\VignetteEngine{knitr::knitr}
+%\VignetteIndexEntry{Bayesian First Aid Tutorial}
+-->
+
+Bayesian First Aid Examples
+========================================================
+
+`binom.test`
+------------
+A classical binomial test:
+```{r}
+binom.test(x=16, n=20)
+```
+Preprend `binom.test` by `bfa.` to run the Bayesian "version".
+```{r}
+bfa.binom.test(x=16, n=20)
+```
+The idea is to respect the arguments to the original `binom.test` as far as possible. For example, setting `p` and `alternative` as in...
+
+```{r}
+binom.test(x=16, n=20, p=0.75, conf.level=0.8)
+```
+... is respected by `bfa.binom.test`:
+
+```{r}
+bfa.binom.test(x=16, n=20, p=0.75, conf.level=0.8)
+```
+
+By assigning the result of `bfa.binom.test` to a variable we can get some more usefull info by calling `plot` for looking at the posterior (and perhaps a posterior predictive check), `summary` for a more extensive summary than the standard print out above, and `diagnostics` for MCMC diagnostics. The idea is that the behavior of these functions should be consistent for the output of all the `bfa.*.test` functions.  
+
+```{r}
+fit <- bfa.binom.test(x=16, n=20)
+plot(fit)
+summary(fit)
+diagnostics(fit)
+
+```
+
+`t.test`
+------------

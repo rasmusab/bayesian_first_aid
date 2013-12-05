@@ -32,10 +32,11 @@ jags_cor_test <- function(x, y, n.adapt= 1000, n.chains=3, n.update = 1000, n.it
   # Use robust estimates of the parameters as initial values
   inits_list = list(mu=c(mean(x, trim=0.2), mean(y, trim=0.2)), rho=cor(x, y, method="spearman"), 
                     sigma = c(mad(x), mad(y)))
-  jags_model <- jags.model(textConnection(model_string), data=data_list, n.adapt= n.adapt, n.chains=n.chains,
-                          inits = inits_list)
-  update(jags_model, n.update)
-  mcmc_samples <- coda.samples(jags_model, c("mu", "rho", "sigma", "nu"), n.iter=n.iter, thin=thin)
+  jags_model <- jags.model(textConnection(model_string), data=data_list, n.adapt = 0 , n.chains=n.chains,
+                          inits = inits_list, quiet=TRUE)
+  adapt(jags_model, n.adapt,  progress.bar="none", end.adaptation=TRUE)
+  update(jags_model, n.update, progress.bar="none")
+  mcmc_samples <- coda.samples(jags_model, c("mu", "rho", "sigma", "nu"), n.iter=n.iter, thin=thin, progress.bar="none")
   mcmc_samples
 }
 

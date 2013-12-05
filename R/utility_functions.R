@@ -1,3 +1,37 @@
+# Not very general function that is made to plot a histogram given discrete (integer)
+# data.
+discrete_hist <- function(x, xlim, col="skyblue", lwd=3, x_marked = c(), marked_col = "red", yaxt="n",...) {
+  hist_data <- hist(x, (xlim[1] - 1):(xlim[2]) + 0.5 , plot=FALSE)
+  cols <- ifelse(hist_data$mids %in% x_marked, marked_col, col )
+  plot(hist_data$mids, hist_data$density, type="h", col=cols, lwd=lwd, bty = "L",...)
+  invisible(hist_data)
+}
+
+# Takes coda samples generates a data frame with different statistics for the
+# parameters
+mcmc_stats <- function(samples, cred_mass = 0.95, comp_val = 0) {
+  samples_mat <- as.matrix(samples)
+  stats <- data.frame(mean = colMeans(samples_mat))
+  stats$sd <- apply(samples_mat, 2, sd)
+  hdi_lim <- apply(samples_mat, 2, HDIofMCMC, credMass=cred_mass)
+  stats$"HDI%" <- round(cred_mass * 100)
+  stats$HDIlo <- hdi_lim[1,]
+  stats$HDIup <- hdi_lim[2,]
+  stats$comp <- comp_val
+  stats$"%>comp" <- apply(samples_mat, 2, function(x) { mean(x > comp_val) })
+  stats$"%<comp" <- apply(samples_mat, 2, function(x) { mean(x < comp_val) })
+  stats$"q2.5%" <- apply(samples_mat, 2, quantile,  probs= 0.025)
+  stats$"q25%" <- apply(samples_mat, 2, quantile,  probs= 0.25)
+  stats$median <- apply(samples_mat, 2, median)
+  stats$"q75%" <- apply(samples_mat, 2, quantile,  probs= 0.75)
+  stats$"q97.5%" <- apply(samples_mat, 2, quantile,  probs= 0.975)
+  stats$mcmc.se <- summary(samples)$statistics[,"Time-series SE"]
+  stats$Rhat <- gelman.diag(samples)$psrf[, 1]
+  stats$n.eff <- effectiveSize(samples)
+  as.matrix(stats) # 'cause it's easier to index
+}
+
+
 #' Kruschke
 HDIofICDF = function( ICDFname , credMass=0.95 , tol=1e-8 , ... ) {
   # Arguments:
@@ -96,8 +130,6 @@ plotPost = function( param_sample_vec , cred_mass=0.95 , comp_val=NULL ,
   postSummary[,"median"] = median(param_sample_vec)
   mcmcDensity = density(param_sample_vec)
   postSummary[,"mode"] = mcmcDensity$x[which.max(mcmcDensity$y)]
-  
-  source("HDIofMCMC.R")
   HDI = HDIofMCMC( param_sample_vec , cred_mass )
   postSummary[,"hdiMass"]=cred_mass
   postSummary[,"hdiLow"]=HDI[1]
@@ -180,7 +212,8 @@ plotPost = function( param_sample_vec , cred_mass=0.95 , comp_val=NULL ,
         adj=c(1.0-HDI_text_place,-0.5) , cex=cex )
   par(xpd=F)
   #
-  return( postSummary )
+  #return( postSummary )
+  return(invisible())
 }
 
 

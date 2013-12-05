@@ -20,4 +20,4 @@ Tests to include:
   * poisson.test
     - Just fit a standard poisson distribution. The poisson.test is quite limited...
   
-
+I should write somewhere that the package uses modified code from the coda and the BEST packages.
