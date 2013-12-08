@@ -6,6 +6,11 @@
 Bayesian First Aid Examples
 ========================================================
 
+```{r}
+print(interactive())
+```
+
+
 `binom.test`
 ------------
 A classical binomial test:
@@ -37,5 +42,34 @@ diagnostics(fit)
 
 ```
 
+Of course, in the case of `bfa.binom.test` the MCMC diagnostics might be a bit silly...
+
 `t.test`
 ------------
+
+The alternative for the `t.test` is of course BEST.
+
+```{r}
+x <- rnorm(n=30, mean=10, sd=5)
+t.test(x)
+```
+
+```{r}
+bfa.t.test(x)
+```
+
+`bfa.t.test` also respect the arguments of the original `t.test`.
+
+```{r}
+y <- rnorm(n=30, mean=10, sd=5)
+bfa.t.test(x, y, mu=1, conf.level=0.5)
+```
+Or even...
+
+```{r}
+# Creating "paired" data
+d <- data.frame(x = rnorm(n=30, mean=10, sd=5), group = rep(c("A", "B"), 15))
+                
+bfa.t.test(x ~ group, paired=T, data=d)
+```
+

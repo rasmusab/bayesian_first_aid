@@ -9,7 +9,7 @@
 #' 
 #' @return
 #' An object of type \code{mcmc.list} (defined by the \code{coda} package) that contains the MCMC samples from the model.
-jags_binom_test <- function(x, n, n.adapt= 1000, n.chains=3, n.iter=1000) {
+jags_binom_test <- function(x, n, n.chains=3, n.iter=1000) {
   model_string <- "
     model {
       x ~ dbinom(theta, n)
@@ -17,11 +17,9 @@ jags_binom_test <- function(x, n, n.adapt= 1000, n.chains=3, n.iter=1000) {
       x_pred ~ dbinom(theta, n)
     }
   "
-  
-  jags_model <- jags.model(textConnection(model_string), data=list(x = x, n = n), inits = list(theta = (x + 0.5) / (n + 1)),
-                           n.adapt= 0, n.chains=n.chains, quiet=TRUE)
-  adapt(jags_model, n.adapt,  progress.bar="none", end.adaptation=TRUE)
-  mcmc_samples <- coda.samples(jags_model, c("theta", "x_pred"), n.iter=n.iter, progress.bar="none")
+  mcmc_samples <- run_jags(model_string, data = list(x = x, n = n), inits = list(theta = (x + 1) / (n + 2)), 
+                           params = c("theta", "x_pred"), n.chains = n.chains, n.adapt = 0,
+                           n.update = 0, n.iter = n.iter, thin = 1)
   mcmc_samples
 }
 
@@ -56,9 +54,10 @@ bfa.binom.test <- function (x, n, p = 0.5, alternative = c("two.sided", "less", 
   
   mcmc_samples <- jags_binom_test(x, n)
   stats <- mcmc_stats(mcmc_samples, cred_mass = conf.level, comp_val = p)
-  structure(list(x = x, n = n, p = p, conf.level = conf.level,
-                 data_name = DNAME, mcmc_samples = mcmc_samples, stats = stats), 
-             class = "bfa_binom_test")
+  bfa_object <- list(x = x, n = n, p = p, conf.level = conf.level,
+                 data_name = DNAME, mcmc_samples = mcmc_samples, stats = stats) 
+  class(bfa_object) <- "bfa_binom_test"
+  bfa_object
 }
 
 ### binom test S3 methods ###
@@ -70,6 +69,7 @@ print.bfa_binom_test <- function(x) {
   cat("\n")
   cat("\tBayesian first aid binomial test\n")
   cat("\n")
+  cat("data: ", x$data_name, "\n", sep="")
   cat("number of successes = ", x$x,", number of trials = ", x$n, "\n", sep="")
   cat("Estimated relative frequency of success:\n")
   cat(" ", s["mean"], "\n")
@@ -94,7 +94,7 @@ print.bfa_binom_test <- function(x) {
 }
 
 summary.bfa_binom_test <- function(x) {
-  s <- round(x$stats["theta",], 3)
+  s <- round(x$stats, 3)
   
   cat("  Data\n")
   cat("number of successes = ", x$x,", number of trials = ", x$n, "\n", sep="")
@@ -105,15 +105,15 @@ summary.bfa_binom_test <- function(x) {
   cat("x_pred: Predicted number of successes in a replication\n")
   cat("\n")
   cat("  Measures\n" )
-  print(stats[, c("mean", "sd", "HDIlo", "HDIup", "%>comp", "%<comp")])
+  print(s[, c("mean", "sd", "HDIlo", "HDIup", "%>comp", "%<comp")])
   cat("\n")
-  cat("'HDIlo' and 'HDIup' are the limits of a ", stats[1, "HDI%"] ,"% HDI credible interval.\n", sep="")
+  cat("'HDIlo' and 'HDIup' are the limits of a ", s[1, "HDI%"] ,"% HDI credible interval.\n", sep="")
   cat("'%>comp' and '%<comp' are the probability of the respective parameter being larger\n")
-  cat("than ", stats[1, "comp"] ,". This comparison might not make sense for all parameters.\n", sep="")
+  cat("than ", s[1, "comp"] ,". This comparison might not make sense for all parameters.\n", sep="")
   
   cat("\n")
   cat("  Quantiles\n" )
-  print(stats[, c("q2.5%", "q25%", "median","q75%", "q97.5%")] )
+  print(s[, c("q2.5%", "q25%", "median","q75%", "q97.5%")] )
   # Lägga till HDI
   # 'HDIlo' and 'HDIup' are the limits of a 95% HDI credible interval.
 }
@@ -130,7 +130,7 @@ plot.bfa_binom_test <- function(x) {
 }
 
 diagnostics.bfa_binom_test <- function(x) {
-  s <- round(x$stats["theta",], 3)
+  s <- round(x$stats, 3)
   mcmc_samples <- x$mcmc_samples
   
   cat("\n", "Iterations = ", start(mcmc_samples), ":", end(mcmc_samples), "\n", sep = "")
@@ -140,7 +140,7 @@ diagnostics.bfa_binom_test <- function(x) {
   
   cat("\n")
   cat("  Diagnostic measures\n")
-  print(stats[, c("mean", "sd", "mcmc.se", "Rhat", "n.eff")])
+  print(s[, c("mean", "sd", "mcmc.se", "Rhat", "n.eff")])
   cat("\n")
   cat("MCMC SE: the estimated standard error of the MCMC approximation of the mean.\n")
   cat("n.eff: a crude measure of effective MCMC sample size.\n")

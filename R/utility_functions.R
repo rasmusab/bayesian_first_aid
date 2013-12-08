@@ -1,3 +1,22 @@
+run_jags <- function(model_string, data, inits, params, n.chains = 3, n.adapt = 500, n.update = 500, n.iter = 500, thin = 1 ) {
+  if(interactive()) {
+    #progress.bar <- "text"
+    progress.bar <- "none"
+  } else {
+    progress.bar <- "none"
+  }
+  jags_model <- jags.model(textConnection(model_string) , data=data , inits=inits , 
+                          n.chains=n.chains , n.adapt=0, quiet=TRUE)
+  adapt(jags_model, n.adapt,  progress.bar="none", end.adaptation=TRUE)
+  if(n.update > 0) { 
+    update( jags_model, n.update, progress.bar="none")
+  }
+  mcmc_samples <- coda.samples( jags_model , variable.names= params,
+                               n.iter=n.iter, thin=thin, progress.bar=progress.bar)
+  mcmc_samples <- reorder_coda(mcmc_samples, order=params)
+  mcmc_samples
+}
+
 # Not very general function that is made to plot a histogram given discrete (integer)
 # data.
 discrete_hist <- function(x, xlim, col="skyblue", lwd=3, x_marked = c(), marked_col = "red", yaxt="n",...) {
@@ -5,6 +24,14 @@ discrete_hist <- function(x, xlim, col="skyblue", lwd=3, x_marked = c(), marked_
   cols <- ifelse(hist_data$mids %in% x_marked, marked_col, col )
   plot(hist_data$mids, hist_data$density, type="h", col=cols, lwd=lwd, bty = "L",...)
   invisible(hist_data)
+}
+
+# Reoder the columns of a mcmc.list coda object.
+reorder_coda <- function(s, order) {
+  s <- lapply(s, function(chain) {
+    chain[, order]
+  })
+  mcmc.list(s)
 }
 
 # Takes coda samples generates a data frame with different statistics for the
@@ -18,15 +45,15 @@ mcmc_stats <- function(samples, cred_mass = 0.95, comp_val = 0) {
   stats$HDIlo <- hdi_lim[1,]
   stats$HDIup <- hdi_lim[2,]
   stats$comp <- comp_val
-  stats$"%>comp" <- apply(samples_mat, 2, function(x) { mean(x > comp_val) })
-  stats$"%<comp" <- apply(samples_mat, 2, function(x) { mean(x < comp_val) })
+  stats$"%>comp" <- apply(samples_mat, 2, function(x) { mean(c(x > comp_val, 0, 1)) })
+  stats$"%<comp" <- apply(samples_mat, 2, function(x) { mean(c(x < comp_val, 0, 1)) })
   stats$"q2.5%" <- apply(samples_mat, 2, quantile,  probs= 0.025)
   stats$"q25%" <- apply(samples_mat, 2, quantile,  probs= 0.25)
   stats$median <- apply(samples_mat, 2, median)
   stats$"q75%" <- apply(samples_mat, 2, quantile,  probs= 0.75)
   stats$"q97.5%" <- apply(samples_mat, 2, quantile,  probs= 0.975)
   stats$mcmc.se <- summary(samples)$statistics[,"Time-series SE"]
-  stats$Rhat <- gelman.diag(samples)$psrf[, 1]
+  stats$Rhat <- gelman.diag(samples, multivariate = FALSE)$psrf[, 1]
   stats$n.eff <- effectiveSize(samples)
   as.matrix(stats) # 'cause it's easier to index
 }
