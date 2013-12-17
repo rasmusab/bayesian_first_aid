@@ -9,7 +9,7 @@
 #' 
 #' @return
 #' An object of type \code{mcmc.list} (defined by the \code{coda} package) that contains the MCMC samples from the model.
-jags_binom_test <- function(x, n, n.chains=3, n.iter=1000) {
+jags_binom_test <- function(x, n, n.chains=3, n.iter=5000) {
   model_string <- "
     model {
       x ~ dbinom(theta, n)
@@ -54,7 +54,7 @@ bfa.binom.test <- function (x, n, p = 0.5, alternative = c("two.sided", "less", 
   
   mcmc_samples <- jags_binom_test(x, n)
   stats <- mcmc_stats(mcmc_samples, cred_mass = conf.level, comp_val = p)
-  bfa_object <- list(x = x, n = n, p = p, conf.level = conf.level,
+  bfa_object <- list(x = x, n = n, p = p, cred_mass = conf.level,
                  data_name = DNAME, mcmc_samples = mcmc_samples, stats = stats) 
   class(bfa_object) <- "bfa_binom_test"
   bfa_object
@@ -73,24 +73,11 @@ print.bfa_binom_test <- function(x) {
   cat("number of successes = ", x$x,", number of trials = ", x$n, "\n", sep="")
   cat("Estimated relative frequency of success:\n")
   cat(" ", s["mean"], "\n")
-  cat(s["HDI%"],"percent credible interval:\n")
+  cat(s["HDI%"],"% credible interval:\n", sep="")
   cat(" ", s[ c("HDIlo", "HDIup")], "\n")
   cat("The relative frequency of success is more than", s["comp"] , "by a probability of", s["%>comp"], "\n")
   cat("and less than", s["comp"] , "by a probability of", s["%<comp"], "\n")
   cat("\n")
-  
-  # The output of binom.test
-  
-  #   Exact binomial test
-  # 
-  # data:  5 and 10
-  # number of successes = 5, number of trials = 10, p-value = 1
-  # alternative hypothesis: true probability of success is not equal to 0.5
-  # 95 percent confidence interval:
-  #  0.187 0.813
-  # sample estimates:
-  # probability of success 
-  #                    0.5 
 }
 
 summary.bfa_binom_test <- function(x) {
@@ -105,11 +92,11 @@ summary.bfa_binom_test <- function(x) {
   cat("x_pred: Predicted number of successes in a replication\n")
   cat("\n")
   cat("  Measures\n" )
-  print(s[, c("mean", "sd", "HDIlo", "HDIup", "%>comp", "%<comp")])
+  print(s[, c("mean", "sd", "HDIlo", "HDIup", "%<comp", "%>comp")])
   cat("\n")
   cat("'HDIlo' and 'HDIup' are the limits of a ", s[1, "HDI%"] ,"% HDI credible interval.\n", sep="")
-  cat("'%>comp' and '%<comp' are the probability of the respective parameter being larger\n")
-  cat("than ", s[1, "comp"] ,". This comparison might not make sense for all parameters.\n", sep="")
+  cat("'%<comp' and '%>comp' are the probabilities of the respective parameter being\n")
+  cat("smaller or larger than ", s[1, "comp"] ,".\n", sep="")
   
   cat("\n")
   cat("  Quantiles\n" )
@@ -119,39 +106,30 @@ summary.bfa_binom_test <- function(x) {
 }
 
 plot.bfa_binom_test <- function(x) {
-  old_par <- par(mfcol=c(2,1), mar=c(4.2,4,3,2))
+  layout(matrix(c(1,2), nrow=2, ncol=1 , byrow=FALSE) )
+  old_par <- par( mar=c(3.5,3.5,2.5,0.5) , mgp=c(2.25,0.7,0) )
   sample_mat <- as.matrix(x$mcmc_samples)
-  plotPost(sample_mat[, "theta"], cred_mass= x$conf.level, comp_val=x$p, xlim=c(0, 1), cex=1, cex.lab=1,
-           main = "Posterior distribution", xlab="The relative frequency of success")
+  plotPost(sample_mat[, "theta"], cred_mass= x$cred_mass, comp_val=x$p, xlim=c(0, 1), cex=1, cex.lab=1.5,
+           main = "Relative Frequency of Success", xlab=expression(theta))
   hist_data <- discrete_hist(sample_mat[, "x_pred"], c(0, x$n), ylab="Probability", x_marked= x$x,
-                             xlab = "Number of sucesses",main="Posterior predictive distribution")
-  legend("topright", legend="Data", col="red",  lty=1, lwd=3)
+                             xlab = "Number of sucesses",main="Data w. Post. Pred.")
+  #legend("topright", legend="Data", col="red",  lty=1, lwd=3)
   par(old_par)
 }
 
 diagnostics.bfa_binom_test <- function(x) {
-  s <- round(x$stats, 3)
-  mcmc_samples <- x$mcmc_samples
-  
-  cat("\n", "Iterations = ", start(mcmc_samples), ":", end(mcmc_samples), "\n", sep = "")
-  cat("Thinning interval =", thin(mcmc_samples), "\n")
-  cat("Number of chains =", nchain(mcmc_samples), "\n")
-  cat("Sample size per chain =", (end(mcmc_samples) - start(mcmc_samples))/thin(mcmc_samples) + 1, "\n")
-  
+
+  print_mcmc_info(x$mcmc_samples)  
   cat("\n")
-  cat("  Diagnostic measures\n")
-  print(s[, c("mean", "sd", "mcmc.se", "Rhat", "n.eff")])
+  print_diagnostics_measures(round(x$stats, 3))
   cat("\n")
-  cat("MCMC SE: the estimated standard error of the MCMC approximation of the mean.\n")
-  cat("n.eff: a crude measure of effective MCMC sample size.\n")
-  cat("Rhat: the potential scale reduction factor (at convergence, Rhat=1).\n")
   
-  cat("\n")
   cat("  Model parameters and generated quantities\n")
   cat("theta: The relative frequency of success\n")
   cat("x_pred: Predicted number of successes in a replication\n")
-  
+  old_par <- par( mar=c(3.5,2.5,2.5,0.5) , mgp=c(2.25,0.7,0) )
   plot(x$mcmc_samples)
+  par(old_par)
 }
 
 model_diagram.bfa_binom_test <- function(x) {
