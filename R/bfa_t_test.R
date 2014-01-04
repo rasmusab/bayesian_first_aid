@@ -1,7 +1,25 @@
 # ...
 
+#' Title title title
+#' 
+#' Descritions description description
+#' 
+#' Details details details
+#' 
+#' \figure{best_model.jpg}{A graphical diagram of the BEST model}
+#' 
+#' \deqn{y \sim \text{Norm}(\mu, \sigma)}{y ~ Norm(mu, sigma)}
+#' 
+#' @param x What is this param
+#' 
+#' @return
+#' An object of type something...
+#' @export
+bayes.t.test <- function(x, ...) {
+  UseMethod("bayes.t.test")
+}
 
-jags_one_sample_t_test <- function(x, comp_mu = 0,n.adapt= 1000, n.chains=3, n.update = 1000, n.iter=5000, thin=1) {
+jags_one_sample_t_test <- function(x, comp_mu = 0,n.adapt= 100, n.chains=3, n.update = 100, n.iter=500, thin=1) {
   model_string <- "
     model {
       for(i in 1:length(x)) {
@@ -16,7 +34,7 @@ jags_one_sample_t_test <- function(x, comp_mu = 0,n.adapt= 1000, n.chains=3, n.u
       nu <- nuMinusOne+1
       nuMinusOne ~ dexp(1/29)
     }"
-
+  
   data_list <- list(
     x = x,
     mean_mu = mean(x) ,
@@ -35,8 +53,8 @@ jags_one_sample_t_test <- function(x, comp_mu = 0,n.adapt= 1000, n.chains=3, n.u
   mcmc_samples
 }
 
-#' Adapted from John Kruschke's original BEST code.
-jags_two_sample_t_test <- function(x, y, n.adapt= 1000, n.chains=3, n.update = 1000, n.iter=5000, thin=1) {
+# Adapted from John Kruschke's original BEST code.
+jags_two_sample_t_test <- function(x, y, n.adapt= 100, n.chains=3, n.update = 100, n.iter=500, thin=1) {
   model_string <- "
     model {
       for(i in 1:length(x)) {
@@ -89,7 +107,7 @@ jags_two_sample_t_test <- function(x, y, n.adapt= 1000, n.chains=3, n.update = 1
 
 # Right now, this is basically just calling jags_one_sample_t_test but I'm 
 # keeping it in case I would want to change it in the future.
-jags_paired_t_test <- function(x, y, comp_mu = 0,n.adapt= 1000, n.chains=3, n.update = 1000, n.iter=5000, thin=1) {
+jags_paired_t_test <- function(x, y, comp_mu = 0,n.adapt= 100, n.chains=3, n.update = 100, n.iter=500, thin=1) {
   if(is.null(y)) { # assume x is the aldread calculated difference between the two groups
     pair_diff <- x
   } else {
@@ -108,7 +126,8 @@ jags_paired_t_test <- function(x, y, comp_mu = 0,n.adapt= 1000, n.chains=3, n.up
 }
 
 
-bfa.t.test.default <- function(x, y = NULL, alternative = c("two.sided", "less", "greater"), 
+#' @export
+bayes.t.test.default <- function(x, y = NULL, alternative = c("two.sided", "less", "greater"), 
                                mu = 0, paired = FALSE, var.equal = FALSE, conf.level = 0.95, ...) {
   
   if(var.equal) {
@@ -205,7 +224,9 @@ bfa.t.test.default <- function(x, y = NULL, alternative = c("two.sided", "less",
   bfa_object
 }
 
-bfa.t.test.formula <- function(formula, data, subset, na.action, ...) {
+
+#' @export
+bayes.t.test.formula <- function(formula, data, subset, na.action, ...) {
   
   ### Original code from t.test.formula ###
   if (missing(formula) || (length(formula) != 3L) || (length(attr(terms(formula[-2L]), "term.labels")) != 1L)) 
@@ -225,7 +246,7 @@ bfa.t.test.formula <- function(formula, data, subset, na.action, ...) {
   DATA <- setNames(split(mf[[response]], g), c("x", "y"))
   
   ### Own code starts here ###
-  bfa_object <- do.call("bfa.t.test", c(DATA, list(...)))
+  bfa_object <- do.call("bayes.t.test", c(DATA, list(...)))
   bfa_object$data_name <- DNAME
   if (length(levels(g)) == 2L) {
     bfa_object$x_name <- paste("group", levels(g)[1])
@@ -237,6 +258,7 @@ bfa.t.test.formula <- function(formula, data, subset, na.action, ...) {
 
 ### One sample t-test S3 methods ###
 
+#' @export
 print.bfa_one_sample_t_test <- function(x) {
   
   s <- round(x$stats, 3)
@@ -265,6 +287,7 @@ print_bfa_one_sample_t_test_params <- function(x) {
   cat("x_pred: Predicted distribution for a new datapoint generated as",x$data_name , "\n")
 }
 
+#' @export
 summary.bfa_one_sample_t_test <- function(x) {
   s <- round(x$stats, 3)
   
@@ -287,6 +310,7 @@ summary.bfa_one_sample_t_test <- function(x) {
   print(s[, c("q2.5%", "q25%", "median","q75%", "q97.5%")] )
 }
 
+#' @export
 plot.bfa_one_sample_t_test <- function(x) {
   stats <- x$stats
   mcmc_samples <- x$mcmc_samples
@@ -325,6 +349,7 @@ plot.bfa_one_sample_t_test <- function(x) {
   invisible(NULL)
 }
 
+#' @export
 diagnostics.bfa_one_sample_t_test <- function(x) {
     
   print_mcmc_info(x$mcmc_samples)  
@@ -340,16 +365,14 @@ diagnostics.bfa_one_sample_t_test <- function(x) {
   
 }
 
-model_diagram.bfa_one_sample_t_test <- function(x) {
-  print(jags_binom_test)
-}
-
-model_code.bfa_one_sample_t_test <- function(x) {
+#' @export
+model.code.bfa_one_sample_t_test <- function(x) {
   print(jags_binom_test)
 }
 
 ### Two sample t-test S3 methods ###
 
+#' @export
 print.bfa_two_sample_t_test <- function(x) {
   s <- round(x$stats, 3)
   
@@ -371,6 +394,7 @@ print.bfa_two_sample_t_test <- function(x) {
   cat("\n")
 }
  
+
 print_bfa_two_sample_t_test_params <- function(x) {
   cat("  Model parameters and generated quantities\n")
   cat("mu_x: The mean of", x$x_name, "\n")
@@ -389,6 +413,7 @@ print_bfa_two_sample_t_test_params <- function(x) {
   cat("  generated as",x$y_name , "\n")
 }
 
+#' @export
 summary.bfa_two_sample_t_test <- function(x) {
   s <- round(x$stats, 3)
   
@@ -412,6 +437,7 @@ summary.bfa_two_sample_t_test <- function(x) {
   print(s[, c("q2.5%", "q25%", "median","q75%", "q97.5%")] )
 }
 
+#' @export
 plot.bfa_two_sample_t_test <- function(x) {
   stats <- x$stats
   mcmc_samples <- x$mcmc_samples
@@ -474,6 +500,7 @@ plot.bfa_two_sample_t_test <- function(x) {
   par(old_par)
 }
 
+#' @export
 diagnostics.bfa_two_sample_t_test <- function(x) {
   print_mcmc_info(x$mcmc_samples)  
   cat("\n")
@@ -488,16 +515,14 @@ diagnostics.bfa_two_sample_t_test <- function(x) {
   
 }
 
-model_diagram.bfa_two_sample_t_test <- function(bfa_result) {
-  print(jags_two_sample_t_test)
-}
-
-model_code.bfa_two_sample_t_test <- function(bfa_result) {
+#' @export
+model.code.bfa_two_sample_t_test <- function(bfa_result) {
   print(jags_two_sample_t_test)
 }
 
 ### Paired samples t-test S3 methods ###
 
+#' @export
 print.bfa_paired_t_test <- function(x) {
   s <- round(x$stats, 3)
   # Todo: ändra för att passa paired test.
@@ -528,6 +553,7 @@ print.bfa_paired_t_test <- function(x) {
   
 }
 
+
 print_bfa_paired_t_test_params <- function(x) {
 
   cat("  Model parameters and generated quantities\n")
@@ -538,6 +564,7 @@ print_bfa_paired_t_test_params <- function(x) {
   cat("diff_pred: Predicted distribution for a new datapoint generated\n  as the pairwise difference between", x$x_name, "and", x$y_name,"\n")
 }
 
+#' @export
 summary.bfa_paired_t_test <- function(x) {
   s <- round(x$stats, 3)
   
@@ -561,6 +588,7 @@ summary.bfa_paired_t_test <- function(x) {
   print(s[, c("q2.5%", "q25%", "median","q75%", "q97.5%")] )
 }
 
+#' @export
 plot.bfa_paired_t_test <- function(x) {
   stats <- x$stats
   mcmc_samples <- x$mcmc_samples
@@ -599,7 +627,7 @@ plot.bfa_paired_t_test <- function(x) {
   invisible(NULL)
 }
 
-
+#' @export
 diagnostics.bfa_paired_t_test <- function(x) {
   print_mcmc_info(x$mcmc_samples)  
   cat("\n")
@@ -613,10 +641,7 @@ diagnostics.bfa_paired_t_test <- function(x) {
   par(old_par)
 }
 
-model_diagram.bfa_paired_t_test <- function(x) {
-  print(jags_binom_test)
-}
-
-model_code.bfa_paired_t_test <- function(x) {
+#' @export
+model.code.bfa_paired_t_test <- function(x) {
   print(jags_binom_test)
 }

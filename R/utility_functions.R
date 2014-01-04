@@ -133,7 +133,7 @@ mcmc_stats <- function(samples, cred_mass = 0.95, comp_val = 0) {
 }
 
 
-#' Kruschke
+# Kruschke
 HDIofICDF = function( ICDFname , credMass=0.95 , tol=1e-8 , ... ) {
   # Arguments:
   #   ICDFname is R's name for the inverse cumulative density function
@@ -160,7 +160,7 @@ HDIofICDF = function( ICDFname , credMass=0.95 , tol=1e-8 , ... ) {
 # Tutorial with R and BUGS. Elsevier Science/Academic Press.
 
 
-#' Kruschke
+# Kruschke
 HDIofMCMC = function( sampleVec , credMass=0.95 ) {
   # Computes highest density interval from a sample of representative values,
   #   estimated as shortest credible interval.
@@ -185,25 +185,7 @@ HDIofMCMC = function( sampleVec , credMass=0.95 ) {
   return( HDIlim )
 }
 
-#' Kruschke
-mcmcSummary = function( paramSampleVec , compVal=NULL ) {
-  meanParam = mean( paramSampleVec )
-  medianParam = median( paramSampleVec )
-  dres = density( paramSampleVec )
-  modeParam = dres$x[which.max(dres$y)]
-  hdiLim = HDIofMCMC( paramSampleVec )
-  if ( !is.null(compVal) ) {
-    pcgtCompVal = ( 100 * sum( paramSampleVec > compVal ) 
-                    / length( paramSampleVec ) )
-  } else {
-    pcgtCompVal=NA
-  }
-  return( c( meanParam , medianParam , modeParam , hdiLim , pcgtCompVal ) )
-}
-
-
-
-#' Author John Kruschke
+# Author John Kruschke
 plotPost = function( param_sample_vec , cred_mass=0.95 , comp_val=NULL ,
                      HDI_text_place=0.7 , ROPE=NULL , yaxt=NULL , ylab=NULL ,
                      xlab=NULL , cex.lab=NULL , cex=NULL , xlim=NULL , main=NULL ,

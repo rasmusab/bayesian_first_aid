@@ -1,14 +1,14 @@
-#' Generate MCMC samples from the Bayesian First Aid one sample poisson model using JAGS.
-#' 
-#' Descritions description description
-#' 
-#' Details details details
-#'
-#'  @param x the number of events
-#'  @param t The number of time steps during the \code{x} events were observed.
-#'  
-#'  #' @return
-#' An object of type \code{mcmc.list} (defined by the \code{coda} package) that contains the MCMC samples from the model.
+# Generate MCMC samples from the Bayesian First Aid one sample poisson model using JAGS.
+# 
+# Descritions description description
+# 
+# Details details details
+#
+#  @param x the number of events
+#  @param t The number of time steps during the \code{x} events were observed.
+#  
+#  @return
+# An object of type \code{mcmc.list} (defined by the \code{coda} package) that contains the MCMC samples from the model.
 jags_one_sample_poisson_test <- function(x, t, n.adapt= 1000, n.chains=3, n.iter=1000) {
   model_string <- "
     model {
@@ -45,7 +45,23 @@ jags_two_sample_poisson_test <- function(x1, t1, x2, t2, n.adapt= 1000, n.chains
   mcmc_samples
 }
 
-bfa.poisson.test <- function (x, T = 1, r = 1, alternative = c("two.sided", "less", 
+# ...
+
+#' Title title title
+#' 
+#' Descritions description description
+#' 
+#' Details details details
+#' \figure{best_model.jpeg}{A graphical diagram of the BEST model}
+#' 
+#' \deqn{y \sim \text{Norm}(\mu, \sigma)}{y ~ Norm(mu, sigma)}
+#' 
+#' @param x What is this param
+#' 
+#' @return
+#' An object of type something...
+#' @export
+bayes.poisson.test <- function (x, T = 1, r = 1, alternative = c("two.sided", "less", 
                                                                "greater"), conf.level = 0.95) 
 {
   
@@ -88,56 +104,58 @@ bfa.poisson.test <- function (x, T = 1, r = 1, alternative = c("two.sided", "les
 
 ### One sample poisson test S3 methods ###
 
+#' @export
 print.bfa_one_sample_poisson_test <- function(x) {
   cat("\n --- Bayesian first aid one sample poisson test ---\n\n")
   print(summary(x$mcmc_samples))
 }
 
+#' @export
 summary.bfa_one_sample_poisson_test <- function(object) {
   cat("\nSummary\n")
   print(object)
 }
 
+#' @export
 plot.bfa_one_sample_poisson_test <- function(x) {
   plot(x$mcmc_samples)
 }
 
+#' @export
 diagnostics.bfa_one_sample_poisson_test <- function(bfa_result) {
   plot(bfa_result$mcmc_samples)
 }
 
-model_diagram.bfa_one_sample_poisson_test <- function(x) {
-  print(jags_one_sample_poisson_test)
-}
-
-model_code.bfa_one_sample_poisson_test <- function(x) {
+#' @export
+model.code.bfa_one_sample_poisson_test <- function(x) {
   print(jags_one_sample_poisson_test)
 }
 
 ### Two sample poisson test S3 methods ###
 
+#' @export
 print.bfa_two_sample_poisson_test <- function(x) {
   cat("\n --- Bayesian first aid two sample poisson test ---\n\n")
   print(summary(x$mcmc_samples))
 }
 
+#' @export
 summary.bfa_two_sample_poisson_test <- function(object) {
   cat("\nSummary\n")
   print(object)
 }
 
+#' @export
 plot.bfa_two_sample_poisson_test <- function(x) {
   plot(x$mcmc_samples)
 }
 
+#' @export
 diagnostics.bfa_two_sample_poisson_test <- function(bfa_result) {
   plot(bfa_result$mcmc_samples)
 }
 
-model_diagram.bfa_two_sample_poisson_test <- function(x) {
-  print(jags_two_sample_poisson_test)
-}
-
-model_code.bfa_two_sample_poisson_test <- function(x) {
+#' @export
+model.code.bfa_two_sample_poisson_test <- function(x) {
   print(jags_two_sample_poisson_test)
 }

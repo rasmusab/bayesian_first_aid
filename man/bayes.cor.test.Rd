@@ -1,8 +1,8 @@
-\name{diagnostics}
-\alias{diagnostics}
-\title{Plots and prints diagnostics regarding the convergence of the model.}
+\name{bayes.cor.test}
+\alias{bayes.cor.test}
+\title{Title title title}
 \usage{
-diagnostics(fit)
+bayes.cor.test(x, ...)
 }
 \arguments{
   \item{x}{What is this param}

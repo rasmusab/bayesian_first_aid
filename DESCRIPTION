@@ -2,6 +2,7 @@ Package: BayesianFirstAid
 Title: Bayesian replacements for the most commonly used statistical tests in R.
 Description: TBA
 Version: 0.1
+Encoding: UTF-8
 Maintainer: Rasmus Bååth <rasmus.baath@gmail.com>
 Author: Rasmus Bååth <rasmus.baath@gmail.com>
 Depends:
@@ -12,11 +13,3 @@ URL: http://www.sumsar.net
 License: GPL-3
 LazyData: true
 VignetteBuilder: knitr
-Collate:
-    'BayesianFirstAid-package.R'
-    'bfa_binom_test.R'
-    'generic_functions.R'
-    'bfa_t_test.R'
-    'bfa_cor_test.R'
-    'utility_functions.R'
-    'bfa_poisson_test.R'

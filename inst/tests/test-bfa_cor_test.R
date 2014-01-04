@@ -14,6 +14,6 @@ test_that("the  bfa.cor.test function returns a bfa_cor_test object", {
   d <- data.frame(x1 = x1, x2 = x2)
   
   
-  expect_that(bfa.cor.test(x1, x2), is_a("bfa_cor_test"))
-  expect_that(bfa.cor.test(~ x1 + x2, data=d), is_a("bfa_cor_test"))
+  expect_that(bayes.cor.test(x1, x2), is_a("bfa_cor_test"))
+  expect_that(bayes.cor.test(~ x1 + x2, data=d), is_a("bfa_cor_test"))
 })

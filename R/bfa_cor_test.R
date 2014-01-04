@@ -1,3 +1,18 @@
+#' Title title title
+#' 
+#' Descritions description description
+#' 
+#' Details details details
+#' 
+#' @param x What is this param
+#' 
+#' @return
+#' An object of type something...
+#' @export
+bayes.cor.test <- function(x, ...) {
+  UseMethod("bayes.cor.test")
+}
+
 jags_cor_test <- function(x, y, n.adapt= 1000, n.chains=3, n.update = 1000, n.iter=1000, thin=1) {
   model_string <- "
     model {
@@ -40,7 +55,9 @@ jags_cor_test <- function(x, y, n.adapt= 1000, n.chains=3, n.update = 1000, n.it
   mcmc_samples
 }
 
-bfa.cor.test.default <- function (x, y, alternative = c("two.sided", "less", "greater"), 
+#' @method bayes.cor.test default
+#' @export
+bayes.cor.test.default <- function (x, y, alternative = c("two.sided", "less", "greater"), 
                                   method = c("pearson", "kendall", "spearman"), exact = NULL, 
                                   conf.level = 0.95, continuity = FALSE, ...) 
 {
@@ -72,7 +89,9 @@ bfa.cor.test.default <- function (x, y, alternative = c("two.sided", "less", "gr
   
 }
 
-bfa.cor.test.formula <- function (formula, data, subset, na.action, ...) 
+#' @method bayes.cor.test formula
+#' @export
+bayes.cor.test.formula <- function (formula, data, subset, na.action, ...) 
 {
   ### BEGIN code from cor.test.formula ###
   if (missing(formula) || !inherits(formula, "formula") || 
@@ -90,36 +109,36 @@ bfa.cor.test.formula <- function (formula, data, subset, na.action, ...)
   names(mf) <- c("x", "y")
   ### END code from cor.test.formula ###
   
-  bfa_result <- do.call("bfa.cor.test.default", c(mf, list(...)))
+  bfa_result <- do.call("bayes.cor.test.default", c(mf, list(...)))
   bfa_result$data_name <- DNAME
   bfa_result
 }
 
 ### Cor test S3 methods ###
 
+#' @export
 print.bfa_cor_test <- function(bfa_result) {
   cat("\n --- Bayesian first aid cor test ---\n\n")
   print(summary(bfa_result$mcmc_samples))
 }
 
+#' @export
 summary.bfa_cor_test <- function(bfa_result) {
   cat("\nSummary\n")
   print(bfa_result)
 }
 
+#' @export
 plot.bfa_cor_test <- function(bfa_result) {
   plot(bfa_result$mcmc_samples)
 }
 
+#' @export
 diagnostics.bfa_cor_test <- function(bfa_result) {
   plot(bfa_result$mcmc_samples)
 }
 
-
-model_diagram.bfa_cor_test <- function(bfa_result) {
-  print(jags_cor_test)
-}
-
-model_code.bfa_cor_test <- function(bfa_result) {
+#' @export
+model.code.bfa_cor_test <- function(bfa_result) {
   print(jags_cor_test)
 }

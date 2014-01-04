@@ -1,6 +1,12 @@
 Bayesian First Aid
 ========================================================
 
+Todo:
+
+* Roxygen Documentation
+* Export function in the correct way.
+* Add model.code functions.
+
 Tests to include:
 
   * t.test 

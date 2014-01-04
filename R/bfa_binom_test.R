@@ -1,29 +1,32 @@
-#' Generate MCMC samples from the Bayesian First Aid binomial model using JAGS.
+#' Title title title
 #' 
 #' Descritions description description
 #' 
 #' Details details details
 #' 
-#' @param x The number of successes
-#' @param n The number of trials
+#' @param x What is this param
 #' 
 #' @return
-#' An object of type \code{mcmc.list} (defined by the \code{coda} package) that contains the MCMC samples from the model.
-jags_binom_test <- function(x, n, n.chains=3, n.iter=5000) {
-  model_string <- "
-    model {
-      x ~ dbinom(theta, n)
-      theta ~ dbeta(1, 1)
-      x_pred ~ dbinom(theta, n)
-    }
-  "
-  mcmc_samples <- run_jags(model_string, data = list(x = x, n = n), inits = list(theta = (x + 1) / (n + 2)), 
-                           params = c("theta", "x_pred"), n.chains = n.chains, n.adapt = 0,
-                           n.update = 0, n.iter = n.iter, thin = 1)
-  mcmc_samples
-}
-
-bfa.binom.test <- function (x, n, p = 0.5, alternative = c("two.sided", "less", "greater"), conf.level = 0.95) {
+#' An object of type something...
+#' 
+#' @examples
+#' bayes.binom.test(5, 10)
+#' 
+#' @export
+bayes.binom.test <- function (x, n, comp.theta = 0.5, alternative = NULL, cred.mass = 0.95, p, conf.level) {
+  
+  if(! missing(alternative)) {
+    warning("The argument 'alternative' is ignored by bayes.binom.test")
+  }
+  
+  if(! missing(p)) {
+    comp.theta <- p
+  }
+  
+  if(! missing(conf.level)) {
+    cred.mass <- conf.level
+  }
+  
   ### Begin code from binom.test 
   DNAME <- deparse(substitute(x))
   xr <- round(x)
@@ -43,25 +46,50 @@ bfa.binom.test <- function (x, n, p = 0.5, alternative = c("two.sided", "less", 
     n <- nr
   }
   else stop("incorrect length of 'x'")
-  if (!missing(p) && (length(p) > 1L || is.na(p) || p < 0 || 
-                        p > 1)) 
-    stop("'p' must be a single number between 0 and 1")
-  alternative <- match.arg(alternative)
-  if (!((length(conf.level) == 1L) && is.finite(conf.level) && 
-          (conf.level > 0) && (conf.level < 1))) 
-    stop("'conf.level' must be a single number between 0 and 1")
+  if (!missing(comp.theta) && (length(comp.theta) > 1L || is.na(comp.theta) || comp.theta < 0 || 
+                                comp.theta > 1)) 
+    stop("'comp.theta' or 'p' must be a single number between 0 and 1")
+  if (!((length(cred.mass) == 1L) && is.finite(cred.mass) && 
+          (cred.mass > 0) && (cred.mass < 1))) 
+    stop("'cred.mass' or 'conf.level' must be a single number between 0 and 1")
   ### END code from binom.test
   
   mcmc_samples <- jags_binom_test(x, n)
-  stats <- mcmc_stats(mcmc_samples, cred_mass = conf.level, comp_val = p)
-  bfa_object <- list(x = x, n = n, p = p, cred_mass = conf.level,
+  stats <- mcmc_stats(mcmc_samples, cred_mass = cred.mass, comp_val = comp.theta)
+  bfa_object <- list(x = x, n = n, comp_theta = comp.theta, cred_mass = cred.mass,
                  data_name = DNAME, mcmc_samples = mcmc_samples, stats = stats) 
   class(bfa_object) <- "bfa_binom_test"
   bfa_object
 }
 
+# Generate MCMC samples from the Bayesian First Aid binomial model using JAGS.
+# 
+# Descritions description description
+# 
+# Details details details
+# 
+# @param x The number of successes
+# @param n The number of trials
+# 
+# @return
+# An object of type \code{mcmc.list} (defined by the \code{coda} package) that contains the MCMC samples from the model.
+jags_binom_test <- function(x, n, n.chains=3, n.iter=500) {
+  model_string <- "
+    model {
+      x ~ dbinom(theta, n)
+      theta ~ dbeta(1, 1)
+      x_pred ~ dbinom(theta, n)
+    }
+  "
+  mcmc_samples <- run_jags(model_string, data = list(x = x, n = n), inits = list(theta = (x + 1) / (n + 2)), 
+                           params = c("theta", "x_pred"), n.chains = n.chains, n.adapt = 0,
+                           n.update = 0, n.iter = n.iter, thin = 1)
+  mcmc_samples
+}
+
 ### binom test S3 methods ###
 
+#' @export
 print.bfa_binom_test <- function(x) {
   
   s <- round(x$stats["theta",], 3)
@@ -80,6 +108,8 @@ print.bfa_binom_test <- function(x) {
   cat("\n")
 }
 
+
+#' @export
 summary.bfa_binom_test <- function(x) {
   s <- round(x$stats, 3)
   
@@ -105,11 +135,13 @@ summary.bfa_binom_test <- function(x) {
   # 'HDIlo' and 'HDIup' are the limits of a 95% HDI credible interval.
 }
 
+
+#' @export
 plot.bfa_binom_test <- function(x) {
   layout(matrix(c(1,2), nrow=2, ncol=1 , byrow=FALSE) )
   old_par <- par( mar=c(3.5,3.5,2.5,0.5) , mgp=c(2.25,0.7,0) )
   sample_mat <- as.matrix(x$mcmc_samples)
-  plotPost(sample_mat[, "theta"], cred_mass= x$cred_mass, comp_val=x$p, xlim=c(0, 1), cex=1, cex.lab=1.5,
+  plotPost(sample_mat[, "theta"], cred_mass= x$cred_mass, comp_val=x$comp_theta, xlim=c(0, 1), cex=1, cex.lab=1.5,
            main = "Relative Frequency of Success", xlab=expression(theta))
   hist_data <- discrete_hist(sample_mat[, "x_pred"], c(0, x$n), ylab="Probability", x_marked= x$x,
                              xlab = "Number of sucesses",main="Data w. Post. Pred.")
@@ -117,6 +149,8 @@ plot.bfa_binom_test <- function(x) {
   par(old_par)
 }
 
+
+#' @export
 diagnostics.bfa_binom_test <- function(x) {
 
   print_mcmc_info(x$mcmc_samples)  
@@ -132,11 +166,9 @@ diagnostics.bfa_binom_test <- function(x) {
   par(old_par)
 }
 
-model_diagram.bfa_binom_test <- function(x) {
-  print(jags_binom_test)
-}
 
-model_code.bfa_binom_test <- function(x) {
+#' @export
+model.code.bfa_binom_test <- function(x) {
   print(jags_binom_test)
 }
 

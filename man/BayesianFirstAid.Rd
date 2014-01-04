@@ -4,7 +4,7 @@
 \alias{BayesianFirstAid-package}
 \title{BayesianFirstAid}
 \description{
-  Bayesian replacements for the most commonly used
-  statistical tests in R.
+Bayesian replacements for the most commonly used
+statistical tests in R.
 }
 

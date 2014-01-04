@@ -15,34 +15,41 @@ set.seed(123)
 ------------
 A classical binomial test:
 ```{r}
+library(BayesianFirstAid)
 binom.test(x=16, n=20)
 ```
-Prepend `binom.test` by `bfa.` to run the Bayesian "version".
+Prepend `binom.test` by `bayes.` to run the Bayesian "version".
 ```{r}
-bfa.binom.test(x=16, n=20)
+bayes.binom.test(x=16, n=20)
 ```
 The idea is to respect the arguments to the original `binom.test` as far as possible. For example, setting `p` and `conf.level` as in...
 
 ```{r}
 binom.test(x=16, n=20, p=0.75, conf.level=0.8)
 ```
-... is respected by `bfa.binom.test`:
+... is respected by `bayes.binom.test`:
 
 ```{r}
-bfa.binom.test(x=16, n=20, p=0.75, conf.level=0.8)
+bayes.binom.test(x=16, n=20, p=0.75, conf.level=0.8)
 ```
 
-By assigning the result of `bfa.binom.test` to a variable we can get some more useful info by calling `plot` for looking at the posterior (and perhaps a posterior predictive check), `summary` for a more extensive summary than the standard print out above, and `diagnostics` for MCMC diagnostics. The idea is that the behavior of these functions should be consistent for all the `bfa.*.test` functions.  
+By assigning the result of `bayes.binom.test` to a variable we can get some more useful info by calling `plot` for looking at the posterior (and perhaps a posterior predictive check), `summary` for a more extensive summary than the standard print out above, and `diagnostics` for MCMC diagnostics. The idea is that the behavior of these functions should be consistent for all the `bayes.*.test` functions.  
 
 ```{r fig.width=6, fig.height=5, dpi=96}
-(fit <- bfa.binom.test(x=16, n=20))
+(fit <- bayes.binom.test(x=16, n=20))
 plot(fit)
 summary(fit)
 diagnostics(fit)
-
 ```
 
-Of course, in the case of `bfa.binom.test` the MCMC diagnostics might be a bit silly...
+Of course, in the case of `bayes.binom.test` the MCMC diagnostics might be a bit silly...
+
+By asking for the `model.code` we get a print out of a script that runs the same analysis as `bayes.binom.test`. This could be copied into an R-script to study how it works or to modify it further.
+
+```{r}
+model.code(fit)
+```
+
 
 `t.test`
 ------------
@@ -55,14 +62,14 @@ t.test(x)
 ```
 
 ```{r}
-bfa.t.test(x)
+bayes.t.test(x)
 ```
 
-`bfa.t.test` also respects the arguments of the original `t.test`.
+`bayes.t.test` also respects the arguments of the original `t.test`.
 
 ```{r}
 y <- rnorm(n=30, mean=10, sd=5)
-bfa.t.test(x, y, mu=1, conf.level=0.5)
+bayes.t.test(x, y, mu=1, conf.level=0.5)
 ```
 Or even...
 
@@ -70,33 +77,33 @@ Or even...
 # Creating "paired" data
 d <- data.frame(x = rnorm(n=30, mean=10, sd=5), group = rep(c("A", "B"), 15))
                 
-bfa.t.test(x ~ group, paired=T, data=d)
+bayes.t.test(x ~ group, paired=T, data=d)
 ```
 
-The same generic functions (`plot`, `summary`, `diagnostics`) works for all fitted models from `bfa.t.test`.
+The same generic functions (`plot`, `summary`, `diagnostics`) works for all fitted models from `bayes.t.test`.
 
-### Output one sample ´bfa.t.test´
+### Output one sample ´bayes.t.test´
 
 ```{r  fig.width=6, fig.height=5, dpi=96}
-(fit <- bfa.t.test(x, mu=1) )
+(fit <- bayes.t.test(x, mu=1) )
 plot(fit)
 summary(fit)
 diagnostics(fit)
 ```
 
-### Output two sample ´bfa.t.test´
+### Output two sample ´bayes.t.test´
 
 ```{r  fig.width=6, fig.height=5, dpi=96}
-(fit <- bfa.t.test(x, y, conf.level=0.8) )
+(fit <- bayes.t.test(x, y, conf.level=0.8) )
 plot(fit)
 summary(fit)
 diagnostics(fit)
 ```
 
-### Output paired samples ´bfa.t.test´
+### Output paired samples ´bayes.t.test´
 
 ```{r  fig.width=6, fig.height=5, dpi=96}
-(fit <- bfa.t.test(x ~ group, paired=T, data=d))
+(fit <- bayes.t.test(x ~ group, paired=T, data=d))
 plot(fit)
 summary(fit)
 diagnostics(fit)
