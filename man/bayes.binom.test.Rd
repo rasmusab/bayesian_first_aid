@@ -20,4 +20,3 @@ Details details details
 \examples{
 bayes.binom.test(5, 10)
 }
-
