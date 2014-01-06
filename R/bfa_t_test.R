@@ -33,17 +33,17 @@ one_sample_t_model_string <- "model {
   nuMinusOne ~ dexp(1/29)
 }"
 
-jags_one_sample_t_test <- function(x, comp_mu = 0,n.adapt= 100, n.chains=3, n.update = 100, n.iter=500, thin=1) {
+jags_one_sample_t_test <- function(x, comp_mu = 0,n.adapt= 1000, n.chains=3, n.update = 500, n.iter=5000, thin=1) {
   data_list <- list(
     x = x,
-    mean_mu = mean(x) ,
-    precision_mu = 1 / (sd(x)^2 * 1000000),
-    sigmaLow = sd(x) / 1000 ,
-    sigmaHigh = sd(x) * 1000 ,
+    mean_mu = mean(x, trim=0.2) ,
+    precision_mu = 1 / (mad(x)^2 * 1000000),
+    sigmaLow = mad(x) / 1000 ,
+    sigmaHigh = mad(x) * 1000 ,
     comp_mu = comp_mu
   )
   
-  inits_list <- list(mu= mean(x, trim=0.2), sigma = mad(x), nuMinusOne = 4)
+  inits_list <- list(mu = mean(x, trim=0.2), sigma = mad(x), nuMinusOne = 4)
   params <- c("mu", "sigma", "nu", "eff_size", "x_pred")
   mcmc_samples <- run_jags(one_sample_t_model_string, data = data_list, inits = inits_list, 
                            params = params, n.chains = n.chains, n.adapt = n.adapt,
@@ -77,14 +77,14 @@ two_sample_t_model_string <- "model {
 }"
 
 # Adapted from John Kruschke's original BEST code.
-jags_two_sample_t_test <- function(x, y, n.adapt= 100, n.chains=3, n.update = 100, n.iter=500, thin=1) {
+jags_two_sample_t_test <- function(x, y, n.adapt= 1000, n.chains=3, n.update = 1000, n.iter=5000, thin=1) {
   data_list <- list(
     x = x ,
     y = y ,
-    mean_mu = mean(c(x, y)) ,
-    precision_mu = 1 / (sd(c(x, y))^2 * 1000000),
-    sigmaLow = sd(c(x, y)) / 1000 ,
-    sigmaHigh = sd(c(x, y)) * 1000 
+    mean_mu = mean(c(x, y), trim=0.2) ,
+    precision_mu = 1 / (mad(c(x, y))^2 * 1000000),
+    sigmaLow = mad(c(x, y)) / 1000 ,
+    sigmaHigh = mad(c(x, y)) * 1000 
   )
   
   inits_list <- list(
@@ -104,7 +104,7 @@ jags_two_sample_t_test <- function(x, y, n.adapt= 100, n.chains=3, n.update = 10
 
 # Right now, this is basically just calling jags_one_sample_t_test but I'm 
 # keeping it in case I would want to change it in the future.
-jags_paired_t_test <- function(x, y, comp_mu = 0,n.adapt= 100, n.chains=3, n.update = 100, n.iter=500, thin=1) {
+jags_paired_t_test <- function(x, y, comp_mu = 0,n.adapt= 1000, n.chains=3, n.update = 500, n.iter=5000, thin=1) {
   if(is.null(y)) { # assume x is the aldread calculated difference between the two groups
     pair_diff <- x
   } else {
@@ -125,7 +125,7 @@ jags_paired_t_test <- function(x, y, comp_mu = 0,n.adapt= 100, n.chains=3, n.upd
 
 #' @export
 bayes.t.test.default <- function(x, y = NULL, alternative = c("two.sided", "less", "greater"), 
-                               mu = 0, paired = FALSE, var.equal = FALSE, conf.level = 0.95, ...) {
+                               mu = 0, paired = FALSE, var.equal = FALSE, conf.level = 0.95, n.iter = 15000,...) {
   
   if(var.equal) {
     var.equal <- FALSE
@@ -196,7 +196,7 @@ bayes.t.test.default <- function(x, y = NULL, alternative = c("two.sided", "less
   ### Own code starts here ###
   
   if(paired) {
-    mcmc_samples <- jags_paired_t_test(x, y)
+    mcmc_samples <- jags_paired_t_test(x, y, n.chains= 3, n.iter = ceiling(n.iter / 3) )
     stats <- mcmc_stats(mcmc_samples, cred_mass = conf.level, comp_val = mu)
     bfa_object <- list(x = x, y = y, pair_diff = y - x, comp = mu, cred_mass = conf.level,
                         x_name = xname, y_name = yname, data_name = dname,
@@ -204,14 +204,14 @@ bayes.t.test.default <- function(x, y = NULL, alternative = c("two.sided", "less
     class(bfa_object) <- "bfa_paired_t_test"
   
   } else if(is.null(y)) {
-    mcmc_samples <- jags_one_sample_t_test(x, comp_mu = mu)
+    mcmc_samples <- jags_one_sample_t_test(x, comp_mu = mu, n.chains= 3, n.iter = ceiling(n.iter / 3))
     stats <- mcmc_stats(mcmc_samples, cred_mass = conf.level, comp_val = mu)
     bfa_object <- list(x = x, comp = mu, cred_mass = conf.level, x_name = xname, 
                        data_name = dname, mcmc_samples = mcmc_samples, stats = stats)
     class(bfa_object) <- "bfa_one_sample_t_test"
     
   } else { # is two sample t.test
-    mcmc_samples <- jags_two_sample_t_test(x, y)
+    mcmc_samples <- jags_two_sample_t_test(x, y, n.chains= 3, n.iter = ceiling(n.iter / 3))
     stats <- mcmc_stats(mcmc_samples, cred_mass = conf.level, comp_val = mu)
     bfa_object <- list(x = x, y = y, comp = mu, cred_mass = conf.level,
                        x_name = xname, y_name = yname, data_name = dname,

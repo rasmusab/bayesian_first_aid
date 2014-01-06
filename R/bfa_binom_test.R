@@ -33,6 +33,7 @@ bayes.binom.test <- function (x, n, comp.theta = 0.5, alternative = NULL, cred.m
   
   ### Begin code from binom.test 
   x_name <- deparse(substitute(x))
+  DNAME <- x_name
   n_name <- deparse(substitute(n))
   xr <- round(x)
   if (any(is.na(x) | (x < 0)) || max(abs(x - xr)) > 1e-07) 

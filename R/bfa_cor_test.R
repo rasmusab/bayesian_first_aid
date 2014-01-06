@@ -39,11 +39,11 @@ cor_model_string <- "model {
   nuMinusOne ~ dexp(1/29)
 }"
 
-jags_cor_test <- function(x, y, n.adapt= 1000, n.chains=3, n.update = 1000, n.iter=1000, thin=1) {
+jags_cor_test <- function(x, y, n.adapt= 1000, n.chains=3, n.update = 1000, n.iter=5000, thin=1) {
   data_list = list(xy = cbind(x, y), n = length(x))
   # Use robust estimates of the parameters as initial values
   inits_list = list(mu=c(mean(x, trim=0.2), mean(y, trim=0.2)), rho=cor(x, y, method="spearman"), 
-                    sigma = c(mad(x), mad(y)))
+                    sigma = c(mad(x), mad(y)), nuMinusOne = 5)
   mcmc_samples <- run_jags(cor_model_string, data = data_list, inits = inits_list, 
                            params = c("rho", "mu", "sigma", "nu"), n.chains = n.chains, n.adapt = n.adapt,
                            n.update = n.update, n.iter = n.iter, thin = thin)
@@ -54,7 +54,7 @@ jags_cor_test <- function(x, y, n.adapt= 1000, n.chains=3, n.update = 1000, n.it
 #' @export
 bayes.cor.test.default <- function (x, y, alternative = c("two.sided", "less", "greater"), 
                                   method = c("pearson", "kendall", "spearman"), exact = NULL, 
-                                  conf.level = 0.95, continuity = FALSE, ...) 
+                                  conf.level = 0.95, continuity = FALSE, n.iter = 15000, ...) 
 {
   ### BEGIN code from cor.test.default ###
   alternative <- match.arg(alternative)
@@ -77,7 +77,7 @@ bayes.cor.test.default <- function (x, y, alternative = c("two.sided", "less", "
   if (method == "kendall" || method == "spearman") {
     stop("no non-parametric correlation comparable to Kendall's tau or Spearman's rho has been implemented yet.")
   }
-  mcmc_samples <- jags_cor_test(x, y)
+  mcmc_samples <- jags_cor_test(x, y, n.chains=3, n.iter=ceiling(n.iter / 3))
   bfa_result <- structure(list(x = x, y = y, n = n, data_name = DNAME, mcmc_samples = mcmc_samples), 
             class = "bfa_cor_test")
   bfa_result
