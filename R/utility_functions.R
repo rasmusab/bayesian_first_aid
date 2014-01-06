@@ -17,6 +17,25 @@ run_jags <- function(model_string, data, inits, params, n.chains, n.adapt, n.upd
   mcmc_samples
 }
 
+# The following two functions are hacks that are only used to construct
+# and print the model code that is preinted by the model.code functions.
+
+# This first function takes a function and replaces the placeholder
+# with model_string. Is used so that model string doesn't have to be written twice.
+inject_model_string <- function(fn, model_string, placeholder = "BayesianFirstAid::replace_this_with_model_string") {
+  code_string <- deparse(fn, control="useSource")
+  code_string <- gsub(placeholder, 
+                      paste0('model_string <-"', gsub("\n", "\n  ", model_string), '"'), code_string)
+  eval(parse(text=code_string))
+}
+
+# This second function pretty prints the body of a function.
+pretty_print_function_body <- function(fn) {
+  fn_string <- deparse(fn, control="useSource")
+  fn_string <- gsub("^  ", "", fn_string)
+  cat(paste(fn_string[-c(1, length(fn_string))], collapse="\n"))
+}
+
 # mcmc_samples should be a coda mcmc object
 print_mcmc_info <- function(mcmc_samples) {
   cat("\n", "Iterations = ", start(mcmc_samples), ":", end(mcmc_samples), "\n", sep = "")

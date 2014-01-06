@@ -17,7 +17,7 @@
 #' bayes.binom.test(5, 10)
 #' 
 #' @export
-bayes.binom.test <- function (x, n, comp.theta = 0.5, alternative = NULL, cred.mass = 0.95, p, conf.level) {
+bayes.binom.test <- function (x, n, comp.theta = 0.5, alternative = NULL, cred.mass = 0.95, n.iter=15000, p, conf.level) {
   
   if(! missing(alternative)) {
     warning("The argument 'alternative' is ignored by bayes.binom.test")
@@ -32,7 +32,8 @@ bayes.binom.test <- function (x, n, comp.theta = 0.5, alternative = NULL, cred.m
   }
   
   ### Begin code from binom.test 
-  DNAME <- deparse(substitute(x))
+  x_name <- deparse(substitute(x))
+  n_name <- deparse(substitute(n))
   xr <- round(x)
   if (any(is.na(x) | (x < 0)) || max(abs(x - xr)) > 1e-07) 
     stop("'x' must be nonnegative and integer")
@@ -46,7 +47,7 @@ bayes.binom.test <- function (x, n, comp.theta = 0.5, alternative = NULL, cred.m
     if ((length(n) > 1L) || is.na(n) || (n < 1) || abs(n - 
                                                          nr) > 1e-07 || (x > nr)) 
       stop("'n' must be a positive integer >= 'x'")
-    DNAME <- paste(DNAME, "and", deparse(substitute(n)))
+    DNAME <- paste(x_name, "and", n_name)
     n <- nr
   }
   else stop("incorrect length of 'x'")
@@ -58,10 +59,11 @@ bayes.binom.test <- function (x, n, comp.theta = 0.5, alternative = NULL, cred.m
     stop("'cred.mass' or 'conf.level' must be a single number between 0 and 1")
   ### END code from binom.test
   
-  mcmc_samples <- jags_binom_test(x, n)
+  mcmc_samples <- jags_binom_test(x, n, n.chains = 3, n.iter = ceiling(n.iter / 3) )
   stats <- mcmc_stats(mcmc_samples, cred_mass = cred.mass, comp_val = comp.theta)
   bfa_object <- list(x = x, n = n, comp_theta = comp.theta, cred_mass = cred.mass,
-                 data_name = DNAME, mcmc_samples = mcmc_samples, stats = stats) 
+                     x_name = x_name, n_name = n_name, data_name = DNAME,
+                     mcmc_samples = mcmc_samples, stats = stats) 
   class(bfa_object) <- "bfa_binom_test"
   bfa_object
 }
@@ -145,7 +147,6 @@ plot.bfa_binom_test <- function(x) {
 
 #' @export
 diagnostics.bfa_binom_test <- function(x) {
-
   print_mcmc_info(x$mcmc_samples)  
   cat("\n")
   print_diagnostics_measures(round(x$stats, 3))
@@ -154,7 +155,7 @@ diagnostics.bfa_binom_test <- function(x) {
   cat("  Model parameters and generated quantities\n")
   cat("theta: The relative frequency of success\n")
   cat("x_pred: Predicted number of successes in a replication\n")
-  old_par <- par( mar=c(3.5,2.5,2.5,0.5) , mgp=c(2.25,0.7,0) )
+  old_par <- par( mar=c(3.5,2.5,2.5,0.6) , mgp=c(2.25,0.7,0) )
   plot(x$mcmc_samples)
   par(old_par)
 }
@@ -162,6 +163,28 @@ diagnostics.bfa_binom_test <- function(x) {
 
 #' @export
 model.code.bfa_binom_test <- function(x) {
-  print(jags_binom_test)
+  cat("### Model code for the Bayesian First Aid alternative to the binomial test ###\n")
+  cat("require(rjags)\n\n")
+  
+  cat("# Setting up the data\n")
+  cat("x <-", x$x_name, "\n")
+  cat("n <-", x$n_name, "\n")
+  cat("\n")
+  pretty_print_function_body(binom_model_code)
 }
 
+# Not to be run, just to be printed
+binom_model_code <- function() {
+  # The model string written in the JAGS language
+  BayesianFirstAid::replace_this_with_model_string
+  
+  # Running the model
+  model <- jags.model(textConnection(model_string), data = list(x = x, n = n), 
+                      n.chains = 3, n.adapt=1000)
+  samples <- coda.samples(model, c("theta", "x_pred"), n.iter=5000)
+  
+  #Inspecting the posterior
+  plot(samples)
+  summary(samples)  
+}
+binom_model_code <- inject_model_string(binom_model_code, binom_model_string)

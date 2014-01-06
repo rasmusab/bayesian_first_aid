@@ -13,3 +13,11 @@ URL: http://www.sumsar.net
 License: GPL-3
 LazyData: true
 VignetteBuilder: knitr
+Collate:
+    'utility_functions.R'
+    'generic_functions.R'
+    'BayesianFirstAid-package.R'
+    'bfa_binom_test.R'
+    'bfa_cor_test.R'
+    'bfa_poisson_test.R'
+    'bfa_t_test.R'
