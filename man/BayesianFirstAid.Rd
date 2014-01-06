@@ -7,4 +7,29 @@
 Bayesian replacements for the most commonly used
 statistical tests in R.
 }
+\details{
+The idea with this R package is to make "replacements" for
+the most commonly used tests in R such as \code{t.test},
+\code{binom.test} and \code{cor.test}. These replacements
+will be based on Bayesian estimation and will in that sense
+neither be "null hypothesis" nor "tests". They will be
+replacements in that they will have similar assumptions as
+the original tests and will answer the the same type of
+question as one probably have when using the corresponding
+null hypothesis test.
+
+The gimmick of the package is that the Bayesian versions
+have functions calls that are compatible with the classical
+tests' functions. That is, going from a classical binomial
+test:
+
+\code{binom.test(x=7, n=10)}
+
+... to the Bayesian estimation version is as easy as
+prepending \code{bayes.} to the function call:
+
+\code{ bayes.binom.test(x=7, n=10, p=0.33)}
+
+Hence the name of the package: Bayesian First Aid.
+}
 

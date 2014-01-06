@@ -13,45 +13,40 @@ bayes.cor.test <- function(x, ...) {
   UseMethod("bayes.cor.test")
 }
 
-jags_cor_test <- function(x, y, n.adapt= 1000, n.chains=3, n.update = 1000, n.iter=1000, thin=1) {
-  model_string <- "
-    model {
-      for(i in 1:n) {
-        #xy[i,1:2] ~ dmnorm(mu[], prec[ , ])
-        xy[i,1:2] ~ dmt(mu[], prec[ , ], nu) 
-      }
+cor_model_string <- "model {
+  for(i in 1:n) {
+    xy[i,1:2] ~ dmt(mu[], prec[ , ], nu) 
+  }
 
-      ## priors for elements of precision matrix
-      prec[1:2,1:2] <- inverse(cov[,])
-      
-      cov[1,1] <- sigma[1] * sigma[1]
-      cov[1,2] <- sigma[1] * sigma[2] * rho
-      cov[2,1] <- sigma[1] * sigma[2] * rho
-      cov[2,2] <- sigma[2] * sigma[2]
-      
-      sigma[1] ~ dunif(0, 1000) 
-      sigma[2] ~ dunif(0, 1000)
-      tau[1] <- 1 / pow(sigma[1], 2)
-      tau[2] <- 1 / pow(sigma[2], 2)
-      rho ~ dunif(-1, 1)
-
-      mu[1] ~ dnorm(0, 0.0001)
-      mu[2] ~ dnorm(0, 0.0001)
-
-      nu <- nuMinusOne+1
-      nuMinusOne ~ dexp(1/29)
-    }
-  "
+  ## priors for elements of precision matrix
+  prec[1:2,1:2] <- inverse(cov[,])
   
+  cov[1,1] <- sigma[1] * sigma[1]
+  cov[1,2] <- sigma[1] * sigma[2] * rho
+  cov[2,1] <- sigma[1] * sigma[2] * rho
+  cov[2,2] <- sigma[2] * sigma[2]
+  
+  sigma[1] ~ dunif(0, 1000) 
+  sigma[2] ~ dunif(0, 1000)
+  tau[1] <- 1 / pow(sigma[1], 2)
+  tau[2] <- 1 / pow(sigma[2], 2)
+  rho ~ dunif(-1, 1)
+
+  mu[1] ~ dnorm(0, 0.0001)
+  mu[2] ~ dnorm(0, 0.0001)
+
+  nu <- nuMinusOne+1
+  nuMinusOne ~ dexp(1/29)
+}"
+
+jags_cor_test <- function(x, y, n.adapt= 1000, n.chains=3, n.update = 1000, n.iter=1000, thin=1) {
   data_list = list(xy = cbind(x, y), n = length(x))
   # Use robust estimates of the parameters as initial values
   inits_list = list(mu=c(mean(x, trim=0.2), mean(y, trim=0.2)), rho=cor(x, y, method="spearman"), 
                     sigma = c(mad(x), mad(y)))
-  jags_model <- jags.model(textConnection(model_string), data=data_list, n.adapt = 0 , n.chains=n.chains,
-                          inits = inits_list, quiet=TRUE)
-  adapt(jags_model, n.adapt,  progress.bar="none", end.adaptation=TRUE)
-  update(jags_model, n.update, progress.bar="none")
-  mcmc_samples <- coda.samples(jags_model, c("mu", "rho", "sigma", "nu"), n.iter=n.iter, thin=thin, progress.bar="none")
+  mcmc_samples <- run_jags(cor_model_string, data = data_list, inits = inits_list, 
+                           params = c("rho", "mu", "sigma", "nu"), n.chains = n.chains, n.adapt = n.adapt,
+                           n.update = n.update, n.iter = n.iter, thin = thin)
   mcmc_samples
 }
 

@@ -7,13 +7,13 @@ run_jags <- function(model_string, data, inits, params, n.chains, n.adapt, n.upd
   }
   jags_model <- jags.model(textConnection(model_string) , data=data , inits=inits , 
                           n.chains=n.chains , n.adapt=0, quiet=TRUE)
-  adapt(jags_model, n.adapt,  progress.bar="none", end.adaptation=TRUE)
+  adapt(jags_model, max(1, n.adapt),  progress.bar="none", end.adaptation=TRUE)
   if(n.update > 0) { 
     update( jags_model, n.update, progress.bar="none")
   }
   mcmc_samples <- coda.samples( jags_model , variable.names= params,
                                n.iter=n.iter, thin=thin, progress.bar=progress.bar)
-  mcmc_samples <- reorder_coda(mcmc_samples, order=params)
+  mcmc_samples <- reorder_coda(mcmc_samples, params)
   mcmc_samples
 }
 
@@ -99,9 +99,9 @@ hist_with_t_curves <- function(data, data_mu, data_sigma, mu, sigma, nu, data_na
   
 
 # Reoder the columns of a mcmc.list coda object.
-reorder_coda <- function(s, order) {
+reorder_coda <- function(s, param_order) {
   s <- lapply(s, function(chain) {
-    chain[, order]
+    chain[, order(match(gsub("\\[.+\\]$", "", colnames(chain)), param_order))]
   })
   mcmc.list(s)
 }

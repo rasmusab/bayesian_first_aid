@@ -4,6 +4,10 @@
 #' 
 #' Details details details
 #' 
+#' some more details
+#' 
+#' Will it never stop?
+#' 
 #' @param x What is this param
 #' 
 #' @return
@@ -62,26 +66,15 @@ bayes.binom.test <- function (x, n, comp.theta = 0.5, alternative = NULL, cred.m
   bfa_object
 }
 
-# Generate MCMC samples from the Bayesian First Aid binomial model using JAGS.
-# 
-# Descritions description description
-# 
-# Details details details
-# 
-# @param x The number of successes
-# @param n The number of trials
-# 
-# @return
-# An object of type \code{mcmc.list} (defined by the \code{coda} package) that contains the MCMC samples from the model.
+
+binom_model_string <- "model {
+  x ~ dbinom(theta, n)
+  theta ~ dbeta(1, 1)
+  x_pred ~ dbinom(theta, n)
+}"
+
 jags_binom_test <- function(x, n, n.chains=3, n.iter=500) {
-  model_string <- "
-    model {
-      x ~ dbinom(theta, n)
-      theta ~ dbeta(1, 1)
-      x_pred ~ dbinom(theta, n)
-    }
-  "
-  mcmc_samples <- run_jags(model_string, data = list(x = x, n = n), inits = list(theta = (x + 1) / (n + 2)), 
+  mcmc_samples <- run_jags(binom_model_string, data = list(x = x, n = n), inits = list(theta = (x + 1) / (n + 2)), 
                            params = c("theta", "x_pred"), n.chains = n.chains, n.adapt = 0,
                            n.update = 0, n.iter = n.iter, thin = 1)
   mcmc_samples

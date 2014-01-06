@@ -19,22 +19,21 @@ bayes.t.test <- function(x, ...) {
   UseMethod("bayes.t.test")
 }
 
+one_sample_t_model_string <- "model {
+  for(i in 1:length(x)) {
+    x[i] ~ dt( mu , tau , nu )
+  }
+  x_pred ~ dt( mu , tau , nu )
+  eff_size <- (mu - comp_mu) / sigma
+
+  mu ~ dnorm( mean_mu , precision_mu )
+  tau <- 1/pow( sigma , 2 )
+  sigma ~ dunif( sigmaLow , sigmaHigh )
+  nu <- nuMinusOne+1
+  nuMinusOne ~ dexp(1/29)
+}"
+
 jags_one_sample_t_test <- function(x, comp_mu = 0,n.adapt= 100, n.chains=3, n.update = 100, n.iter=500, thin=1) {
-  model_string <- "
-    model {
-      for(i in 1:length(x)) {
-        x[i] ~ dt( mu , tau , nu )
-      }
-      x_pred ~ dt( mu , tau , nu )
-      eff_size <- (mu - comp_mu) / sigma
-  
-      mu ~ dnorm( mean_mu , precision_mu )
-      tau <- 1/pow( sigma , 2 )
-      sigma ~ dunif( sigmaLow , sigmaHigh )
-      nu <- nuMinusOne+1
-      nuMinusOne ~ dexp(1/29)
-    }"
-  
   data_list <- list(
     x = x,
     mean_mu = mean(x) ,
@@ -44,43 +43,41 @@ jags_one_sample_t_test <- function(x, comp_mu = 0,n.adapt= 100, n.chains=3, n.up
     comp_mu = comp_mu
   )
   
-  
   inits_list <- list(mu= mean(x, trim=0.2), sigma = mad(x), nuMinusOne = 4)
   params <- c("mu", "sigma", "nu", "eff_size", "x_pred")
-  mcmc_samples <- run_jags(model_string, data = data_list, inits = inits_list, 
+  mcmc_samples <- run_jags(one_sample_t_model_string, data = data_list, inits = inits_list, 
                            params = params, n.chains = n.chains, n.adapt = n.adapt,
                            n.update = n.update, n.iter = n.iter, thin = thin)   
   mcmc_samples
 }
 
+two_sample_t_model_string <- "model {
+  for(i in 1:length(x)) {
+    x[i] ~ dt( mu_x , tau_x , nu )
+  }
+  x_pred ~ dt( mu_x , tau_x , nu )
+  for(i in 1:length(y)) {
+    y[i] ~ dt( mu_y , tau_y , nu )
+  }
+  y_pred ~ dt( mu_y , tau_y , nu )
+  eff_size <- (mu_x - mu_y) / sqrt((pow(sigma_x, 2) + pow(sigma_y, 2)) / 2)
+  mu_diff <- mu_x - mu_y
+  sigma_diff <-sigma_x - sigma_y 
+  
+  mu_x ~ dnorm( mean_mu , precision_mu )
+  tau_x <- 1/pow( sigma_x , 2 )
+  sigma_x ~ dunif( sigmaLow , sigmaHigh )
+
+  mu_y ~ dnorm( mean_mu , precision_mu )
+  tau_y <- 1/pow( sigma_y , 2 )
+  sigma_y ~ dunif( sigmaLow , sigmaHigh )
+
+  nu <- nuMinusOne+1
+  nuMinusOne ~ dexp(1/29)
+}"
+
 # Adapted from John Kruschke's original BEST code.
 jags_two_sample_t_test <- function(x, y, n.adapt= 100, n.chains=3, n.update = 100, n.iter=500, thin=1) {
-  model_string <- "
-    model {
-      for(i in 1:length(x)) {
-        x[i] ~ dt( mu_x , tau_x , nu )
-      }
-      x_pred ~ dt( mu_x , tau_x , nu )
-      for(i in 1:length(y)) {
-        y[i] ~ dt( mu_y , tau_y , nu )
-      }
-      y_pred ~ dt( mu_y , tau_y , nu )
-      eff_size <- (mu_x - mu_y) / sqrt((pow(sigma_x, 2) + pow(sigma_y, 2)) / 2)
-      mu_diff <- mu_x - mu_y
-      sigma_diff <-sigma_x - sigma_y 
-      
-      mu_x ~ dnorm( mean_mu , precision_mu )
-      tau_x <- 1/pow( sigma_x , 2 )
-      sigma_x ~ dunif( sigmaLow , sigmaHigh )
-
-      mu_y ~ dnorm( mean_mu , precision_mu )
-      tau_y <- 1/pow( sigma_y , 2 )
-      sigma_y ~ dunif( sigmaLow , sigmaHigh )
-
-      nu <- nuMinusOne+1
-      nuMinusOne ~ dexp(1/29)
-    }"
-
   data_list <- list(
     x = x ,
     y = y ,
@@ -95,11 +92,11 @@ jags_two_sample_t_test <- function(x, y, n.adapt= 100, n.chains=3, n.update = 10
     mu_y = mean(y, trim=0.2),
     sigma_x = mad(x),
     sigma_y = mad(y),
-    nuMinusOne = 4 
+    nuMinusOne = 4
   )
   
   params <- c("mu_x", "sigma_x", "mu_y", "sigma_y", "mu_diff", "sigma_diff","nu", "eff_size", "x_pred", "y_pred")  
-  mcmc_samples <- run_jags(model_string, data = data_list, inits = inits_list, 
+  mcmc_samples <- run_jags(two_sample_t_model_string, data = data_list, inits = inits_list, 
                            params = params, n.chains = n.chains, n.adapt = n.adapt,
                            n.update = n.update, n.iter = n.iter, thin = thin)
   mcmc_samples

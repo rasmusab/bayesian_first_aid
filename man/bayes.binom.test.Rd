@@ -16,7 +16,12 @@ Descritions description description
 }
 \details{
 Details details details
+
+some more details
+
+Will it never stop?
 }
 \examples{
 bayes.binom.test(5, 10)
 }
+
