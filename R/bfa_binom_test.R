@@ -1,20 +1,45 @@
-#' Title title title
+#' Bayesian First Aid Alternative to the Binomial Test
 #' 
 #' Descritions description description
 #' 
 #' Details details details
 #' 
-#' some more details
 #' 
-#' Will it never stop?
+#' @param x number of successes, or a vector of length 2 giving the numbers of 
+#'   successes and failures, respectively.
+#' @param n number of trials; ignored if x has length 2.
+#' @param comp.theta a fixed relative frequency of success to compare with the 
+#'   estimated relative frequency of success. This argument fills a similar role
+#'   as \code{p} in \code{\link{binom.test}}.
+#' @param alternative ignored and is only retained in order to 
+#'   mantain compatibility with \code{\link{binom.test}}.
+#' @param cred.mass the amount of probability mass that will be contained in 
+#'   reported credible intervals. This argument fills a similar role
+#'   as \code{conf.level} in \code{\link{binom.test}}.
+#' @param n.iter The number of iterations to run the MCMC sampling.
+#' @param p same as \code{comp.theta} and is only retained in order to 
+#'   mantain compatibility with \code{\link{binom.test}}.
+#' @param conf.level same as \code{cred.mass} and is only retained in order to 
+#'   mantain compatibility with \code{\link{binom.test}}.
 #' 
-#' @param x What is this param
 #' 
-#' @return
-#' An object of type something...
-#' 
+#' @return A list of class \code{bfa_binom_test} that contains information about
+#'   the analysis. It can be further inspected using the functions
+#'   \code{summary}, \code{plot}, \code{\link{diagnostics}} and 
+#'   \code{\link{model.code}}.
+#'   
 #' @examples
 #' bayes.binom.test(5, 10)
+#' 
+#' # Save the return value in order to inspect the model result further.
+#' fit <- bayes.binom.test(x=67, n=100, cred.mass=0.8)
+#' summary(fit)
+#' plot(fit)
+#' # MCMC diagnostics (should not be necessary for such a simple model)
+#' diagnostis(fit)
+#' # Print out the R code to run the model. This can be copy n' pasted into
+#' # an R-script and further modified.
+#' model.code(fit)
 #' 
 #' @export
 bayes.binom.test <- function (x, n, comp.theta = 0.5, alternative = NULL, cred.mass = 0.95, n.iter=15000, p, conf.level) {
@@ -168,8 +193,8 @@ model.code.bfa_binom_test <- function(x) {
   cat("require(rjags)\n\n")
   
   cat("# Setting up the data\n")
-  cat("x <-", x$x_name, "\n")
-  cat("n <-", x$n_name, "\n")
+  cat("x <-", x$x, "\n")
+  cat("n <-", x$n, "\n")
   cat("\n")
   pretty_print_function_body(binom_model_code)
 }

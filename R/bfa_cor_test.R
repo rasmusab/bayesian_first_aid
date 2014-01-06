@@ -9,6 +9,7 @@
 #' @return
 #' An object of type something...
 #' @export
+#' @rdname bayes.cor.test
 bayes.cor.test <- function(x, ...) {
   UseMethod("bayes.cor.test")
 }
@@ -52,6 +53,7 @@ jags_cor_test <- function(x, y, n.adapt= 1000, n.chains=3, n.update = 1000, n.it
 
 #' @method bayes.cor.test default
 #' @export
+#' @rdname bayes.cor.test
 bayes.cor.test.default <- function (x, y, alternative = c("two.sided", "less", "greater"), 
                                   method = c("pearson", "kendall", "spearman"), exact = NULL, 
                                   conf.level = 0.95, continuity = FALSE, n.iter = 15000, ...) 
@@ -86,6 +88,7 @@ bayes.cor.test.default <- function (x, y, alternative = c("two.sided", "less", "
 
 #' @method bayes.cor.test formula
 #' @export
+#' @rdname bayes.cor.test
 bayes.cor.test.formula <- function (formula, data, subset, na.action, ...) 
 {
   ### BEGIN code from cor.test.formula ###

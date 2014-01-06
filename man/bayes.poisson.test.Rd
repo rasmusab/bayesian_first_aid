@@ -3,7 +3,7 @@
 \title{Title title title}
 \usage{
 bayes.poisson.test(x, T = 1, r = 1, alternative = c("two.sided", "less",
-  "greater"), conf.level = 0.95)
+  "greater"), conf.level = 0.95, n.iter = 15000)
 }
 \arguments{
   \item{x}{What is this param}

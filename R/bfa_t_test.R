@@ -15,6 +15,7 @@
 #' @return
 #' An object of type something...
 #' @export
+#' @rdname bayes.t.test
 bayes.t.test <- function(x, ...) {
   UseMethod("bayes.t.test")
 }
@@ -124,6 +125,7 @@ jags_paired_t_test <- function(x, y, comp_mu = 0,n.adapt= 1000, n.chains=3, n.up
 
 
 #' @export
+#' @rdname bayes.t.test
 bayes.t.test.default <- function(x, y = NULL, alternative = c("two.sided", "less", "greater"), 
                                mu = 0, paired = FALSE, var.equal = FALSE, conf.level = 0.95, n.iter = 15000,...) {
   
@@ -223,6 +225,7 @@ bayes.t.test.default <- function(x, y = NULL, alternative = c("two.sided", "less
 
 
 #' @export
+#' @rdname bayes.t.test
 bayes.t.test.formula <- function(formula, data, subset, na.action, ...) {
   
   ### Original code from t.test.formula ###
