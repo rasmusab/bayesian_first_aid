@@ -4,7 +4,19 @@
 #' 
 #' Details details details
 #' 
-#' @param x What is this param
+#' @param x 
+#' @param ... 
+#' @param y 
+#' @param alternative 
+#' @param method 
+#' @param exact 
+#' @param conf.level 
+#' @param continuity 
+#' @param n.iter 
+#' @param formula 
+#' @param data 
+#' @param subset 
+#' @param na.action 
 #' 
 #' @return
 #' An object of type something...
@@ -115,28 +127,28 @@ bayes.cor.test.formula <- function (formula, data, subset, na.action, ...)
 ### Cor test S3 methods ###
 
 #' @export
-print.bfa_cor_test <- function(bfa_result) {
+print.bfa_cor_test <- function(x, ...) {
   cat("\n --- Bayesian first aid cor test ---\n\n")
-  print(summary(bfa_result$mcmc_samples))
+  print(summary(x$mcmc_samples))
 }
 
 #' @export
-summary.bfa_cor_test <- function(bfa_result) {
+summary.bfa_cor_test <- function(object, ...) {
   cat("\nSummary\n")
-  print(bfa_result)
+  print(object)
 }
 
 #' @export
-plot.bfa_cor_test <- function(bfa_result) {
-  plot(bfa_result$mcmc_samples)
+plot.bfa_cor_test <- function(x, ...) {
+  plot(x$mcmc_samples)
 }
 
 #' @export
-diagnostics.bfa_cor_test <- function(bfa_result) {
-  plot(bfa_result$mcmc_samples)
+diagnostics.bfa_cor_test <- function(fit) {
+  plot(fit$mcmc_samples)
 }
 
 #' @export
-model.code.bfa_cor_test <- function(bfa_result) {
+model.code.bfa_cor_test <- function(fit) {
   print(jags_cor_test)
 }

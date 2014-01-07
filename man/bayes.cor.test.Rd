@@ -13,7 +13,31 @@ bayes.cor.test(x, ...)
 \method{bayes.cor.test}{formula}(formula, data, subset, na.action, ...)
 }
 \arguments{
-  \item{x}{What is this param}
+  \item{x}{}
+
+  \item{...}{}
+
+  \item{y}{}
+
+  \item{alternative}{}
+
+  \item{method}{}
+
+  \item{exact}{}
+
+  \item{conf.level}{}
+
+  \item{continuity}{}
+
+  \item{n.iter}{}
+
+  \item{formula}{}
+
+  \item{data}{}
+
+  \item{subset}{}
+
+  \item{na.action}{}
 }
 \value{
 An object of type something...

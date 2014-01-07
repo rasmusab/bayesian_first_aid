@@ -5,7 +5,7 @@
 model.code(fit)
 }
 \arguments{
-  \item{x}{What is this param}
+  \item{fit}{}
 }
 \value{
 An object of type something...

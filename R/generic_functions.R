@@ -6,7 +6,7 @@
 #' 
 #' Details details details
 #' 
-#' @param x What is this param
+#' @param fit
 #' 
 #' @return
 #' An object of type something...
@@ -26,7 +26,7 @@ diagnostics <- function(fit) {
 #' 
 #' Details details details
 #' 
-#' @param x What is this param
+#' @param fit
 #' 
 #' @return
 #' An object of type something...

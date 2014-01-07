@@ -1,9 +1,9 @@
-bibentry("Journal",
+bibentry("Article",
    title = "Bayesian First Aid",
    author = person("Rasmus", "Bååth"),
-   journal = "",
+   journal = "tba",
    year   = 2013,
-   url    = "",
+   url    = "tba",
 
    mheader = "No citation yet...",
 

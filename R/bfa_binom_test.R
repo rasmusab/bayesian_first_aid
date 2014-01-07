@@ -2,7 +2,11 @@
 #' 
 #' Descritions description description
 #' 
-#' Details details details
+#' \deqn{x \sim \mathrm{Binom}(\theta, n)}{x ~ Binom(\theta, n)}
+#' \deqn{\theta \sim \mathrm{Unif}(0, 1)}{\theta ~ Unif(0, 1)}
+#' 
+#' \if{html}{\figure{binom_diagram.svg}{options: height=250}}
+#' \if{latex}{binom_diagram.svg}
 #' 
 #' 
 #' @param x number of successes, or a vector of length 2 giving the numbers of 
@@ -36,7 +40,7 @@
 #' summary(fit)
 #' plot(fit)
 #' # MCMC diagnostics (should not be necessary for such a simple model)
-#' diagnostis(fit)
+#' diagnostics(fit)
 #' # Print out the R code to run the model. This can be copy n' pasted into
 #' # an R-script and further modified.
 #' model.code(fit)
@@ -111,7 +115,7 @@ jags_binom_test <- function(x, n, n.chains=3, n.iter=500) {
 ### binom test S3 methods ###
 
 #' @export
-print.bfa_binom_test <- function(x) {
+print.bfa_binom_test <- function(x, ...) {
   
   s <- round(x$stats["theta",], 3)
   
@@ -131,11 +135,11 @@ print.bfa_binom_test <- function(x) {
 
 
 #' @export
-summary.bfa_binom_test <- function(x) {
-  s <- round(x$stats, 3)
+summary.bfa_binom_test <- function(object, ...) {
+  s <- round(object$stats, 3)
   
   cat("  Data\n")
-  cat("number of successes = ", x$x,", number of trials = ", x$n, "\n", sep="")
+  cat("number of successes = ", object$x,", number of trials = ", object$n, "\n", sep="")
   cat("\n")
   
   cat("  Model parameters and generated quantities\n")
@@ -158,7 +162,7 @@ summary.bfa_binom_test <- function(x) {
 
 
 #' @export
-plot.bfa_binom_test <- function(x) {
+plot.bfa_binom_test <- function(x, ...) {
   layout(matrix(c(1,2), nrow=2, ncol=1 , byrow=FALSE) )
   old_par <- par( mar=c(3.5,3.5,2.5,0.5) , mgp=c(2.25,0.7,0) )
   sample_mat <- as.matrix(x$mcmc_samples)
@@ -172,29 +176,29 @@ plot.bfa_binom_test <- function(x) {
 
 
 #' @export
-diagnostics.bfa_binom_test <- function(x) {
-  print_mcmc_info(x$mcmc_samples)  
+diagnostics.bfa_binom_test <- function(fit) {
+  print_mcmc_info(fit$mcmc_samples)  
   cat("\n")
-  print_diagnostics_measures(round(x$stats, 3))
+  print_diagnostics_measures(round(fit$stats, 3))
   cat("\n")
   
   cat("  Model parameters and generated quantities\n")
   cat("theta: The relative frequency of success\n")
   cat("x_pred: Predicted number of successes in a replication\n")
   old_par <- par( mar=c(3.5,2.5,2.5,0.6) , mgp=c(2.25,0.7,0) )
-  plot(x$mcmc_samples)
+  plot(fit$mcmc_samples)
   par(old_par)
 }
 
 
 #' @export
-model.code.bfa_binom_test <- function(x) {
+model.code.bfa_binom_test <- function(fit) {
   cat("### Model code for the Bayesian First Aid alternative to the binomial test ###\n")
   cat("require(rjags)\n\n")
   
   cat("# Setting up the data\n")
-  cat("x <-", x$x, "\n")
-  cat("n <-", x$n, "\n")
+  cat("x <-", fit$x, "\n")
+  cat("n <-", fit$n, "\n")
   cat("\n")
   pretty_print_function_body(binom_model_code)
 }

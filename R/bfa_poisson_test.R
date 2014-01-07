@@ -37,11 +37,15 @@ jags_two_sample_poisson_test <- function(x1, t1, x2, t2, n.adapt= 500, n.chains=
 #' Descritions description description
 #' 
 #' Details details details
-#' \figure{best_model.jpeg}{A graphical diagram of the BEST model}
 #' 
-#' \deqn{y \sim \text{Norm}(\mu, \sigma)}{y ~ Norm(mu, sigma)}
+#' @param x
+#' @param T
+#' @param r
+#' @param alternative
+#' @param conf.level
+#' @param n.iter
 #' 
-#' @param x What is this param
+#' 
 #' 
 #' @return
 #' An object of type something...
@@ -91,57 +95,57 @@ bayes.poisson.test <- function (x, T = 1, r = 1, alternative = c("two.sided", "l
 ### One sample poisson test S3 methods ###
 
 #' @export
-print.bfa_one_sample_poisson_test <- function(x) {
+print.bfa_one_sample_poisson_test <- function(x, ...) {
   cat("\n --- Bayesian first aid one sample poisson test ---\n\n")
   print(summary(x$mcmc_samples))
 }
 
 #' @export
-summary.bfa_one_sample_poisson_test <- function(object) {
+summary.bfa_one_sample_poisson_test <- function(object, ...) {
   cat("\nSummary\n")
   print(object)
 }
 
 #' @export
-plot.bfa_one_sample_poisson_test <- function(x) {
+plot.bfa_one_sample_poisson_test <- function(x, ...) {
   plot(x$mcmc_samples)
 }
 
 #' @export
-diagnostics.bfa_one_sample_poisson_test <- function(bfa_result) {
-  plot(bfa_result$mcmc_samples)
+diagnostics.bfa_one_sample_poisson_test <- function(fit) {
+  plot(fit$mcmc_samples)
 }
 
 #' @export
-model.code.bfa_one_sample_poisson_test <- function(x) {
+model.code.bfa_one_sample_poisson_test <- function(fit) {
   print(jags_one_sample_poisson_test)
 }
 
 ### Two sample poisson test S3 methods ###
 
 #' @export
-print.bfa_two_sample_poisson_test <- function(x) {
+print.bfa_two_sample_poisson_test <- function(x, ...) {
   cat("\n --- Bayesian first aid two sample poisson test ---\n\n")
   print(summary(x$mcmc_samples))
 }
 
 #' @export
-summary.bfa_two_sample_poisson_test <- function(object) {
+summary.bfa_two_sample_poisson_test <- function(object, ...) {
   cat("\nSummary\n")
   print(object)
 }
 
 #' @export
-plot.bfa_two_sample_poisson_test <- function(x) {
+plot.bfa_two_sample_poisson_test <- function(x, ...) {
   plot(x$mcmc_samples)
 }
 
 #' @export
-diagnostics.bfa_two_sample_poisson_test <- function(bfa_result) {
-  plot(bfa_result$mcmc_samples)
+diagnostics.bfa_two_sample_poisson_test <- function(fit) {
+  plot(fit$mcmc_samples)
 }
 
 #' @export
-model.code.bfa_two_sample_poisson_test <- function(x) {
+model.code.bfa_two_sample_poisson_test <- function(fit) {
   print(jags_two_sample_poisson_test)
 }

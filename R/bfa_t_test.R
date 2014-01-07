@@ -6,11 +6,24 @@
 #' 
 #' Details details details
 #' 
-#' \figure{best_model.jpg}{A graphical diagram of the BEST model}
+#' \figure{bestmodel.png}{A graphical diagram of the BEST model}
 #' 
-#' \deqn{y \sim \text{Norm}(\mu, \sigma)}{y ~ Norm(mu, sigma)}
+#' \deqn{y \sim \mathrm{Norm}(\mu, \sigma)}{y ~ Norm(mu, sigma)}
 #' 
-#' @param x What is this param
+#' @param x 
+#' @param ... 
+#' @param y 
+#' @param alternative 
+#' @param mu 
+#' @param paired 
+#' @param var.equal 
+#' @param conf.level 
+#' @param n.iter 
+#' @param formula 
+#' @param data 
+#' @param subset 
+#' @param na.action 
+#' 
 #' 
 #' @return
 #' An object of type something...
@@ -259,7 +272,7 @@ bayes.t.test.formula <- function(formula, data, subset, na.action, ...) {
 ### One sample t-test S3 methods ###
 
 #' @export
-print.bfa_one_sample_t_test <- function(x) {
+print.bfa_one_sample_t_test <- function(x, ...) {
   
   s <- round(x$stats, 3)
   
@@ -288,14 +301,14 @@ print_bfa_one_sample_t_test_params <- function(x) {
 }
 
 #' @export
-summary.bfa_one_sample_t_test <- function(x) {
-  s <- round(x$stats, 3)
+summary.bfa_one_sample_t_test <- function(object, ...) {
+  s <- round(object$stats, 3)
   
   cat("  Data\n")
-  cat(x$data_name, ", n = ", length(x$x), "\n", sep="")
+  cat(object$data_name, ", n = ", length(object$x), "\n", sep="")
   cat("\n")
   
-  print_bfa_one_sample_t_test_params(x)
+  print_bfa_one_sample_t_test_params(object)
   cat("\n")
 
   cat("  Measures\n" )
@@ -311,7 +324,7 @@ summary.bfa_one_sample_t_test <- function(x) {
 }
 
 #' @export
-plot.bfa_one_sample_t_test <- function(x) {
+plot.bfa_one_sample_t_test <- function(x, ...) {
   stats <- x$stats
   mcmc_samples <- x$mcmc_samples
   samples_mat <- as.matrix(mcmc_samples)
@@ -350,30 +363,30 @@ plot.bfa_one_sample_t_test <- function(x) {
 }
 
 #' @export
-diagnostics.bfa_one_sample_t_test <- function(x) {
+diagnostics.bfa_one_sample_t_test <- function(fit) {
     
-  print_mcmc_info(x$mcmc_samples)  
+  print_mcmc_info(fit$mcmc_samples)  
   cat("\n")
-  print_diagnostics_measures(round(x$stats, 3))
+  print_diagnostics_measures(round(fit$stats, 3))
   cat("\n")
-  print_bfa_one_sample_t_test_params(x)
+  print_bfa_one_sample_t_test_params(fit)
   cat("\n")
   
   old_par <- par( mar=c(3.5,2.5,2.5,0.5) , mgp=c(2.25,0.7,0) )
-  plot(x$mcmc_samples)
+  plot(fit$mcmc_samples)
   par(old_par)
   
 }
 
 #' @export
-model.code.bfa_one_sample_t_test <- function(x) {
+model.code.bfa_one_sample_t_test <- function(fit) {
   print(jags_binom_test)
 }
 
 ### Two sample t-test S3 methods ###
 
 #' @export
-print.bfa_two_sample_t_test <- function(x) {
+print.bfa_two_sample_t_test <- function(x, ...) {
   s <- round(x$stats, 3)
   
   cat("\n")
@@ -414,15 +427,15 @@ print_bfa_two_sample_t_test_params <- function(x) {
 }
 
 #' @export
-summary.bfa_two_sample_t_test <- function(x) {
-  s <- round(x$stats, 3)
+summary.bfa_two_sample_t_test <- function(object, ...) {
+  s <- round(object$stats, 3)
   
   cat("  Data\n")
-  cat(x$x_name, ", n = ", length(x$x), "\n", sep="")
-  cat(x$y_name, ", n = ", length(x$y), "\n", sep="")
+  cat(object$x_name, ", n = ", length(object$x), "\n", sep="")
+  cat(object$y_name, ", n = ", length(object$y), "\n", sep="")
   cat("\n")
   
-  print_bfa_two_sample_t_test_params(x)
+  print_bfa_two_sample_t_test_params(object)
   cat("\n")
   
   cat("  Measures\n" )
@@ -438,7 +451,7 @@ summary.bfa_two_sample_t_test <- function(x) {
 }
 
 #' @export
-plot.bfa_two_sample_t_test <- function(x) {
+plot.bfa_two_sample_t_test <- function(x, ...) {
   stats <- x$stats
   mcmc_samples <- x$mcmc_samples
   samples_mat <- as.matrix(mcmc_samples)
@@ -501,29 +514,29 @@ plot.bfa_two_sample_t_test <- function(x) {
 }
 
 #' @export
-diagnostics.bfa_two_sample_t_test <- function(x) {
-  print_mcmc_info(x$mcmc_samples)  
+diagnostics.bfa_two_sample_t_test <- function(fit) {
+  print_mcmc_info(fit$mcmc_samples)  
   cat("\n")
-  print_diagnostics_measures(round(x$stats, 3))
+  print_diagnostics_measures(round(fit$stats, 3))
   cat("\n")
-  print_bfa_two_sample_t_test_params(x)
+  print_bfa_two_sample_t_test_params(fit)
   cat("\n")
   
   old_par <- par( mar=c(3.5,2.5,2.5,0.5) , mgp=c(2.25,0.7,0) )
-  plot(x$mcmc_samples)
+  plot(fit$mcmc_samples)
   par(old_par)
   
 }
 
 #' @export
-model.code.bfa_two_sample_t_test <- function(bfa_result) {
+model.code.bfa_two_sample_t_test <- function(fit) {
   print(jags_two_sample_t_test)
 }
 
 ### Paired samples t-test S3 methods ###
 
 #' @export
-print.bfa_paired_t_test <- function(x) {
+print.bfa_paired_t_test <- function(x, ...) {
   s <- round(x$stats, 3)
   # Todo: ändra för att passa paired test.
   cat("\n")
@@ -565,15 +578,15 @@ print_bfa_paired_t_test_params <- function(x) {
 }
 
 #' @export
-summary.bfa_paired_t_test <- function(x) {
-  s <- round(x$stats, 3)
+summary.bfa_paired_t_test <- function(object, ...) {
+  s <- round(object$stats, 3)
   
   cat("  Data\n")
-  cat(x$x_name, ", n = ", length(x$x), "\n", sep="")
-  cat(x$y_name, ", n = ", length(x$y), "\n", sep="")
+  cat(object$x_name, ", n = ", length(object$x), "\n", sep="")
+  cat(object$y_name, ", n = ", length(object$y), "\n", sep="")
   cat("\n")
   
-  print_bfa_paired_t_test_params(x)
+  print_bfa_paired_t_test_params(object)
   cat("\n")
   
   cat("  Measures\n" )
@@ -589,7 +602,7 @@ summary.bfa_paired_t_test <- function(x) {
 }
 
 #' @export
-plot.bfa_paired_t_test <- function(x) {
+plot.bfa_paired_t_test <- function(x, ...) {
   stats <- x$stats
   mcmc_samples <- x$mcmc_samples
   samples_mat <- as.matrix(mcmc_samples)
@@ -628,20 +641,20 @@ plot.bfa_paired_t_test <- function(x) {
 }
 
 #' @export
-diagnostics.bfa_paired_t_test <- function(x) {
-  print_mcmc_info(x$mcmc_samples)  
+diagnostics.bfa_paired_t_test <- function(fit) {
+  print_mcmc_info(fit$mcmc_samples)  
   cat("\n")
-  print_diagnostics_measures(round(x$stats, 3))
+  print_diagnostics_measures(round(fit$stats, 3))
   cat("\n")
-  print_bfa_paired_t_test_params(x)
+  print_bfa_paired_t_test_params(fit)
   cat("\n")
   
   old_par <- par( mar=c(3.5,2.5,2.5,0.5) , mgp=c(2.25,0.7,0) )
-  plot(x$mcmc_samples)
+  plot(fit$mcmc_samples)
   par(old_par)
 }
 
 #' @export
-model.code.bfa_paired_t_test <- function(x) {
+model.code.bfa_paired_t_test <- function(fit) {
   print(jags_binom_test)
 }

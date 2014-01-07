@@ -46,7 +46,12 @@ using the functions \code{summary}, \code{plot},
 Descritions description description
 }
 \details{
-Details details details
+\deqn{x \sim \mathrm{Binom}(\theta, n)}{x ~ Binom(\theta,
+n)} \deqn{\theta \sim \mathrm{Beta}(1, 1)}{\theta ~ Beta(1,
+1)}
+
+\if{html}{\figure{binom_diagram.svg}{options: height=250}}
+\if{latex}{binom_diagram.svg}
 }
 \examples{
 bayes.binom.test(5, 10)
@@ -56,7 +61,7 @@ fit <- bayes.binom.test(x=67, n=100, cred.mass=0.8)
 summary(fit)
 plot(fit)
 # MCMC diagnostics (should not be necessary for such a simple model)
-diagnostis(fit)
+diagnostics(fit)
 # Print out the R code to run the model. This can be copy n' pasted into
 # an R-script and further modified.
 model.code(fit)
