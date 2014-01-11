@@ -213,7 +213,7 @@ binom_model_code <- function() {
                       n.chains = 3, n.adapt=1000)
   samples <- coda.samples(model, c("theta", "x_pred"), n.iter=5000)
   
-  #Inspecting the posterior
+  # Inspecting the posterior
   plot(samples)
   summary(samples)  
 }

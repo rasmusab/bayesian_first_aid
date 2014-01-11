@@ -10,21 +10,35 @@
 #' 
 #' \deqn{y \sim \mathrm{Norm}(\mu, \sigma)}{y ~ Norm(mu, sigma)}
 #' 
-#' @param x 
-#' @param ... 
-#' @param y 
-#' @param alternative 
-#' @param mu 
-#' @param paired 
-#' @param var.equal 
-#' @param conf.level 
-#' @param n.iter 
-#' @param formula 
-#' @param data 
-#' @param subset 
-#' @param na.action 
-#' 
-#' 
+#' @param x a (non-empty) numeric vector of data values.
+#' @param y an optional (non-empty) numeric vector of data values.
+#' @param alternative ignored and is only retained in order to mantain 
+#'   compatibility with \code{\link{t.test}}.
+#' @param mu a fixed relative mean value to compare with the estimated mean (or
+#'   the difference in means when performing a two sample BEST).
+#' @param paired a logical indicating whether you want to assume the data is 
+#'   paired and you want to run a one sample BEST of the pair difference.
+#' @param var.equal ignored and is only retained in order to mantain 
+#'   compatibility with \code{\link{t.test}}.
+#' @param cred.mass the amount of probability mass that will be contained in 
+#'   reported credible intervals. This argument fills a similar role as
+#'   \code{conf.level} in \code{\link{t.test}}.
+#' @param n.iter The number of iterations to run the MCMC sampling.
+#' @param conf.level same as \code{cred.mass} and is only retained in order to 
+#'   mantain compatibility with \code{\link{binom.test}}.
+#' @param formula a formula of the form \code{lhs ~ rhs} where \code{lhs} is a
+#'   numeric variable giving the data values and \code{rhs} a factor with two
+#'   levels giving the corresponding groups.
+#' @param data an optional matrix or data frame (or similar: see
+#'   \code{\link{model.frame}}) containing the variables in the formula formula.
+#'   By default the variables are taken from \code{environment(formula)}.
+#' @param subset an optional vector specifying a subset of observations to be 
+#'   used.
+#' @param na.action a function which indicates what should happen when the data 
+#'   contain \code{NA}s. Defaults to \code{getOption("na.action")}.
+#' @param ... further arguments to be passed to or from methods.
+#'   
+#'   
 #' @return
 #' An object of type something...
 #' @export
@@ -32,6 +46,144 @@
 bayes.t.test <- function(x, ...) {
   UseMethod("bayes.t.test")
 }
+
+
+#' @export
+#' @rdname bayes.t.test
+bayes.t.test.default <- function(x, y = NULL, alternative = c("two.sided", "less", "greater"), 
+                                 mu = 0, paired = FALSE, var.equal = FALSE, cred.mass = 0.95, n.iter = 15000, conf.level,...) {
+  
+  if(! missing(conf.level)) {
+    cred.mass <- conf.level
+  }
+  
+  if(var.equal) {
+    var.equal <- FALSE
+    warning("To assume equal variance of 'x' and 'y' is not supported. Continuing by estimating the variance of 'x' and 'y' separately.")
+  }
+  
+  ### Original (but slighly modified) code from t.test.default ###
+  alternative <- match.arg(alternative)
+  if (!missing(mu) && (length(mu) != 1 || is.na(mu))) 
+    stop("'mu' must be a single number")
+  if (!missing(cred.mass) && (length(cred.mass) != 1 || !is.finite(cred.mass) || 
+                                cred.mass < 0 || cred.mass > 1)) 
+    stop("'cred.mass' or 'conf.level' must be a single number between 0 and 1")
+  
+  # removing incomplete cases and preparing the data vectors (x & y)
+  if (!is.null(y)) {
+    xname <- deparse(substitute(x))
+    yname <- deparse(substitute(y))
+    dname <- paste(xname, "and", yname)
+    if (paired) 
+      xok <- yok <- complete.cases(x, y)
+    else {
+      yok <- !is.na(y)
+      xok <- !is.na(x)
+    }
+    y <- y[yok]
+  }
+  else {
+    xname <- deparse(substitute(x))
+    dname <- xname
+    if (paired) 
+      stop("'y' is missing for paired test")
+    xok <- !is.na(x)
+    yok <- NULL
+  }
+  x <- x[xok]
+  
+  # Checking that there is enough data. Even though BEST handles the case with
+  # one data point it is still usefull to do these checks.
+  nx <- length(x)
+  mx <- mean(x)
+  vx <- var(x)
+  if (is.null(y)) {
+    if (nx < 2) 
+      stop("not enough 'x' observations")
+    df <- nx - 1
+    stderr <- sqrt(vx/nx)
+    if (stderr < 10 * .Machine$double.eps * abs(mx)) 
+      stop("data are essentially constant")
+  }
+  else {
+    ny <- length(y)
+    if (nx < 2) 
+      stop("not enough 'x' observations")
+    if (ny < 2) 
+      stop("not enough 'y' observations")
+    my <- mean(y)
+    vy <- var(y)
+    stderrx <- sqrt(vx/nx)
+    stderry <- sqrt(vy/ny)
+    stderr <- sqrt(stderrx^2 + stderry^2)
+    df <- stderr^4/(stderrx^4/(nx - 1) + stderry^4/(ny - 1))
+    if (stderr < 10 * .Machine$double.eps * max(abs(mx), 
+                                                abs(my))) 
+      stop("data are essentially constant")
+  }
+  
+  ### Own code starts here ###
+  
+  if(paired) {
+    mcmc_samples <- jags_paired_t_test(x, y, n.chains= 3, n.iter = ceiling(n.iter / 3) )
+    stats <- mcmc_stats(mcmc_samples, cred_mass = cred.mass, comp_val = mu)
+    bfa_object <- list(x = x, y = y, pair_diff = y - x, comp = mu, cred_mass = cred.mass,
+                       x_name = xname, y_name = yname, data_name = dname,
+                       mcmc_samples = mcmc_samples, stats = stats)
+    class(bfa_object) <- "bfa_paired_t_test"
+    
+  } else if(is.null(y)) {
+    mcmc_samples <- jags_one_sample_t_test(x, comp_mu = mu, n.chains= 3, n.iter = ceiling(n.iter / 3))
+    stats <- mcmc_stats(mcmc_samples, cred_mass = conf.level, comp_val = mu)
+    bfa_object <- list(x = x, comp = mu, cred_mass = conf.level, x_name = xname, 
+                       data_name = dname, mcmc_samples = mcmc_samples, stats = stats)
+    class(bfa_object) <- "bfa_one_sample_t_test"
+    
+  } else { # is two sample t.test
+    mcmc_samples <- jags_two_sample_t_test(x, y, n.chains= 3, n.iter = ceiling(n.iter / 3))
+    stats <- mcmc_stats(mcmc_samples, cred_mass = conf.level, comp_val = mu)
+    bfa_object <- list(x = x, y = y, comp = mu, cred_mass = conf.level,
+                       x_name = xname, y_name = yname, data_name = dname,
+                       mcmc_samples = mcmc_samples, stats = stats)
+    class(bfa_object) <- "bfa_two_sample_t_test"
+  }
+  bfa_object
+}
+
+
+#' @export
+#' @rdname bayes.t.test
+bayes.t.test.formula <- function(formula, data, subset, na.action, ...) {
+  
+  ### Original code from t.test.formula ###
+  if (missing(formula) || (length(formula) != 3L) || (length(attr(terms(formula[-2L]), "term.labels")) != 1L)) 
+    stop("'formula' missing or incorrect")
+  m <- match.call(expand.dots = FALSE)
+  if (is.matrix(eval(m$data, parent.frame()))) 
+    m$data <- as.data.frame(data)
+  m[[1L]] <- quote(stats::model.frame)
+  m$... <- NULL
+  mf <- eval(m, parent.frame())
+  DNAME <- paste(names(mf), collapse = " by ")
+  names(mf) <- NULL
+  response <- attr(attr(mf, "terms"), "response")
+  g <- factor(mf[[-response]])
+  if (nlevels(g) != 2L) 
+    stop("grouping factor must have exactly 2 levels")
+  DATA <- setNames(split(mf[[response]], g), c("x", "y"))
+  
+  ### Own code starts here ###
+  bfa_object <- do.call("bayes.t.test", c(DATA, list(...)))
+  bfa_object$data_name <- DNAME
+  if (length(levels(g)) == 2L) {
+    bfa_object$x_name <- paste("group", levels(g)[1])
+    bfa_object$y_name <- paste("group", levels(g)[2])
+  }
+  bfa_object
+  
+}
+
 
 one_sample_t_model_string <- "model {
   for(i in 1:length(x)) {
@@ -134,139 +286,6 @@ jags_paired_t_test <- function(x, y, comp_mu = 0,n.adapt= 1000, n.chains=3, n.up
     colnames(mcmc_samples[[i]]) <- cnames
   }
   mcmc_samples
-}
-
-
-#' @export
-#' @rdname bayes.t.test
-bayes.t.test.default <- function(x, y = NULL, alternative = c("two.sided", "less", "greater"), 
-                               mu = 0, paired = FALSE, var.equal = FALSE, conf.level = 0.95, n.iter = 15000,...) {
-  
-  if(var.equal) {
-    var.equal <- FALSE
-    warning("To assume equal variance of 'x' and 'y' is not supported. Continuing by estimating the variance of 'x' and 'y' separately.")
-  }
-  
-  ### Original (but slighly modified) code from t.test.default ###
-  alternative <- match.arg(alternative)
-  if (!missing(mu) && (length(mu) != 1 || is.na(mu))) 
-    stop("'mu' must be a single number")
-  if (!missing(conf.level) && (length(conf.level) != 1 || !is.finite(conf.level) || 
-                                 conf.level < 0 || conf.level > 1)) 
-    stop("'conf.level' must be a single number between 0 and 1")
-  
-  # removing incomplete cases and preparing the data vectors (x & y)
-  if (!is.null(y)) {
-    xname <- deparse(substitute(x))
-    yname <- deparse(substitute(y))
-    dname <- paste(xname, "and", yname)
-    if (paired) 
-      xok <- yok <- complete.cases(x, y)
-    else {
-      yok <- !is.na(y)
-      xok <- !is.na(x)
-    }
-    y <- y[yok]
-  }
-  else {
-    xname <- deparse(substitute(x))
-    dname <- xname
-    if (paired) 
-      stop("'y' is missing for paired test")
-    xok <- !is.na(x)
-    yok <- NULL
-  }
-  x <- x[xok]
-  
-  # Checking that there is enough data. Even though BEST handles the case with
-  # one data point it is still usefull to do these checks.
-  nx <- length(x)
-  mx <- mean(x)
-  vx <- var(x)
-  if (is.null(y)) {
-    if (nx < 2) 
-      stop("not enough 'x' observations")
-    df <- nx - 1
-    stderr <- sqrt(vx/nx)
-    if (stderr < 10 * .Machine$double.eps * abs(mx)) 
-      stop("data are essentially constant")
-  }
-  else {
-    ny <- length(y)
-    if (nx < 2) 
-      stop("not enough 'x' observations")
-    if (ny < 2) 
-      stop("not enough 'y' observations")
-    my <- mean(y)
-    vy <- var(y)
-    stderrx <- sqrt(vx/nx)
-    stderry <- sqrt(vy/ny)
-    stderr <- sqrt(stderrx^2 + stderry^2)
-    df <- stderr^4/(stderrx^4/(nx - 1) + stderry^4/(ny - 1))
-    if (stderr < 10 * .Machine$double.eps * max(abs(mx), 
-                                                abs(my))) 
-      stop("data are essentially constant")
-  }
-  
-  ### Own code starts here ###
-  
-  if(paired) {
-    mcmc_samples <- jags_paired_t_test(x, y, n.chains= 3, n.iter = ceiling(n.iter / 3) )
-    stats <- mcmc_stats(mcmc_samples, cred_mass = conf.level, comp_val = mu)
-    bfa_object <- list(x = x, y = y, pair_diff = y - x, comp = mu, cred_mass = conf.level,
-                        x_name = xname, y_name = yname, data_name = dname,
-                        mcmc_samples = mcmc_samples, stats = stats)
-    class(bfa_object) <- "bfa_paired_t_test"
-  
-  } else if(is.null(y)) {
-    mcmc_samples <- jags_one_sample_t_test(x, comp_mu = mu, n.chains= 3, n.iter = ceiling(n.iter / 3))
-    stats <- mcmc_stats(mcmc_samples, cred_mass = conf.level, comp_val = mu)
-    bfa_object <- list(x = x, comp = mu, cred_mass = conf.level, x_name = xname, 
-                       data_name = dname, mcmc_samples = mcmc_samples, stats = stats)
-    class(bfa_object) <- "bfa_one_sample_t_test"
-    
-  } else { # is two sample t.test
-    mcmc_samples <- jags_two_sample_t_test(x, y, n.chains= 3, n.iter = ceiling(n.iter / 3))
-    stats <- mcmc_stats(mcmc_samples, cred_mass = conf.level, comp_val = mu)
-    bfa_object <- list(x = x, y = y, comp = mu, cred_mass = conf.level,
-                       x_name = xname, y_name = yname, data_name = dname,
-                       mcmc_samples = mcmc_samples, stats = stats)
-    class(bfa_object) <- "bfa_two_sample_t_test"
-  }
-  bfa_object
-}
-
-
-#' @export
-#' @rdname bayes.t.test
-bayes.t.test.formula <- function(formula, data, subset, na.action, ...) {
-  
-  ### Original code from t.test.formula ###
-  if (missing(formula) || (length(formula) != 3L) || (length(attr(terms(formula[-2L]), "term.labels")) != 1L)) 
-    stop("'formula' missing or incorrect")
-  m <- match.call(expand.dots = FALSE)
-  if (is.matrix(eval(m$data, parent.frame()))) 
-    m$data <- as.data.frame(data)
-  m[[1L]] <- quote(stats::model.frame)
-  m$... <- NULL
-  mf <- eval(m, parent.frame())
-  DNAME <- paste(names(mf), collapse = " by ")
-  names(mf) <- NULL
-  response <- attr(attr(mf, "terms"), "response")
-  g <- factor(mf[[-response]])
-  if (nlevels(g) != 2L) 
-    stop("grouping factor must have exactly 2 levels")
-  DATA <- setNames(split(mf[[response]], g), c("x", "y"))
-  
-  ### Own code starts here ###
-  bfa_object <- do.call("bayes.t.test", c(DATA, list(...)))
-  bfa_object$data_name <- DNAME
-  if (length(levels(g)) == 2L) {
-    bfa_object$x_name <- paste("group", levels(g)[1])
-    bfa_object$y_name <- paste("group", levels(g)[2])
-  }
-  bfa_object
-  
 }
 
 ### One sample t-test S3 methods ###

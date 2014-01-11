@@ -47,7 +47,7 @@ Descritions description description
 }
 \details{
 \deqn{x \sim \mathrm{Binom}(\theta, n)}{x ~ Binom(\theta,
-n)} \deqn{\theta \sim \mathrm{Beta}(1, 1)}{\theta ~ Beta(1,
+n)} \deqn{\theta \sim \mathrm{Unif}(0, 1)}{\theta ~ Unif(0,
 1)}
 
 \if{html}{\figure{binom_diagram.svg}{options: height=250}}

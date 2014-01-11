@@ -12,6 +12,7 @@ Depends:
 URL: http://www.sumsar.net
 License: GPL-3
 LazyData: true
+KeepSource: true
 VignetteBuilder: knitr
 Collate:
     'utility_functions.R'
