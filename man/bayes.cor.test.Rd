@@ -40,7 +40,10 @@ bayes.cor.test(x, ...)
   \item{na.action}{}
 }
 \value{
-An object of type something...
+A list of class \code{bayes_cor_test} that contains
+information about the analysis. It can be further inspected
+using the functions \code{summary}, \code{plot},
+\code{\link{diagnostics}} and \code{\link{model.code}}.
 }
 \description{
 Descritions description description

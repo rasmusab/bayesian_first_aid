@@ -27,7 +27,7 @@
 #'   mantain compatibility with \code{\link{binom.test}}.
 #' 
 #' 
-#' @return A list of class \code{bfa_binom_test} that contains information about
+#' @return A list of class \code{bayes_binom_test} that contains information about
 #'   the analysis. It can be further inspected using the functions
 #'   \code{summary}, \code{plot}, \code{\link{diagnostics}} and 
 #'   \code{\link{model.code}}.
@@ -94,7 +94,7 @@ bayes.binom.test <- function (x, n, comp.theta = 0.5, alternative = NULL, cred.m
   bfa_object <- list(x = x, n = n, comp_theta = comp.theta, cred_mass = cred.mass,
                      x_name = x_name, n_name = n_name, data_name = DNAME,
                      mcmc_samples = mcmc_samples, stats = stats) 
-  class(bfa_object) <- "bfa_binom_test"
+  class(bfa_object) <- "bayes_binom_test"
   bfa_object
 }
 
@@ -115,7 +115,7 @@ jags_binom_test <- function(x, n, n.chains=3, n.iter=500) {
 ### binom test S3 methods ###
 
 #' @export
-print.bfa_binom_test <- function(x, ...) {
+print.bayes_binom_test <- function(x, ...) {
   
   s <- round(x$stats["theta",], 3)
   
@@ -135,7 +135,7 @@ print.bfa_binom_test <- function(x, ...) {
 
 
 #' @export
-summary.bfa_binom_test <- function(object, ...) {
+summary.bayes_binom_test <- function(object, ...) {
   s <- round(object$stats, 3)
   
   cat("  Data\n")
@@ -162,7 +162,7 @@ summary.bfa_binom_test <- function(object, ...) {
 
 
 #' @export
-plot.bfa_binom_test <- function(x, ...) {
+plot.bayes_binom_test <- function(x, ...) {
   layout(matrix(c(1,2), nrow=2, ncol=1 , byrow=FALSE) )
   old_par <- par( mar=c(3.5,3.5,2.5,0.5) , mgp=c(2.25,0.7,0) )
   sample_mat <- as.matrix(x$mcmc_samples)
@@ -176,7 +176,7 @@ plot.bfa_binom_test <- function(x, ...) {
 
 
 #' @export
-diagnostics.bfa_binom_test <- function(fit) {
+diagnostics.bayes_binom_test <- function(fit) {
   print_mcmc_info(fit$mcmc_samples)  
   cat("\n")
   print_diagnostics_measures(round(fit$stats, 3))
@@ -192,7 +192,7 @@ diagnostics.bfa_binom_test <- function(fit) {
 
 
 #' @export
-model.code.bfa_binom_test <- function(fit) {
+model.code.bayes_binom_test <- function(fit) {
   cat("### Model code for the Bayesian First Aid alternative to the binomial test ###\n")
   cat("require(rjags)\n\n")
   

@@ -1,5 +1,9 @@
 *This is still in development and currently not fit for any purpose.*
 
+This package requires a working instalation of [JAGS](http://mcmc-jags.sourceforge.net/). The package uses code, both modified and copied directly, from the [BEST package](http://cran.r-project.org/web/packages/BEST/index.html) and from the stats package part of base [R](http://www.r-project.org/).
+
+---------------------
+
 The idea with this R package is to make "replacements" for the most commonly used tests in R such as `t.test`, `binom.test` and `cor.test`. These replacements will be based on Bayesian estimation and will in that sense neither be "null hypothesis" nor "tests". They will be replacements in that they will have similar assumptions as the original tests and will answer the the same type of question as one probably have when using the corresponding null hypothesis test.
 
 The gimmick of the package is that the Bayesian versions have functions calls that are compatible with the classical tests' functions. That is, going from a classical binomial test:

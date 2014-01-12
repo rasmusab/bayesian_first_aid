@@ -65,7 +65,12 @@ bayes.t.test(x, ...)
   methods.}
 }
 \value{
-An object of type something...
+A list of class \code{bayes_paired_t_test},
+\code{bayes_one_sample_t_test} or
+\code{bayes_two_sample_t_test} that contains information
+about the analysis. It can be further inspected using the
+functions \code{summary}, \code{plot},
+\code{\link{diagnostics}} and \code{\link{model.code}}.
 }
 \description{
 Descritions description description

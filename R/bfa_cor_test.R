@@ -18,8 +18,10 @@
 #' @param subset 
 #' @param na.action 
 #' 
-#' @return
-#' An object of type something...
+#' @return A list of class \code{bayes_cor_test} that contains information about
+#'   the analysis. It can be further inspected using the functions
+#'   \code{summary}, \code{plot}, \code{\link{diagnostics}} and 
+#'   \code{\link{model.code}}.
 #' @export
 #' @rdname bayes.cor.test
 bayes.cor.test <- function(x, ...) {
@@ -93,7 +95,7 @@ bayes.cor.test.default <- function (x, y, alternative = c("two.sided", "less", "
   }
   mcmc_samples <- jags_cor_test(x, y, n.chains=3, n.iter=ceiling(n.iter / 3))
   bfa_result <- structure(list(x = x, y = y, n = n, data_name = DNAME, mcmc_samples = mcmc_samples), 
-            class = "bfa_cor_test")
+            class = "bayes_cor_test")
   bfa_result
   
 }
@@ -127,28 +129,28 @@ bayes.cor.test.formula <- function (formula, data, subset, na.action, ...)
 ### Cor test S3 methods ###
 
 #' @export
-print.bfa_cor_test <- function(x, ...) {
+print.bayes_cor_test <- function(x, ...) {
   cat("\n --- Bayesian first aid cor test ---\n\n")
   print(summary(x$mcmc_samples))
 }
 
 #' @export
-summary.bfa_cor_test <- function(object, ...) {
+summary.bayes_cor_test <- function(object, ...) {
   cat("\nSummary\n")
   print(object)
 }
 
 #' @export
-plot.bfa_cor_test <- function(x, ...) {
+plot.bayes_cor_test <- function(x, ...) {
   plot(x$mcmc_samples)
 }
 
 #' @export
-diagnostics.bfa_cor_test <- function(fit) {
+diagnostics.bayes_cor_test <- function(fit) {
   plot(fit$mcmc_samples)
 }
 
 #' @export
-model.code.bfa_cor_test <- function(fit) {
+model.code.bayes_cor_test <- function(fit) {
   print(jags_cor_test)
 }

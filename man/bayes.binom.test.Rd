@@ -37,7 +37,7 @@ bayes.binom.test(x, n, comp.theta = 0.5, alternative = NULL,
   \code{\link{binom.test}}.}
 }
 \value{
-A list of class \code{bfa_binom_test} that contains
+A list of class \code{bayes_binom_test} that contains
 information about the analysis. It can be further inspected
 using the functions \code{summary}, \code{plot},
 \code{\link{diagnostics}} and \code{\link{model.code}}.
