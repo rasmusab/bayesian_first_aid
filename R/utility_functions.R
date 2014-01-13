@@ -65,8 +65,10 @@ estimate_mode <- function(x,from=min(x), to=max(x)) {
 # data.
 discrete_hist <- function(x, xlim, col="skyblue", lwd=3, x_marked = c(), marked_col = "red", yaxt="n",...) {
   hist_data <- hist(x, (xlim[1] - 1):(xlim[2]) + 0.5 , plot=FALSE)
-  cols <- ifelse(hist_data$mids %in% x_marked, marked_col, col )
-  plot(hist_data$mids, hist_data$density, type="h", col=cols, lwd=lwd, bty = "o",...)
+  cols <- ifelse(hist_data$mids %in% x_marked, rgb(0, 0, 0, 0), col )
+  plot(hist_data$mids, hist_data$density, type="h", col=col, lwd=lwd, bty = "o", lend=1,...)
+  points(hist_data$mids[hist_data$mids %in% x_marked], hist_data$density[hist_data$mids %in% x_marked],
+       type="h", col=marked_col, lwd=lwd, bty = "o",lend=2,...)
   invisible(hist_data)
 }
 
@@ -220,7 +222,7 @@ plotPost = function( param_sample_vec , cred_mass=0.95 , comp_val=NULL ,
   if ( is.null(yaxt) ) yaxt="n"
   if ( is.null(ylab) ) ylab=""
   if ( is.null(col) ) col="skyblue"
-  if ( is.null(border) ) border="white"
+  if ( is.null(border) ) border="#CCF0FF"
   
   postSummary = matrix( NA , nrow=1 , ncol=11 , 
                         dimnames=list( c( xlab ) , 
