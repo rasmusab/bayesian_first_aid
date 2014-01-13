@@ -47,11 +47,11 @@ Descritions description description
 }
 \details{
 \deqn{x \sim \mathrm{Binom}(\theta, n)}{x ~ Binom(\theta,
-n)} \deqn{\theta \sim \mathrm{Unif}(0, 1)}{\theta ~ Unif(0,
+n)} \deqn{\theta \sim \mathrm{Beta}(1, 1)}{\theta ~ Beta(1,
 1)}
 
 \if{html}{\figure{binom_diagram.svg}{options: height=250}}
-\if{latex}{binom_diagram.svg}
+\if{latex}{\figure{binom_diagram.svg}}
 }
 \examples{
 bayes.binom.test(5, 10)
