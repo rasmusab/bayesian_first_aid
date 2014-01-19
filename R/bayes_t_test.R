@@ -138,15 +138,15 @@ bayes.t.test.default <- function(x, y = NULL, alternative = c("two.sided", "less
     
   } else if(is.null(y)) {
     mcmc_samples <- jags_one_sample_t_test(x, comp_mu = mu, n.chains= 3, n.iter = ceiling(n.iter / 3))
-    stats <- mcmc_stats(mcmc_samples, cred_mass = conf.level, comp_val = mu)
-    bfa_object <- list(x = x, comp = mu, cred_mass = conf.level, x_name = xname, 
+    stats <- mcmc_stats(mcmc_samples, cred_mass = cred.mass, comp_val = mu)
+    bfa_object <- list(x = x, comp = mu, cred_mass = cred.mass, x_name = xname, 
                        data_name = dname, mcmc_samples = mcmc_samples, stats = stats)
     class(bfa_object) <- "bayes_one_sample_t_test"
     
   } else { # is two sample t.test
     mcmc_samples <- jags_two_sample_t_test(x, y, n.chains= 3, n.iter = ceiling(n.iter / 3))
-    stats <- mcmc_stats(mcmc_samples, cred_mass = conf.level, comp_val = mu)
-    bfa_object <- list(x = x, y = y, comp = mu, cred_mass = conf.level,
+    stats <- mcmc_stats(mcmc_samples, cred_mass = cred.mass, comp_val = mu)
+    bfa_object <- list(x = x, y = y, comp = mu, cred_mass = cred.mass,
                        x_name = xname, y_name = yname, data_name = dname,
                        mcmc_samples = mcmc_samples, stats = stats)
     class(bfa_object) <- "bayes_two_sample_t_test"
