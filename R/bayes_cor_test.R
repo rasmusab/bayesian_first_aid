@@ -12,7 +12,9 @@
 #' @param exact 
 #' @param conf.level 
 #' @param continuity 
-#' @param n.iter 
+#' @param n.iter
+#' @param progress.bar The type of progress bar. Possible values are "text",
+#'   "gui", and "none".
 #' @param formula 
 #' @param data 
 #' @param subset 
@@ -54,14 +56,14 @@ cor_model_string <- "model {
   nuMinusOne ~ dexp(1/29)
 }"
 
-jags_cor_test <- function(x, y, n.adapt= 1000, n.chains=3, n.update = 1000, n.iter=5000, thin=1) {
+jags_cor_test <- function(x, y, n.adapt= 1000, n.chains=3, n.update = 1000, n.iter=5000, thin=1, progress.bar="text") {
   data_list = list(xy = cbind(x, y), n = length(x))
   # Use robust estimates of the parameters as initial values
   inits_list = list(mu=c(mean(x, trim=0.2), mean(y, trim=0.2)), rho=cor(x, y, method="spearman"), 
                     sigma = c(mad(x), mad(y)), nuMinusOne = 5)
   mcmc_samples <- run_jags(cor_model_string, data = data_list, inits = inits_list, 
                            params = c("rho", "mu", "sigma", "nu"), n.chains = n.chains, n.adapt = n.adapt,
-                           n.update = n.update, n.iter = n.iter, thin = thin)
+                           n.update = n.update, n.iter = n.iter, thin = thin, progress.bar=progress.bar)
   mcmc_samples
 }
 
@@ -70,7 +72,7 @@ jags_cor_test <- function(x, y, n.adapt= 1000, n.chains=3, n.update = 1000, n.it
 #' @rdname bayes.cor.test
 bayes.cor.test.default <- function (x, y, alternative = c("two.sided", "less", "greater"), 
                                   method = c("pearson", "kendall", "spearman"), exact = NULL, 
-                                  conf.level = 0.95, continuity = FALSE, n.iter = 15000, ...) 
+                                  conf.level = 0.95, continuity = FALSE, n.iter = 15000, progress.bar="text",...) 
 {
   ### BEGIN code from cor.test.default ###
   alternative <- match.arg(alternative)
@@ -93,7 +95,7 @@ bayes.cor.test.default <- function (x, y, alternative = c("two.sided", "less", "
   if (method == "kendall" || method == "spearman") {
     stop("no non-parametric correlation comparable to Kendall's tau or Spearman's rho has been implemented yet.")
   }
-  mcmc_samples <- jags_cor_test(x, y, n.chains=3, n.iter=ceiling(n.iter / 3))
+  mcmc_samples <- jags_cor_test(x, y, n.chains=3, n.iter=ceiling(n.iter / 3), progress.bar=progress.bar)
   bfa_result <- structure(list(x = x, y = y, n = n, data_name = DNAME, mcmc_samples = mcmc_samples), 
             class = "bayes_cor_test")
   bfa_result

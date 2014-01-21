@@ -24,20 +24,22 @@
 #' copy-n-pasted into an R script and modified, for example, changing the prior
 #' on \eqn{\theta}.
 #' 
-#'
+#' 
 #' @param x number of successes, or a vector of length 2 giving the numbers of 
 #'   successes and failures, respectively.
 #' @param n number of trials; ignored if x has length 2.
 #' @param comp.theta a fixed relative frequency of success to compare with the 
 #'   estimated relative frequency of success. This argument fills a similar role
 #'   as \code{p} in \code{\link{binom.test}}.
-#' @param alternative ignored and is only retained in order to mantain
+#' @param alternative ignored and is only retained in order to mantain 
 #'   compatibility with \code{\link{binom.test}}.
 #' @param cred.mass the amount of probability mass that will be contained in 
-#'   reported credible intervals. This argument fills a similar role as
+#'   reported credible intervals. This argument fills a similar role as 
 #'   \code{conf.level} in \code{\link{binom.test}}.
 #' @param n.iter The number of iterations to run the MCMC sampling.
-#' @param p same as \code{comp.theta} and is only retained in order to mantain
+#' @param progress.bar The type of progress bar. Possible values are "text",
+#'   "gui", and "none".
+#' @param p same as \code{comp.theta} and is only retained in order to mantain 
 #'   compatibility with \code{\link{binom.test}}.
 #' @param conf.level same as \code{cred.mass} and is only retained in order to 
 #'   mantain compatibility with \code{\link{binom.test}}.
@@ -69,7 +71,7 @@
 #' model.code(fit)
 #' 
 #' @export
-bayes.binom.test <- function (x, n, comp.theta = 0.5, alternative = NULL, cred.mass = 0.95, n.iter=15000, p, conf.level) {
+bayes.binom.test <- function (x, n, comp.theta = 0.5, alternative = NULL, cred.mass = 0.95, n.iter=15000, progress.bar="none", p, conf.level) {
   
   if(! missing(alternative)) {
     warning("The argument 'alternative' is ignored by bayes.binom.test")
@@ -112,7 +114,7 @@ bayes.binom.test <- function (x, n, comp.theta = 0.5, alternative = NULL, cred.m
     stop("'cred.mass' or 'conf.level' must be a single number between 0 and 1")
   ### END code from binom.test
   
-  mcmc_samples <- jags_binom_test(x, n, n.chains = 3, n.iter = ceiling(n.iter / 3) )
+  mcmc_samples <- jags_binom_test(x, n, n.chains = 3, n.iter = ceiling(n.iter / 3) , progress.bar=progress.bar)
   stats <- mcmc_stats(mcmc_samples, cred_mass = cred.mass, comp_val = comp.theta)
   bfa_object <- list(x = x, n = n, comp_theta = comp.theta, cred_mass = cred.mass,
                      x_name = x_name, n_name = n_name, data_name = DNAME,
@@ -128,10 +130,10 @@ binom_model_string <- "model {
   x_pred ~ dbinom(theta, n)
 }"
 
-jags_binom_test <- function(x, n, n.chains=3, n.iter=500) {
+jags_binom_test <- function(x, n, n.chains=3, n.iter=500, progress.bar="none") {
   mcmc_samples <- run_jags(binom_model_string, data = list(x = x, n = n), inits = list(theta = (x + 1) / (n + 2)), 
                            params = c("theta", "x_pred"), n.chains = n.chains, n.adapt = 0,
-                           n.update = 0, n.iter = n.iter, thin = 1)
+                           n.update = 0, n.iter = n.iter, thin = 1, progress.bar=progress.bar)
   mcmc_samples
 }
 
@@ -143,7 +145,7 @@ print.bayes_binom_test <- function(x, ...) {
   s <- round(x$stats["theta",], 3)
   
   cat("\n")
-  cat("\tBayesian first aid binomial test\n")
+  cat("\tBayesian First Aid binomial test\n")
   cat("\n")
   cat("data: ", x$data_name, "\n", sep="")
   cat("number of successes = ", x$x,", number of trials = ", x$n, "\n", sep="")

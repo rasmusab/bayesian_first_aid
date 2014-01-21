@@ -10,6 +10,8 @@
 #' @param alternative
 #' @param conf.level
 #' @param n.iter
+#' @param progress.bar The type of progress bar. Possible values are "text",
+#'   "gui", and "none".
 #' 
 #' 
 #' 
@@ -19,7 +21,7 @@
 #'   \code{plot}, \code{\link{diagnostics}} and \code{\link{model.code}}.
 #' @export
 bayes.poisson.test <- function (x, T = 1, r = 1, alternative = c("two.sided", "less", "greater"),
-                                conf.level = 0.95, n.iter = 15000) 
+                                conf.level = 0.95, n.iter = 15000, progress.bar="none") 
 {
   
   ### BEGIN code from poisson.test ###
@@ -47,13 +49,13 @@ bayes.poisson.test <- function (x, T = 1, r = 1, alternative = c("two.sided", "l
   if (k == 2) {
     # two samle poison test
     mcmc_samples <- jags_two_sample_poisson_test(x[1], T[1], x[2], T[2], 
-                                                 n.chains=3, n.iter= ceiling(n.iter / 3))
+                                                 n.chains=3, n.iter= ceiling(n.iter / 3), progress.bar=progress.bar)
     bfa_object <- list(mcmc_samples = mcmc_samples, x = x, T = T)
     class(bfa_object) <- "bayes_two_sample_poisson_test"
   }
   else { # k == 1
     # one samle poison test
-    mcmc_samples <- jags_one_sample_poisson_test(x, T, n.chains=3, n.iter= ceiling(n.iter / 3))
+    mcmc_samples <- jags_one_sample_poisson_test(x, T, n.chains=3, n.iter= ceiling(n.iter / 3), progress.bar=progress.bar)
     bfa_object <- list(mcmc_samples = mcmc_samples, x = x, T = T)
     class(bfa_object) <- "bayes_one_sample_poisson_test"
   }
@@ -65,10 +67,10 @@ one_sample_poisson_model_string <- "model {
   rate ~ dgamma(0.5, 0.00001)
 }"
 
-jags_one_sample_poisson_test <- function(x, t, n.adapt= 500, n.chains=3, n.iter=5000) {  
+jags_one_sample_poisson_test <- function(x, t, n.adapt= 500, n.chains=3, n.iter=5000, progress.bar="none") {  
   mcmc_samples <- run_jags(one_sample_poisson_model_string, data = list(x = x, t = t), inits = list(rate = x / t), 
                            params = c("rate"), n.chains = n.chains, n.adapt = n.adapt,
-                           n.update = 0, n.iter = n.iter, thin = 1)
+                           n.update = 0, n.iter = n.iter, thin = 1, progress.bar=progress.bar)
   mcmc_samples
 }
 
@@ -82,12 +84,12 @@ two_sample_poisson_model_string <- "model {
   rate_ratio <- rate1 / rate2
 }"
 
-jags_two_sample_poisson_test <- function(x1, t1, x2, t2, n.adapt= 500, n.chains=3, n.iter=5000) {
+jags_two_sample_poisson_test <- function(x1, t1, x2, t2, n.adapt= 500, n.chains=3, n.iter=5000, progress.bar="none") {
   data_list = list(x1 = x1, t1 = t1, x2 = x2, t2 = t2)
   init_list = list(rate1 = x1 / t1, rate2 = x2 / t2)
   mcmc_samples <- run_jags(two_sample_poisson_model_string, data = data_list, inits = init_list, 
                            params = c("rate1", "rate2", "rate_diff", "rate_ratio"), n.chains = n.chains, n.adapt = n.adapt,
-                           n.update = 0, n.iter = n.iter, thin = 1)
+                           n.update = 0, n.iter = n.iter, thin = 1, progress.bar=progress.bar)
   mcmc_samples
 }
 

@@ -1,8 +1,5 @@
-run_jags <- function(model_string, data, inits, params, n.chains, n.adapt, n.update, n.iter, thin) {
-  if(interactive()) {
-    #progress.bar <- "text"
-    progress.bar <- "none"
-  } else {
+run_jags <- function(model_string, data, inits, params, n.chains, n.adapt, n.update, n.iter, thin, progress.bar) {
+  if(!interactive()) {
     progress.bar <- "none"
   }
   jags_model <- jags.model(textConnection(model_string) , data=data , inits=inits , 

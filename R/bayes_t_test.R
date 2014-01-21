@@ -24,6 +24,8 @@
 #'   reported credible intervals. This argument fills a similar role as
 #'   \code{conf.level} in \code{\link{t.test}}.
 #' @param n.iter The number of iterations to run the MCMC sampling.
+#' @param progress.bar The type of progress bar. Possible values are "text",
+#'   "gui", and "none".
 #' @param conf.level same as \code{cred.mass} and is only retained in order to 
 #'   mantain compatibility with \code{\link{binom.test}}.
 #' @param formula a formula of the form \code{lhs ~ rhs} where \code{lhs} is a
@@ -54,7 +56,7 @@ bayes.t.test <- function(x, ...) {
 #' @export
 #' @rdname bayes.t.test
 bayes.t.test.default <- function(x, y = NULL, alternative = c("two.sided", "less", "greater"), 
-                                 mu = 0, paired = FALSE, var.equal = FALSE, cred.mass = 0.95, n.iter = 15000, conf.level,...) {
+                                 mu = 0, paired = FALSE, var.equal = FALSE, cred.mass = 0.95, n.iter = 15000, progress.bar="text", conf.level,...) {
   
   if(! missing(conf.level)) {
     cred.mass <- conf.level
@@ -129,7 +131,7 @@ bayes.t.test.default <- function(x, y = NULL, alternative = c("two.sided", "less
   ### Own code starts here ###
   
   if(paired) {
-    mcmc_samples <- jags_paired_t_test(x, y, n.chains= 3, n.iter = ceiling(n.iter / 3) )
+    mcmc_samples <- jags_paired_t_test(x, y, n.chains= 3, n.iter = ceiling(n.iter / 3), progress.bar=progress.bar)
     stats <- mcmc_stats(mcmc_samples, cred_mass = cred.mass, comp_val = mu)
     bfa_object <- list(x = x, y = y, pair_diff = y - x, comp = mu, cred_mass = cred.mass,
                        x_name = xname, y_name = yname, data_name = dname,
@@ -137,14 +139,14 @@ bayes.t.test.default <- function(x, y = NULL, alternative = c("two.sided", "less
     class(bfa_object) <- "bayes_paired_t_test"
     
   } else if(is.null(y)) {
-    mcmc_samples <- jags_one_sample_t_test(x, comp_mu = mu, n.chains= 3, n.iter = ceiling(n.iter / 3))
+    mcmc_samples <- jags_one_sample_t_test(x, comp_mu = mu, n.chains= 3, n.iter = ceiling(n.iter / 3), progress.bar=progress.bar)
     stats <- mcmc_stats(mcmc_samples, cred_mass = cred.mass, comp_val = mu)
     bfa_object <- list(x = x, comp = mu, cred_mass = cred.mass, x_name = xname, 
                        data_name = dname, mcmc_samples = mcmc_samples, stats = stats)
     class(bfa_object) <- "bayes_one_sample_t_test"
     
   } else { # is two sample t.test
-    mcmc_samples <- jags_two_sample_t_test(x, y, n.chains= 3, n.iter = ceiling(n.iter / 3))
+    mcmc_samples <- jags_two_sample_t_test(x, y, n.chains= 3, n.iter = ceiling(n.iter / 3), progress.bar=progress.bar)
     stats <- mcmc_stats(mcmc_samples, cred_mass = cred.mass, comp_val = mu)
     bfa_object <- list(x = x, y = y, comp = mu, cred_mass = cred.mass,
                        x_name = xname, y_name = yname, data_name = dname,
@@ -202,7 +204,7 @@ one_sample_t_model_string <- "model {
   nuMinusOne ~ dexp(1/29)
 }"
 
-jags_one_sample_t_test <- function(x, comp_mu = 0,n.adapt= 1000, n.chains=3, n.update = 500, n.iter=5000, thin=1) {
+jags_one_sample_t_test <- function(x, comp_mu = 0,n.adapt= 1000, n.chains=3, n.update = 500, n.iter=5000, thin=1, progress.bar="text") {
   data_list <- list(
     x = x,
     mean_mu = mean(x, trim=0.2) ,
@@ -216,7 +218,7 @@ jags_one_sample_t_test <- function(x, comp_mu = 0,n.adapt= 1000, n.chains=3, n.u
   params <- c("mu", "sigma", "nu", "eff_size", "x_pred")
   mcmc_samples <- run_jags(one_sample_t_model_string, data = data_list, inits = inits_list, 
                            params = params, n.chains = n.chains, n.adapt = n.adapt,
-                           n.update = n.update, n.iter = n.iter, thin = thin)   
+                           n.update = n.update, n.iter = n.iter, thin = thin, progress.bar=progress.bar)   
   mcmc_samples
 }
 
@@ -246,7 +248,7 @@ two_sample_t_model_string <- "model {
 }"
 
 # Adapted from John Kruschke's original BEST code.
-jags_two_sample_t_test <- function(x, y, n.adapt= 1000, n.chains=3, n.update = 1000, n.iter=5000, thin=1) {
+jags_two_sample_t_test <- function(x, y, n.adapt= 1000, n.chains=3, n.update = 1000, n.iter=5000, thin=1, progress.bar="text") {
   data_list <- list(
     x = x ,
     y = y ,
@@ -267,13 +269,13 @@ jags_two_sample_t_test <- function(x, y, n.adapt= 1000, n.chains=3, n.update = 1
   params <- c("mu_x", "sigma_x", "mu_y", "sigma_y", "mu_diff", "sigma_diff","nu", "eff_size", "x_pred", "y_pred")  
   mcmc_samples <- run_jags(two_sample_t_model_string, data = data_list, inits = inits_list, 
                            params = params, n.chains = n.chains, n.adapt = n.adapt,
-                           n.update = n.update, n.iter = n.iter, thin = thin)
+                           n.update = n.update, n.iter = n.iter, thin = thin, progress.bar=progress.bar)
   mcmc_samples
 }
 
 # Right now, this is basically just calling jags_one_sample_t_test but I'm 
 # keeping it in case I would want to change it in the future.
-jags_paired_t_test <- function(x, y, comp_mu = 0,n.adapt= 1000, n.chains=3, n.update = 500, n.iter=5000, thin=1) {
+jags_paired_t_test <- function(x, y, comp_mu = 0,n.adapt= 1000, n.chains=3, n.update = 500, n.iter=5000, thin=1, progress.bar="text") {
   if(is.null(y)) { # assume x is the aldread calculated difference between the two groups
     pair_diff <- x
   } else {
@@ -281,7 +283,7 @@ jags_paired_t_test <- function(x, y, comp_mu = 0,n.adapt= 1000, n.chains=3, n.up
   }
   mcmc_samples <- 
     jags_one_sample_t_test(pair_diff, comp_mu=comp_mu,n.adapt=n.adapt, n.chains=n.chains, 
-                           n.update=n.update, n.iter = n.iter, thin=thin)
+                           n.update=n.update, n.iter = n.iter, thin=thin, progress.bar=progress.bar)
   # Renaming the parameters to match a paired test
   for(i in seq_along(mcmc_samples)) {
     cnames <- colnames(mcmc_samples[[i]])
