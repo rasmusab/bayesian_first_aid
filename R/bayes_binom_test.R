@@ -119,7 +119,7 @@ bayes.binom.test <- function (x, n, comp.theta = 0.5, alternative = NULL, cred.m
   bfa_object <- list(x = x, n = n, comp_theta = comp.theta, cred_mass = cred.mass,
                      x_name = x_name, n_name = n_name, data_name = DNAME,
                      mcmc_samples = mcmc_samples, stats = stats) 
-  class(bfa_object) <- "bayes_binom_test"
+  class(bfa_object) <- c("bayes_binom_test", "bayesian_first_aid")
   bfa_object
 }
 

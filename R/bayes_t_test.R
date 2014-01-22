@@ -136,14 +136,14 @@ bayes.t.test.default <- function(x, y = NULL, alternative = c("two.sided", "less
     bfa_object <- list(x = x, y = y, pair_diff = y - x, comp = mu, cred_mass = cred.mass,
                        x_name = xname, y_name = yname, data_name = dname,
                        mcmc_samples = mcmc_samples, stats = stats)
-    class(bfa_object) <- "bayes_paired_t_test"
+    class(bfa_object) <- c("bayes_paired_t_test", "bayesian_first_aid")
     
   } else if(is.null(y)) {
     mcmc_samples <- jags_one_sample_t_test(x, comp_mu = mu, n.chains= 3, n.iter = ceiling(n.iter / 3), progress.bar=progress.bar)
     stats <- mcmc_stats(mcmc_samples, cred_mass = cred.mass, comp_val = mu)
     bfa_object <- list(x = x, comp = mu, cred_mass = cred.mass, x_name = xname, 
                        data_name = dname, mcmc_samples = mcmc_samples, stats = stats)
-    class(bfa_object) <- "bayes_one_sample_t_test"
+    class(bfa_object) <- c("bayes_one_sample_t_test", "bayesian_first_aid")
     
   } else { # is two sample t.test
     mcmc_samples <- jags_two_sample_t_test(x, y, n.chains= 3, n.iter = ceiling(n.iter / 3), progress.bar=progress.bar)
@@ -151,7 +151,7 @@ bayes.t.test.default <- function(x, y = NULL, alternative = c("two.sided", "less
     bfa_object <- list(x = x, y = y, comp = mu, cred_mass = cred.mass,
                        x_name = xname, y_name = yname, data_name = dname,
                        mcmc_samples = mcmc_samples, stats = stats)
-    class(bfa_object) <- "bayes_two_sample_t_test"
+    class(bfa_object) <- c("bayes_two_sample_t_test", "bayesian_first_aid")
   }
   bfa_object
 }

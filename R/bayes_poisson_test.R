@@ -51,13 +51,13 @@ bayes.poisson.test <- function (x, T = 1, r = 1, alternative = c("two.sided", "l
     mcmc_samples <- jags_two_sample_poisson_test(x[1], T[1], x[2], T[2], 
                                                  n.chains=3, n.iter= ceiling(n.iter / 3), progress.bar=progress.bar)
     bfa_object <- list(mcmc_samples = mcmc_samples, x = x, T = T)
-    class(bfa_object) <- "bayes_two_sample_poisson_test"
+    class(bfa_object) <- c("bayes_two_sample_poisson_test", "bayesian_first_aid")
   }
   else { # k == 1
     # one samle poison test
     mcmc_samples <- jags_one_sample_poisson_test(x, T, n.chains=3, n.iter= ceiling(n.iter / 3), progress.bar=progress.bar)
     bfa_object <- list(mcmc_samples = mcmc_samples, x = x, T = T)
-    class(bfa_object) <- "bayes_one_sample_poisson_test"
+    class(bfa_object) <- c("bayes_one_sample_poisson_test", "bayesian_first_aid")
   }
   bfa_object
 }

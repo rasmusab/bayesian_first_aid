@@ -96,8 +96,8 @@ bayes.cor.test.default <- function (x, y, alternative = c("two.sided", "less", "
     stop("no non-parametric correlation comparable to Kendall's tau or Spearman's rho has been implemented yet.")
   }
   mcmc_samples <- jags_cor_test(x, y, n.chains=3, n.iter=ceiling(n.iter / 3), progress.bar=progress.bar)
-  bfa_result <- structure(list(x = x, y = y, n = n, data_name = DNAME, mcmc_samples = mcmc_samples), 
-            class = "bayes_cor_test")
+  bfa_result <- list(x = x, y = y, n = n, data_name = DNAME, mcmc_samples = mcmc_samples)
+  class(bfa_result) <- c("bayes_cor_test", "bayesian_first_aid")
   bfa_result
   
 }
