@@ -13,8 +13,10 @@ Description: The idea with this R package is to make "replacements" for the
     package part of base R.
 Version: 0.1
 Encoding: UTF-8
-Maintainer: Rasmus Bååth <rasmus.baath@gmail.com>
-Author: Rasmus Bååth <rasmus.baath@gmail.com>
+Authors@R: c(person("Rasmus", "Bååth", role = c("aut", "cre"),
+    email="rasmus.baath@gmail.com"), person("John D.", "Kruschke", role =
+    "ctb"), person("Mike", "Meredith", role = "ctb"), person("R Core", role =
+    "ctb"))
 Depends:
     R (>= 3.0.1),
     rjags (>= 3-10),
