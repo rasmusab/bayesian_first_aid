@@ -56,7 +56,7 @@ cor_model_string <- "model {
   nuMinusOne ~ dexp(1/29)
 }"
 
-jags_cor_test <- function(x, y, n.adapt= 1000, n.chains=3, n.update = 1000, n.iter=5000, thin=1, progress.bar="text") {
+jags_cor_test <- function(x, y, n.adapt= 500, n.chains=3, n.update = 100, n.iter=5000, thin=1, progress.bar="text") {
   data_list = list(xy = cbind(x, y), n = length(x))
   # Use robust estimates of the parameters as initial values
   inits_list = list(mu=c(mean(x, trim=0.2), mean(y, trim=0.2)), rho=cor(x, y, method="spearman"), 
@@ -149,6 +149,7 @@ plot.bayes_cor_test <- function(x, ...) {
 
 #' @export
 diagnostics.bayes_cor_test <- function(fit) {
+  cat("Not implemented\n")
   plot(fit$mcmc_samples)
 }
 

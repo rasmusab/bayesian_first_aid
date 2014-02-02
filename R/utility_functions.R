@@ -15,14 +15,14 @@ run_jags <- function(model_string, data, inits, params, n.chains, n.adapt, n.upd
 }
 
 # The following two functions are hacks that are only used to construct
-# and print the model code that is preinted by the model.code functions.
+# and print the model code that is printed by the model.code functions.
 
 # This first function takes a function and replaces the placeholder
 # with model_string. Is used so that model string doesn't have to be written twice.
 inject_model_string <- function(fn, model_string, placeholder = "BayesianFirstAid::replace_this_with_model_string") {
   code_string <- deparse(fn, control="useSource")
   code_string <- gsub(placeholder, 
-                      paste0('model_string <-"', gsub("\n", "\n  ", model_string), '"'), code_string)
+                      paste0('model_string <- "', gsub("\n", "\n  ", model_string), '"'), code_string)
   eval(parse(text=code_string))
 }
 

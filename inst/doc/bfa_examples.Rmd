@@ -6,6 +6,8 @@
 Bayesian First Aid Examples
 ========================================================
 
+This document contains examples of all the `bayes.*` functions implemented in Bayesian First aid including example output from the generic functions `plot`, `summary`, `diagnostics` and `model.code`.
+
 ```{r echo=FALSE}
 set.seed(123)
 ```
@@ -54,7 +56,7 @@ model.code(fit)
 `t.test`
 ------------
 
-The alternative for the `t.test` is of course BEST.
+The alternative for the `t.test` is BEST.
 
 ```{r}
 x <- rnorm(n=30, mean=2, sd=5)
@@ -89,6 +91,7 @@ The same generic functions (`plot`, `summary`, `diagnostics`) works for all fitt
 plot(fit)
 summary(fit)
 diagnostics(fit)
+model.code(fit)
 ```
 
 ### Output two sample ´bayes.t.test´
@@ -98,6 +101,7 @@ diagnostics(fit)
 plot(fit)
 summary(fit)
 diagnostics(fit)
+model.code(fit)
 ```
 
 ### Output paired samples ´bayes.t.test´
@@ -107,6 +111,54 @@ diagnostics(fit)
 plot(fit)
 summary(fit)
 diagnostics(fit)
+model.code(fit)
+```
+
+`poisson.test`
+------------
+
+```{r}
+poisson.test(15, 3, r=3)
+```
+
+
+### Output one sample ´bayes.poisson.test´
+
+```{r  fig.width=6, fig.height=5, dpi=96}
+(fit <- bayes.poisson.test(15, 3, r=3))
+plot(fit)
+summary(fit)
+diagnostics(fit)
+model.code(fit)
+```
+
+### Output two sample ´bayes.poisson.test´
+
+```{r  fig.width=6, fig.height=5, dpi=96}
+(fit <- bayes.poisson.test(c(15, 20), c(3, 3), r=1))
+plot(fit)
+summary(fit)
+diagnostics(fit)
+model.code(fit)
+```
+
+`cor.test`
+------------
+
+```{r}
+a = c(-1.5, -1.6, -0.5, -1.5, 0.7, 2.1, -1.3, 0.8)
+b = c(-1.9, -1.8, -1.5, -0.6, 0.4, 0.7, -1.7, -1.8)
+cor.test(a, b, conf.level=0.8, )
+```
+
+### Output ´bayes.cor.test´
+
+```{r}
+(fit <- bayes.cor.test(a, b, conf.level=0.8) )
+plot(fit)
+summary(fit)
+diagnostics(fit)
+model.code(fit)
 ```
 
 

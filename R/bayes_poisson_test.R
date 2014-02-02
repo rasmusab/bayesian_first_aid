@@ -117,6 +117,7 @@ plot.bayes_one_sample_poisson_test <- function(x, ...) {
 
 #' @export
 diagnostics.bayes_one_sample_poisson_test <- function(fit) {
+  cat("Not implemented\n")
   plot(fit$mcmc_samples)
 }
 
@@ -146,6 +147,7 @@ plot.bayes_two_sample_poisson_test <- function(x, ...) {
 
 #' @export
 diagnostics.bayes_two_sample_poisson_test <- function(fit) {
+  cat("Not implemented\n")
   plot(fit$mcmc_samples)
 }
 
