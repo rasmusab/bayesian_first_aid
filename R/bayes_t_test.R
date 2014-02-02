@@ -56,7 +56,7 @@ bayes.t.test <- function(x, ...) {
 #' @export
 #' @rdname bayes.t.test
 bayes.t.test.default <- function(x, y = NULL, alternative = c("two.sided", "less", "greater"), 
-                                 mu = 0, paired = FALSE, var.equal = FALSE, cred.mass = 0.95, n.iter = 15000, progress.bar="text", conf.level,...) {
+                                 mu = 0, paired = FALSE, var.equal = FALSE, cred.mass = 0.95, n.iter = 25000, progress.bar="text", conf.level,...) {
   
   if(! missing(conf.level)) {
     cred.mass <- conf.level
@@ -66,6 +66,10 @@ bayes.t.test.default <- function(x, y = NULL, alternative = c("two.sided", "less
     var.equal <- FALSE
     warning("To assume equal variance of 'x' and 'y' is not supported. Continuing by estimating the variance of 'x' and 'y' separately.")
   }
+  
+  if(! missing(alternative)) {
+    warning("The argument 'alternative' is ignored by bayes.binom.test")
+  } 
   
   ### Original (but slighly modified) code from t.test.default ###
   alternative <- match.arg(alternative)
@@ -133,7 +137,7 @@ bayes.t.test.default <- function(x, y = NULL, alternative = c("two.sided", "less
   if(paired) {
     mcmc_samples <- jags_paired_t_test(x, y, n.chains= 3, n.iter = ceiling(n.iter / 3), progress.bar=progress.bar)
     stats <- mcmc_stats(mcmc_samples, cred_mass = cred.mass, comp_val = mu)
-    bfa_object <- list(x = x, y = y, pair_diff = y - x, comp = mu, cred_mass = cred.mass,
+    bfa_object <- list(x = x, y = y, pair_diff = x - y, comp = mu, cred_mass = cred.mass,
                        x_name = xname, y_name = yname, data_name = dname,
                        mcmc_samples = mcmc_samples, stats = stats)
     class(bfa_object) <- c("bayes_paired_t_test", "bayesian_first_aid")
@@ -200,11 +204,12 @@ one_sample_t_model_string <- "model {
   mu ~ dnorm( mean_mu , precision_mu )
   tau <- 1/pow( sigma , 2 )
   sigma ~ dunif( sigmaLow , sigmaHigh )
-  nu <- nuMinusOne+1
+  # A trick to get an exponentially distributed prior on nu that starts at 1.
+  nu <- nuMinusOne + 1 
   nuMinusOne ~ dexp(1/29)
 }"
 
-jags_one_sample_t_test <- function(x, comp_mu = 0,n.adapt= 1000, n.chains=3, n.update = 500, n.iter=5000, thin=1, progress.bar="text") {
+jags_one_sample_t_test <- function(x, comp_mu = 0,n.adapt= 500, n.chains=3, n.update = 100, n.iter=5000, thin=1, progress.bar="text") {
   data_list <- list(
     x = x,
     mean_mu = mean(x, trim=0.2) ,
@@ -248,7 +253,7 @@ two_sample_t_model_string <- "model {
 }"
 
 # Adapted from John Kruschke's original BEST code.
-jags_two_sample_t_test <- function(x, y, n.adapt= 1000, n.chains=3, n.update = 1000, n.iter=5000, thin=1, progress.bar="text") {
+jags_two_sample_t_test <- function(x, y, n.adapt= 500, n.chains=3, n.update = 100, n.iter=5000, thin=1, progress.bar="text") {
   data_list <- list(
     x = x ,
     y = y ,
@@ -279,7 +284,7 @@ jags_paired_t_test <- function(x, y, comp_mu = 0,n.adapt= 1000, n.chains=3, n.up
   if(is.null(y)) { # assume x is the aldread calculated difference between the two groups
     pair_diff <- x
   } else {
-    pair_diff <- y - x
+    pair_diff <- x - y
   }
   mcmc_samples <- 
     jags_one_sample_t_test(pair_diff, comp_mu=comp_mu,n.adapt=n.adapt, n.chains=n.chains, 
@@ -293,7 +298,9 @@ jags_paired_t_test <- function(x, y, comp_mu = 0,n.adapt= 1000, n.chains=3, n.up
   mcmc_samples
 }
 
+####################################
 ### One sample t-test S3 methods ###
+####################################
 
 #' @export
 print.bayes_one_sample_t_test <- function(x, ...) {
@@ -301,9 +308,9 @@ print.bayes_one_sample_t_test <- function(x, ...) {
   s <- round(x$stats, 3)
   
   cat("\n")
-  cat("\tBayesian estimation supersedes the t test (BEST)\n")
+  cat("\tBayesian estimation supersedes the t test (BEST) - one sample\n")
   cat("\n")
-  cat("data: ", x$data_name, "\n", sep="")
+  cat("data: ", x$data_name,  ", n = ", length(x$x),"\n", sep="")
   cat("\n")
   cat("  Estimates [", s[1, "HDI%"] ,"% credible interval]\n", sep="")
   cat("mean of ",  x$x_name, ": ", s["mu", "mean"], " [", s["mu", "HDIlo"], ", ", s["mu", "HDIup"] , "]\n",sep="")
@@ -403,18 +410,68 @@ diagnostics.bayes_one_sample_t_test <- function(fit) {
 }
 
 #' @export
-model.code.bayes_one_sample_t_test <- function(fit) {
-  print(jags_binom_test)
+model.code.bayes_one_sample_t_test <- function(fit) {  
+  cat("### Model code for Bayesian estimation supersedes the t test - one sample ###\n")
+  
+  cat("require(rjags)\n\n")
+  cat("# Setting up the data\n")
+  cat("x <-", fit$x_name, "\n")
+  cat("comp_mu <- ", fit$comp, "\n")
+  cat("\n")
+  pretty_print_function_body(one_sample_t_test_model_code)
 }
 
-### Two sample t-test S3 methods ###
+# Not to be run, just to be printed
+one_sample_t_test_model_code <- function() {
+  # The model string written in the JAGS language
+  BayesianFirstAid::replace_this_with_model_string
+  
+  # Setting parameters for the priors that in practice will result
+  # in flat priors on mu and sigma.
+  mean_mu = mean(x, trim=0.2)
+  precision_mu = 1 / (mad(x)^2 * 1000000)
+  sigmaLow = mad(x) / 1000 
+  sigmaHigh = mad(x) * 1000
+  
+  # Initializing parameters to sensible starting values helps the convergence
+  # of the MCMC sampling. Here using robust estimates of the mean (trimmed)
+  # and standard deviation (MAD).
+  inits_list <- list(mu = mean(x, trim=0.2), sigma = mad(x), nuMinusOne = 4)
+  
+  data_list <- list(
+    x = x,
+    comp_mu = comp_mu,
+    mean_mu = mean_mu,
+    precision_mu = precision_mu,
+    sigmaLow = sigmaLow,
+    sigmaHigh = sigmaHigh)
+  
+  # The parameters to monitor.
+  params <- c("mu", "sigma", "nu", "eff_size", "x_pred")
+  
+  # Running the model
+  model <- jags.model(textConnection(model_string), data = data_list,
+                      inits = inits_list, n.chains = 3, n.adapt=1000)
+  update(model, 500) # Burning some samples to the MCMC gods....
+  samples <- coda.samples(model, params, n.iter=10000)
+  
+  # Inspecting the posterior
+  plot(samples)
+  summary(samples)  
+}
+one_sample_t_test_model_code <- inject_model_string(one_sample_t_test_model_code, one_sample_t_model_string)
 
+
+
+####################################
+### Two sample t-test S3 methods ###
+####################################
 #' @export
 print.bayes_two_sample_t_test <- function(x, ...) {
   s <- round(x$stats, 3)
   
   cat("\n")
-  cat("\tBayesian estimation supersedes the t test (BEST)\n")
+  cat("\tBayesian estimation supersedes the t test (BEST) - two sample\n")
   cat("\n")
   cat("data: ", x$data_name, "\n", sep="")
   cat("\n")
@@ -557,16 +614,18 @@ model.code.bayes_two_sample_t_test <- function(fit) {
   print(jags_two_sample_t_test)
 }
 
+########################################
 ### Paired samples t-test S3 methods ###
+########################################
+
 
 #' @export
 print.bayes_paired_t_test <- function(x, ...) {
   s <- round(x$stats, 3)
-  # Todo: ändra för att passa paired test.
   cat("\n")
-  cat("\tBayesian estimation supersedes the t test (BEST)\n")
+  cat("\tBayesian estimation supersedes the t test (BEST) - paired samples\n")
   cat("\n")
-  cat("data: ", x$data_name, "\n", sep="")
+  cat("data: ", x$data_name,  ", n = ", length(x$pair_diff),"\n", sep="")
   cat("\n")
   cat("  Estimates [", s[1, "HDI%"] ,"% credible interval]\n", sep="")
   cat("mean paired difference: ", s["mu_diff", "mean"], " [", s["mu_diff", "HDIlo"], ", ", s["mu_diff", "HDIup"] , "]\n",sep="")
@@ -595,8 +654,8 @@ print_bayes_paired_t_test_params <- function(x) {
 
   cat("  Model parameters and generated quantities\n")
   cat("mu_diff: The mean pairwise difference between", x$x_name, "and", x$y_name, "\n")
-  cat("sigma_diff: The standard deviation of the pairwise\n  difference between", x$x_name, "and", x$y_name,"\n")
-  cat("nu: The degrees-of-freedom for the t distribution fitted to", x$data_name , "\n")
+  cat("sigma_diff: The standard deviation of the pairwise  difference.\n")
+  cat("nu: The degrees-of-freedom for the t distribution fitted to the pairwise  difference.\n")
   cat("eff_size: The effect size calculated as (mu_diff - ", x$comp ,") / sigma_diff\n", sep="")
   cat("diff_pred: Predicted distribution for a new datapoint generated\n  as the pairwise difference between", x$x_name, "and", x$y_name,"\n")
 }
