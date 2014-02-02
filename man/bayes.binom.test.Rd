@@ -3,7 +3,7 @@
 \title{Bayesian First Aid Alternative to the Binomial Test}
 \usage{
 bayes.binom.test(x, n, comp.theta = 0.5, alternative = NULL,
-  cred.mass = 0.95, n.iter = 15000, p, conf.level)
+  cred.mass = 0.95, n.iter = 15000, progress.bar = "none", p, conf.level)
 }
 \arguments{
   \item{x}{number of successes, or a vector of length 2
@@ -27,6 +27,9 @@ bayes.binom.test(x, n, comp.theta = 0.5, alternative = NULL,
 
   \item{n.iter}{The number of iterations to run the MCMC
   sampling.}
+
+  \item{progress.bar}{The type of progress bar. Possible
+  values are "text", "gui", and "none".}
 
   \item{p}{same as \code{comp.theta} and is only retained
   in order to mantain compatibility with

@@ -3,7 +3,7 @@
 \title{Bayesian First Aid Alternative to the Poisson Test}
 \usage{
 bayes.poisson.test(x, T = 1, r = 1, alternative = c("two.sided", "less",
-  "greater"), conf.level = 0.95, n.iter = 15000)
+  "greater"), conf.level = 0.95, n.iter = 15000, progress.bar = "none")
 }
 \arguments{
   \item{x}{}
@@ -17,6 +17,9 @@ bayes.poisson.test(x, T = 1, r = 1, alternative = c("two.sided", "less",
   \item{conf.level}{}
 
   \item{n.iter}{}
+
+  \item{progress.bar}{The type of progress bar. Possible
+  values are "text", "gui", and "none".}
 }
 \value{
 A list of class \code{bayes_one_sample_poisson_test} or

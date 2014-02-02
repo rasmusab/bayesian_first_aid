@@ -8,7 +8,8 @@ bayes.cor.test(x, ...)
 
 \method{bayes.cor.test}{default}(x, y, alternative = c("two.sided", "less",
   "greater"), method = c("pearson", "kendall", "spearman"), exact = NULL,
-  conf.level = 0.95, continuity = FALSE, n.iter = 15000, ...)
+  conf.level = 0.95, continuity = FALSE, n.iter = 15000,
+  progress.bar = "text", ...)
 
 \method{bayes.cor.test}{formula}(formula, data, subset, na.action, ...)
 }
@@ -30,6 +31,9 @@ bayes.cor.test(x, ...)
   \item{continuity}{}
 
   \item{n.iter}{}
+
+  \item{progress.bar}{The type of progress bar. Possible
+  values are "text", "gui", and "none".}
 
   \item{formula}{}
 
