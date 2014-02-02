@@ -18,6 +18,8 @@ test_that("bayes.binom.test with generic functions does not give an error when r
   expect_output(diagnostics(fit), ".")
   expect_true({plot(fit); TRUE})
   expect_output( eval(parse(text=capture.output(model.code(fit)))) , ".")
+  expect_is(as.data.frame(fit), "data.frame")
+  expect_is(as.matrix(fit), "matrix")
 })
 
 

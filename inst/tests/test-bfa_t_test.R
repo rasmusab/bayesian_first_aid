@@ -26,3 +26,43 @@ test_that("the three jags_*_t_test functions returns 'mcmc.list' objects", {
   expect_that(jags_two_sample_t_test(x, y, n.update=30, n.iter=30), is_a("mcmc.list"))
   expect_that(jags_paired_t_test(x, y, n.update=30, n.iter=30), is_a("mcmc.list"))
 })
+
+test_that("bayes.t.test with generic functions does not give an error when run", {
+  x <- rnorm(10)
+  y <- rnorm(10)
+  
+  # Two sample
+  fit <- bayes.t.test(x, y, n.iter=100)
+  expect_output(print(fit), ".")
+  expect_output(summary(fit), ".")
+  expect_output(diagnostics(fit), ".")
+  expect_true({plot(fit); TRUE})
+  # Not implemented yet
+  #expect_output( eval(parse(text=capture.output(model.code(fit)))) , ".")
+  expect_is(as.data.frame(fit), "data.frame")
+  expect_is(as.matrix(fit), "matrix")
+  
+  # One sample
+  fit <- bayes.t.test(x, n.iter=100)
+  expect_output(print(fit), ".")
+  expect_output(summary(fit), ".")
+  expect_output(diagnostics(fit), ".")
+  expect_true({plot(fit); TRUE})
+  # Not implemented yet
+  #expect_output( eval(parse(text=capture.output(model.code(fit)))) , ".")
+  expect_is(as.data.frame(fit), "data.frame")
+  expect_is(as.matrix(fit), "matrix")
+  
+  # Paired samples
+  fit <- bayes.t.test(x, y, paired=TRUE, n.iter=100)
+  expect_output(print(fit), ".")
+  expect_output(summary(fit), ".")
+  expect_output(diagnostics(fit), ".")
+  expect_true({plot(fit); TRUE})
+  # Not implemented yet
+  #expect_output( eval(parse(text=capture.output(model.code(fit)))) , ".")
+  expect_is(as.data.frame(fit), "data.frame")
+  expect_is(as.matrix(fit), "matrix")
+  
+  
+})
