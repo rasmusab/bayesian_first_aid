@@ -8,7 +8,8 @@ bayes.t.test(x, ...)
 
 \method{bayes.t.test}{default}(x, y = NULL, alternative = c("two.sided",
   "less", "greater"), mu = 0, paired = FALSE, var.equal = FALSE,
-  cred.mass = 0.95, n.iter = 15000, conf.level, ...)
+  cred.mass = 0.95, n.iter = 25000, progress.bar = "text", conf.level,
+  ...)
 
 \method{bayes.t.test}{formula}(formula, data, subset, na.action, ...)
 }
@@ -39,6 +40,9 @@ bayes.t.test(x, ...)
 
   \item{n.iter}{The number of iterations to run the MCMC
   sampling.}
+
+  \item{progress.bar}{The type of progress bar. Possible
+  values are "text", "gui", and "none".}
 
   \item{conf.level}{same as \code{cred.mass} and is only
   retained in order to mantain compatibility with

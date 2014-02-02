@@ -49,7 +49,7 @@ test_that("bayes.t.test with generic functions does not give an error when run",
   expect_output(diagnostics(fit), ".")
   expect_true({plot(fit); TRUE})
   # Not implemented yet
-  #expect_output( eval(parse(text=capture.output(model.code(fit)))) , ".")
+  expect_output( eval(parse(text=capture.output(model.code(fit)))) , ".")
   expect_is(as.data.frame(fit), "data.frame")
   expect_is(as.matrix(fit), "matrix")
   
@@ -60,7 +60,7 @@ test_that("bayes.t.test with generic functions does not give an error when run",
   expect_output(diagnostics(fit), ".")
   expect_true({plot(fit); TRUE})
   # Not implemented yet
-  #expect_output( eval(parse(text=capture.output(model.code(fit)))) , ".")
+  expect_output( eval(parse(text=capture.output(model.code(fit)))) , ".")
   expect_is(as.data.frame(fit), "data.frame")
   expect_is(as.matrix(fit), "matrix")
   

@@ -139,13 +139,14 @@ bayes.t.test.default <- function(x, y = NULL, alternative = c("two.sided", "less
     stats <- mcmc_stats(mcmc_samples, cred_mass = cred.mass, comp_val = mu)
     bfa_object <- list(x = x, y = y, pair_diff = x - y, comp = mu, cred_mass = cred.mass,
                        x_name = xname, y_name = yname, data_name = dname,
+                       x_data_expr = xname, y_data_expr = yname,
                        mcmc_samples = mcmc_samples, stats = stats)
     class(bfa_object) <- c("bayes_paired_t_test", "bayesian_first_aid")
     
   } else if(is.null(y)) {
     mcmc_samples <- jags_one_sample_t_test(x, comp_mu = mu, n.chains= 3, n.iter = ceiling(n.iter / 3), progress.bar=progress.bar)
     stats <- mcmc_stats(mcmc_samples, cred_mass = cred.mass, comp_val = mu)
-    bfa_object <- list(x = x, comp = mu, cred_mass = cred.mass, x_name = xname, 
+    bfa_object <- list(x = x, comp = mu, cred_mass = cred.mass, x_name = xname, x_data_expr = xname,
                        data_name = dname, mcmc_samples = mcmc_samples, stats = stats)
     class(bfa_object) <- c("bayes_one_sample_t_test", "bayesian_first_aid")
     
@@ -154,6 +155,7 @@ bayes.t.test.default <- function(x, y = NULL, alternative = c("two.sided", "less
     stats <- mcmc_stats(mcmc_samples, cred_mass = cred.mass, comp_val = mu)
     bfa_object <- list(x = x, y = y, comp = mu, cred_mass = cred.mass,
                        x_name = xname, y_name = yname, data_name = dname,
+                       x_data_expr = xname, y_data_expr = yname,
                        mcmc_samples = mcmc_samples, stats = stats)
     class(bfa_object) <- c("bayes_two_sample_t_test", "bayesian_first_aid")
   }
@@ -175,6 +177,8 @@ bayes.t.test.formula <- function(formula, data, subset, na.action, ...) {
   m$... <- NULL
   mf <- eval(m, parent.frame())
   DNAME <- paste(names(mf), collapse = " by ")
+  response_name <- names(mf)[1]
+  group_name <- names(mf)[2]
   names(mf) <- NULL
   response <- attr(attr(mf, "terms"), "response")
   g <- factor(mf[[-response]])
@@ -185,12 +189,16 @@ bayes.t.test.formula <- function(formula, data, subset, na.action, ...) {
   ### Own code starts here ###
   bfa_object <- do.call("bayes.t.test", c(DATA, list(...)))
   bfa_object$data_name <- DNAME
-  if (length(levels(g)) == 2L) {
-    bfa_object$x_name <- paste("group", levels(g)[1])
-    bfa_object$y_name <- paste("group", levels(g)[2])
-  }
-  bfa_object
-  
+  bfa_object$x_name <- paste("group", levels(g)[1])
+  bfa_object$y_name <- paste("group", levels(g)[2])
+  data_expr <- deparse(substitute(data))
+  bfa_object$x_data_expr <- 
+    paste("subset(", data_expr, ", as.factor(", group_name, ") == ",
+          deparse(levels(g)[1]), ", ", response_name, ", drop = TRUE)", sep="")
+  bfa_object$y_data_expr <- 
+    paste("subset(", data_expr, ", as.factor(", group_name, ") == ",
+          deparse(levels(g)[2]), ", ", response_name, ", drop = TRUE)", sep="")
+  bfa_object  
 }
 
 
@@ -280,21 +288,41 @@ jags_two_sample_t_test <- function(x, y, n.adapt= 500, n.chains=3, n.update = 10
 
 # Right now, this is basically just calling jags_one_sample_t_test but I'm 
 # keeping it in case I would want to change it in the future.
-jags_paired_t_test <- function(x, y, comp_mu = 0,n.adapt= 1000, n.chains=3, n.update = 500, n.iter=5000, thin=1, progress.bar="text") {
-  if(is.null(y)) { # assume x is the aldread calculated difference between the two groups
-    pair_diff <- x
-  } else {
-    pair_diff <- x - y
-  }
-  mcmc_samples <- 
-    jags_one_sample_t_test(pair_diff, comp_mu=comp_mu,n.adapt=n.adapt, n.chains=n.chains, 
-                           n.update=n.update, n.iter = n.iter, thin=thin, progress.bar=progress.bar)
-  # Renaming the parameters to match a paired test
-  for(i in seq_along(mcmc_samples)) {
-    cnames <- colnames(mcmc_samples[[i]])
-    cnames[cnames %in% c("mu", "sigma", "x_pred")] <- c("mu_diff", "sigma_diff", "diff_pred")
-    colnames(mcmc_samples[[i]]) <- cnames
-  }
+
+paired_samples_t_model_string <- "model {
+  for(i in 1:length(pair_diff)) {
+    pair_diff[i] ~ dt( mu_diff , tau_diff , nu )
+}
+diff_pred ~ dt( mu_diff , tau_diff , nu )
+eff_size <- (mu_diff - comp_mu) / sigma_diff
+
+mu_diff ~ dnorm( mean_mu , precision_mu )
+tau_diff <- 1/pow( sigma_diff , 2 )
+sigma_diff ~ dunif( sigmaLow , sigmaHigh )
+# A trick to get an exponentially distributed prior on nu that starts at 1.
+nu <- nuMinusOne + 1 
+nuMinusOne ~ dexp(1/29)
+}"
+
+
+jags_paired_t_test <- function(x, y, comp_mu = 0, n.adapt= 500, n.chains=3, n.update = 100, n.iter=5000, thin=1, progress.bar="text") {
+  pair_diff <- x - y
+  data_list <- list(
+    pair_diff = pair_diff,
+    mean_mu = mean(pair_diff, trim=0.2) ,
+    precision_mu = 1 / (mad(pair_diff)^2 * 1000000),
+    sigmaLow = mad(pair_diff) / 1000 ,
+    sigmaHigh = mad(pair_diff) * 1000 ,
+    comp_mu = comp_mu
+  )
+  
+  inits_list <- list(mu_diff = mean(pair_diff, trim=0.2), 
+                     sigma_diff = mad(pair_diff), 
+                     nuMinusOne = 4)
+  params <- c("mu_diff", "sigma_diff", "nu", "eff_size", "diff_pred")
+  mcmc_samples <- run_jags(paired_samples_t_model_string, data = data_list, inits = inits_list, 
+                           params = params, n.chains = n.chains, n.adapt = n.adapt,
+                           n.update = n.update, n.iter = n.iter, thin = thin, progress.bar=progress.bar) 
   mcmc_samples
 }
 
@@ -324,11 +352,11 @@ print.bayes_one_sample_t_test <- function(x, ...) {
 
 print_bayes_one_sample_t_test_params <- function(x) {
   cat("  Model parameters and generated quantities\n")
-  cat("mu: The mean of", x$data_name, "\n")
-  cat("sigma: The standard deviation of", x$data_name,"\n")
-  cat("nu: The degrees-of-freedom for the t distribution fitted to",x$data_name , "\n")
-  cat("eff_size: The effect size calculated as (mu - ", x$comp ,") / sigma\n", sep="")
-  cat("x_pred: Predicted distribution for a new datapoint generated as",x$data_name , "\n")
+  cat("mu: the mean of", x$data_name, "\n")
+  cat("sigma: the standard deviation of", x$data_name,"\n")
+  cat("nu: the degrees-of-freedom for the t distribution fitted to",x$data_name , "\n")
+  cat("eff_size: the effect size calculated as (mu - ", x$comp ,") / sigma\n", sep="")
+  cat("x_pred: predicted distribution for a new datapoint generated as",x$data_name , "\n")
 }
 
 #' @export
@@ -415,7 +443,7 @@ model.code.bayes_one_sample_t_test <- function(fit) {
   
   cat("require(rjags)\n\n")
   cat("# Setting up the data\n")
-  cat("x <-", fit$x_name, "\n")
+  cat("x <-", fit$x_data_expr, "\n")
   cat("comp_mu <- ", fit$comp, "\n")
   cat("\n")
   pretty_print_function_body(one_sample_t_test_model_code)
@@ -491,19 +519,19 @@ print.bayes_two_sample_t_test <- function(x, ...) {
 
 print_bayes_two_sample_t_test_params <- function(x) {
   cat("  Model parameters and generated quantities\n")
-  cat("mu_x: The mean of", x$x_name, "\n")
-  cat("sigma_x: The standard deviation of", x$x_name,"\n")
-  cat("mu_y: The mean of", x$y_name, "\n")
-  cat("sigma_y: The standard deviation of", x$y_name,"\n")
+  cat("mu_x: the mean of", x$x_name, "\n")
+  cat("sigma_x: the standard deviation of", x$x_name,"\n")
+  cat("mu_y: the mean of", x$y_name, "\n")
+  cat("sigma_y: the standard deviation of", x$y_name,"\n")
   cat("mu_diff: the difference in means (mu_x - mu_y)\n")
   cat("sigma_diff: the difference in SD (sigma_x - sigma_y)\n")
-  cat("nu: The degrees-of-freedom for the t distribution\n")
+  cat("nu: the degrees-of-freedom for the t distribution\n")
   cat("  fitted to",x$data_name , "\n")
-  cat("eff_size: The effect size calculated as \n", sep="")
+  cat("eff_size: the effect size calculated as \n", sep="")
   cat("  (mu_x - mu_y) / sqrt((sigma_x^2 + sigma_y^2) / 2)\n", sep="")
-  cat("x_pred: Predicted distribution for a new datapoint\n")
+  cat("x_pred: predicted distribution for a new datapoint\n")
   cat("  generated as",x$x_name , "\n")
-  cat("y_pred: Predicted distribution for a new datapoint\n")
+  cat("y_pred: predicted distribution for a new datapoint\n")
   cat("  generated as",x$y_name , "\n")
 }
 
@@ -653,11 +681,11 @@ print.bayes_paired_t_test <- function(x, ...) {
 print_bayes_paired_t_test_params <- function(x) {
 
   cat("  Model parameters and generated quantities\n")
-  cat("mu_diff: The mean pairwise difference between", x$x_name, "and", x$y_name, "\n")
-  cat("sigma_diff: The standard deviation of the pairwise  difference.\n")
-  cat("nu: The degrees-of-freedom for the t distribution fitted to the pairwise  difference.\n")
-  cat("eff_size: The effect size calculated as (mu_diff - ", x$comp ,") / sigma_diff\n", sep="")
-  cat("diff_pred: Predicted distribution for a new datapoint generated\n  as the pairwise difference between", x$x_name, "and", x$y_name,"\n")
+  cat("mu_diff: the mean pairwise difference between", x$x_name, "and", x$y_name, "\n")
+  cat("sigma_diff: the standard deviation of the pairwise difference\n")
+  cat("nu: the degrees-of-freedom for the t distribution fitted to the pairwise difference\n")
+  cat("eff_size: the effect size calculated as (mu_diff - ", x$comp ,") / sigma_diff\n", sep="")
+  cat("diff_pred: predicted distribution for a new datapoint generated\n  as the pairwise difference between", x$x_name, "and", x$y_name,"\n")
 }
 
 #' @export
@@ -739,5 +767,57 @@ diagnostics.bayes_paired_t_test <- function(fit) {
 
 #' @export
 model.code.bayes_paired_t_test <- function(fit) {
-  print(jags_binom_test)
+  cat("## Model code for Bayesian estimation supersedes the t test - paired samples ##\n")
+  
+  cat("require(rjags)\n\n")
+  cat("# Setting up the data\n")
+  cat("x <-", fit$x_data_expr, "\n")
+  cat("y <-", fit$y_data_expr, "\n")
+  cat("pair_diff <- x - y\n")
+  cat("comp_mu <- ", fit$comp, "\n")
+  cat("\n")
+  pretty_print_function_body(paired_samples_t_test_model_code)
 }
+
+# Not to be run, just to be printed
+paired_samples_t_test_model_code <- function() {
+  # The model string written in the JAGS language
+  BayesianFirstAid::replace_this_with_model_string
+  
+  # Setting parameters for the priors that in practice will result
+  # in flat priors on mu and sigma.
+  mean_mu = mean(pair_diff, trim=0.2)
+  precision_mu = 1 / (mad(pair_diff)^2 * 1000000)
+  sigmaLow = mad(pair_diff) / 1000 
+  sigmaHigh = mad(pair_diff) * 1000
+  
+  # Initializing parameters to sensible starting values helps the convergence
+  # of the MCMC sampling. Here using robust estimates of the mean (trimmed)
+  # and standard deviation (MAD).
+  inits_list <- list(
+    mu_diff = mean(pair_diff, trim=0.2),
+    sigma_diff = mad(pair_diff),
+    nuMinusOne = 4)
+  
+  data_list <- list(
+    pair_diff = pair_diff,
+    comp_mu = comp_mu,
+    mean_mu = mean_mu,
+    precision_mu = precision_mu,
+    sigmaLow = sigmaLow,
+    sigmaHigh = sigmaHigh)
+  
+  # The parameters to monitor.
+  params <- c("mu_diff", "sigma_diff", "nu", "eff_size", "diff_pred")
+  
+  # Running the model
+  model <- jags.model(textConnection(model_string), data = data_list,
+                      inits = inits_list, n.chains = 3, n.adapt=1000)
+  update(model, 500) # Burning some samples to the MCMC gods....
+  samples <- coda.samples(model, params, n.iter=10000)
+  
+  # Inspecting the posterior
+  plot(samples)
+  summary(samples)  
+}
+paired_samples_t_test_model_code <- inject_model_string(paired_samples_t_test_model_code, paired_samples_t_model_string)

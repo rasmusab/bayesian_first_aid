@@ -168,8 +168,8 @@ summary.bayes_binom_test <- function(object, ...) {
   cat("\n")
   
   cat("  Model parameters and generated quantities\n")
-  cat("theta: The relative frequency of success\n")
-  cat("x_pred: Predicted number of successes in a replication\n")
+  cat("theta: the relative frequency of success\n")
+  cat("x_pred: predicted number of successes in a replication\n")
   cat("\n")
   cat("  Measures\n" )
   print(s[, c("mean", "sd", "HDIlo", "HDIup", "%<comp", "%>comp")])
