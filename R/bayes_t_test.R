@@ -333,7 +333,7 @@ jags_paired_t_test <- function(x, y, comp_mu = 0, n.adapt= 500, n.chains=3, n.up
 #' @export
 print.bayes_one_sample_t_test <- function(x, ...) {
   
-  s <- round(x$stats, 3)
+  s <- format_stats(x$stats)
   
   cat("\n")
   cat("\tBayesian estimation supersedes the t test (BEST) - one sample\n")
@@ -496,7 +496,7 @@ one_sample_t_test_model_code <- inject_model_string(one_sample_t_test_model_code
 ####################################
 #' @export
 print.bayes_two_sample_t_test <- function(x, ...) {
-  s <- round(x$stats, 3)
+  s <- format_stats(x$stats)
   
   cat("\n")
   cat("\tBayesian estimation supersedes the t test (BEST) - two sample\n")
@@ -649,7 +649,7 @@ model.code.bayes_two_sample_t_test <- function(fit) {
 
 #' @export
 print.bayes_paired_t_test <- function(x, ...) {
-  s <- round(x$stats, 3)
+  s <- format_stats(x$stats)
   cat("\n")
   cat("\tBayesian estimation supersedes the t test (BEST) - paired samples\n")
   cat("\n")

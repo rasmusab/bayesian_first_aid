@@ -130,7 +130,7 @@ binom_model_string <- "model {
   x_pred ~ dbinom(theta, n)
 }"
 
-jags_binom_test <- function(x, n, n.chains=3, n.iter=500, progress.bar="none") {
+jags_binom_test <- function(x, n, n.chains=3, n.iter=5000, progress.bar="none") {
   mcmc_samples <- run_jags(binom_model_string, data = list(x = x, n = n), inits = list(theta = (x + 1) / (n + 2)), 
                            params = c("theta", "x_pred"), n.chains = n.chains, n.adapt = 0,
                            n.update = 0, n.iter = n.iter, thin = 1, progress.bar=progress.bar)
@@ -142,7 +142,7 @@ jags_binom_test <- function(x, n, n.chains=3, n.iter=500, progress.bar="none") {
 #' @export
 print.bayes_binom_test <- function(x, ...) {
   
-  s <- round(x$stats["theta",], 3)
+  s <- format_stats(x$stats)["theta",]
   
   cat("\n")
   cat("\tBayesian First Aid binomial test\n")
