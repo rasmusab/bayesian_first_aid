@@ -56,7 +56,7 @@ bayes.t.test <- function(x, ...) {
 #' @export
 #' @rdname bayes.t.test
 bayes.t.test.default <- function(x, y = NULL, alternative = c("two.sided", "less", "greater"), 
-                                 mu = 0, paired = FALSE, var.equal = FALSE, cred.mass = 0.95, n.iter = 25000, progress.bar="text", conf.level,...) {
+                                 mu = 0, paired = FALSE, var.equal = FALSE, cred.mass = 0.95, n.iter = 30000, progress.bar="text", conf.level,...) {
   
   if(! missing(conf.level)) {
     cred.mass <- conf.level
