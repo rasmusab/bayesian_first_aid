@@ -6,7 +6,8 @@
 #' 
 #' Details details details
 #' 
-#' \figure{bestmodel.png}{A graphical diagram of the BEST model}
+#' \figure{one_sample_best_diagram.png}{A graphical diagram of the one sample the BEST model}
+#' \figure{two_sample_best_diagram.png}{A graphical diagram of the two sample the BEST model}
 #' 
 #' \deqn{y \sim \mathrm{Norm}(\mu, \sigma)}{y ~ Norm(mu, sigma)}
 #' 

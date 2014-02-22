@@ -8,7 +8,7 @@ bayes.t.test(x, ...)
 
 \method{bayes.t.test}{default}(x, y = NULL, alternative = c("two.sided",
   "less", "greater"), mu = 0, paired = FALSE, var.equal = FALSE,
-  cred.mass = 0.95, n.iter = 25000, progress.bar = "text", conf.level,
+  cred.mass = 0.95, n.iter = 30000, progress.bar = "text", conf.level,
   ...)
 
 \method{bayes.t.test}{formula}(formula, data, subset, na.action, ...)
@@ -82,8 +82,10 @@ Descritions description description
 \details{
 Details details details
 
-\figure{bestmodel.png}{A graphical diagram of the BEST
-model}
+\figure{one_sample_best_diagram.png}{A graphical diagram of
+the one sample the BEST model}
+\figure{two_sample_best_diagram.png}{A graphical diagram of
+the two sample the BEST model}
 
 \deqn{y \sim \mathrm{Norm}(\mu, \sigma)}{y ~ Norm(mu,
 sigma)}
