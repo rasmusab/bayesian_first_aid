@@ -249,6 +249,7 @@ two_sample_t_model_string <- "model {
   mu_diff <- mu_x - mu_y
   sigma_diff <-sigma_x - sigma_y 
   
+  # The priors
   mu_x ~ dnorm( mean_mu , precision_mu )
   tau_x <- 1/pow( sigma_x , 2 )
   sigma_x ~ dunif( sigmaLow , sigmaHigh )
@@ -257,6 +258,7 @@ two_sample_t_model_string <- "model {
   tau_y <- 1/pow( sigma_y , 2 )
   sigma_y ~ dunif( sigmaLow , sigmaHigh )
 
+  # A trick to get an exponentially distributed prior on nu that starts at 1.
   nu <- nuMinusOne+1
   nuMinusOne ~ dexp(1/29)
 }"
@@ -293,16 +295,16 @@ jags_two_sample_t_test <- function(x, y, n.adapt= 500, n.chains=3, n.update = 10
 paired_samples_t_model_string <- "model {
   for(i in 1:length(pair_diff)) {
     pair_diff[i] ~ dt( mu_diff , tau_diff , nu )
-}
-diff_pred ~ dt( mu_diff , tau_diff , nu )
-eff_size <- (mu_diff - comp_mu) / sigma_diff
-
-mu_diff ~ dnorm( mean_mu , precision_mu )
-tau_diff <- 1/pow( sigma_diff , 2 )
-sigma_diff ~ dunif( sigmaLow , sigmaHigh )
-# A trick to get an exponentially distributed prior on nu that starts at 1.
-nu <- nuMinusOne + 1 
-nuMinusOne ~ dexp(1/29)
+  }
+  diff_pred ~ dt( mu_diff , tau_diff , nu )
+  eff_size <- (mu_diff - comp_mu) / sigma_diff
+  
+  mu_diff ~ dnorm( mean_mu , precision_mu )
+  tau_diff <- 1/pow( sigma_diff , 2 )
+  sigma_diff ~ dunif( sigmaLow , sigmaHigh )
+  # A trick to get an exponentially distributed prior on nu that starts at 1.
+  nu <- nuMinusOne + 1 
+  nuMinusOne ~ dexp(1/29)
 }"
 
 
@@ -640,8 +642,58 @@ diagnostics.bayes_two_sample_t_test <- function(fit) {
 
 #' @export
 model.code.bayes_two_sample_t_test <- function(fit) {
-  print(jags_two_sample_t_test)
+  cat("## Model code for Bayesian estimation supersedes the t test - two sample ##\n")
+  
+  cat("require(rjags)\n\n")
+  cat("# Setting up the data\n")
+  cat("x <-", fit$x_data_expr, "\n")
+  cat("y <-", fit$y_data_expr, "\n")
+  cat("\n")
+  pretty_print_function_body(two_sample_t_test_model_code)
 }
+
+# Not to be run, just to be printed
+two_sample_t_test_model_code <- function() {
+  # The model string written in the JAGS language
+  BayesianFirstAid::replace_this_with_model_string
+  
+  # Setting parameters for the priors that in practice will result
+  # in flat priors on the mu's and sigma's.
+  mean_mu = mean( c(x, y), trim=0.2)
+  precision_mu = 1 / (mad( c(x, y) )^2 * 1000000)
+  sigmaLow = mad( c(x, y) ) / 1000 
+  sigmaHigh = mad( c(x, y) ) * 1000
+  
+  # Initializing parameters to sensible starting values helps the convergence
+  # of the MCMC sampling. Here using robust estimates of the mean (trimmed)
+  # and standard deviation (MAD).
+  inits_list <- list(
+    mu_x = mean(x, trim=0.2), mu_y = mean(y, trim=0.2),
+    sigma_x = mad(x), sigma_y = mad(y),
+    nuMinusOne = 4)
+  
+  data_list <- list(
+    x = x, y = y,    
+    mean_mu = mean_mu,
+    precision_mu = precision_mu,
+    sigmaLow = sigmaLow,
+    sigmaHigh = sigmaHigh)
+  
+  # The parameters to monitor.
+  params <- c("mu_x", "mu_y", "mu_diff", "sigma_x", "sigma_y", "sigma_diff",
+              "nu", "eff_size", "x_pred", "y_pred")
+  
+  # Running the model
+  model <- jags.model(textConnection(model_string), data = data_list,
+                      inits = inits_list, n.chains = 3, n.adapt=1000)
+  update(model, 500) # Burning some samples to the MCMC gods....
+  samples <- coda.samples(model, params, n.iter=10000)
+  
+  # Inspecting the posterior
+  plot(samples)
+  summary(samples)  
+}
+two_sample_t_test_model_code <- inject_model_string(two_sample_t_test_model_code, two_sample_t_model_string)
 
 ########################################
 ### Paired samples t-test S3 methods ###
