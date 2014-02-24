@@ -504,7 +504,7 @@ print.bayes_two_sample_t_test <- function(x, ...) {
   cat("\n")
   cat("\tBayesian estimation supersedes the t test (BEST) - two sample\n")
   cat("\n")
-  cat("data: ", x$data_name, "\n", sep="")
+  cat("data: ", x$x_name, " (n = ", length(x$x) ,") and ", x$y_name," (n = ", length(x$y) ,")\n", sep="")
   cat("\n")
   cat("  Estimates [", s[1, "HDI%"] ,"% credible interval]\n", sep="")
   cat("mean of ",  x$x_name, ": ", s["mu_x", "mean"], " [", s["mu_x", "HDIlo"], ", ", s["mu_x", "HDIup"] , "]\n",sep="")
