@@ -514,7 +514,7 @@ print.bayes_two_sample_t_test <- function(x, ...) {
   cat("sd of ",  x$y_name, ": ", s["sigma_y", "mean"], " [", s["sigma_y", "HDIlo"], ", ", s["sigma_y", "HDIup"] , "]\n",sep="")
   
   cat("\n")
-  cat("The difference of the means is more than", s["mu_diff","comp"] , "by a probability of", s["mu_diff","%>comp"], "\n")
+  cat("The difference of the means is greater than", s["mu_diff","comp"] , "by a probability of", s["mu_diff","%>comp"], "\n")
   cat("and less than", s["mu_diff", "comp"] , "by a probability of", s["mu_diff", "%<comp"], "\n")
   cat("\n")
 }
