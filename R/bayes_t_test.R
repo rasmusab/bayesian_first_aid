@@ -1,54 +1,117 @@
 # ...
 
-#' Title title title
+#'Bayesian First Aid alternative to the t-test
+#'
+#'\code{bayes.t.test} estimates the mean of one group, or the difference in 
+#'means between two groups, using Bayesian estimation and is intended as a 
+#'replacement for \code{\link{t.test}}. Is based on Bayesian Estimation
+#'Supersedes the t-test (BEST) (Kruschke, 2012).
+#'
+#'As with the \code{\link{t.test}} function \code{bayes.t.test} estimates one of
+#'three models depending on the arguments given. All three models are based on 
+#'the \emph{Bayesian Estimation Supersedes the t test} (BEST) model developed by
+#'Kruschke (2013).
+#'
+#'If one vecor is supplied a one sample BEST is run. BEST assumes the data (\eqn{x})
+#'is distributed as a t distribution, a more robust alternative to the normal 
+#'distribution due to its wider tails. Except for the mean (\eqn{\mu}) and the
+#'scale (\eqn{\sigma}) the t has one additional parameter, the
+#'degree-of-freedoms (\eqn{\nu}), where the lower \eqn{\nu} is the wider the
+#'tails become. When \eqn{\nu} gets larger the t distribution approaches the
+#'normal distribution. While it would be possible to fix \eqn{\nu} to a single
+#'value BEST instead estimates \eqn{\nu} allowing the t-distribution to become
+#'more or less normal depending on the data. Here is the full model for the one
+#'sample BEST:
+#'
+#'\deqn{x_i \sim \mathrm{t}(\mu, \sigma, \nu)}{x[i] ~ t(\mu, \sigma, \nu)} 
+#'\deqn{\mu \sim \mathrm{Normal}(M_\mu, S_\mu)}{\mu ~ Normal(M[\mu], S[\mu])} 
+#'\deqn{\sigma \sim \mathrm{Uniform}(L_\sigma, H__\sigma)}{\sigma ~
+#'Uniform(L[\sigma], H[\sigma])} \deqn{\nu \sim \mathrm{Shifted-Exp}(1/29,
+#'\mathrm{shift}=1)}{\nu ~ Shifted-Exp(1/29, shift=1)}
+#'
+#'\figure{one_sample_best_diagram.png}{A graphical diagram of the one sample the
+#'BEST model}
+#'
+#'The constants \eqn{M_\mu, S_\mu, L_\sigma, H__\sigma}{M[\mu], S[\mu],
+#'L[\sigma]} and \eqn{H__\sigma}{H[\sigma]} are set so that the priors on
+#'\eqn{\mu} and \eqn{\sigma} are essentially flat.
+#'
+#'If two vectors are supplied a two sample BEST is run. This is essentially the 
+#'same as estimaiting two separate one sample BEST except for that both groups 
+#'are assumed to have the same \eqn{\nu}. Here is a Kruschke style diagram 
+#'showing the two sample BEST model:
+#'
+#'\figure{two_sample_best_diagram.png}{A graphical diagram of the two sample the
+#'BEST model}
+#'
+#'If two vectors are supplied and \code{paired=TRUE} then the paired difference
+#'between \code{x - y} is modeled using the one sample BEST.
+#'
+#'
+#'@param x a (non-empty) numeric vector of data values.
+#'@param y an optional (non-empty) numeric vector of data values.
+#'@param alternative ignored and is only retained in order to mantain 
+#'  compatibility with \code{\link{t.test}}.
+#'@param mu a fixed relative mean value to compare with the estimated mean (or 
+#'  the difference in means when performing a two sample BEST).
+#'@param paired a logical indicating whether you want to estimate a paired samples BEST.
+#'@param var.equal ignored and is only retained in order to mantain 
+#'  compatibility with \code{\link{t.test}}.
+#'@param cred.mass the amount of probability mass that will be contained in 
+#'  reported credible intervals. This argument fills a similar role as 
+#'  \code{conf.level} in \code{\link{t.test}}.
+#'@param n.iter The number of iterations to run the MCMC sampling.
+#'@param progress.bar The type of progress bar. Possible values are "text", 
+#'  "gui", and "none".
+#'@param conf.level same as \code{cred.mass} and is only retained in order to 
+#'  mantain compatibility with \code{\link{binom.test}}.
+#'@param formula a formula of the form \code{lhs ~ rhs} where \code{lhs} is a 
+#'  numeric variable giving the data values and \code{rhs} a factor with two 
+#'  levels giving the corresponding groups.
+#'@param data an optional matrix or data frame (or similar: see 
+#'  \code{\link{model.frame}}) containing the variables in the formula formula. 
+#'  By default the variables are taken from \code{environment(formula)}.
+#'@param subset an optional vector specifying a subset of observations to be 
+#'  used.
+#'@param na.action a function which indicates what should happen when the data 
+#'  contain \code{NA}s. Defaults to \code{getOption("na.action")}.
+#'@param ... further arguments to be passed to or from methods.
+#'  
+#'  
+#'@return A list of class \code{bayes_paired_t_test}, 
+#'  \code{bayes_one_sample_t_test} or \code{bayes_two_sample_t_test} that 
+#'  contains information about the analysis. It can be further inspected using 
+#'  the functions \code{summary}, \code{plot}, \code{\link{diagnostics}} and 
+#'  \code{\link{model.code}}.
+#'  
+#' @examples
+#' # Using Student's sleep data as in the t.test example
+#' # bayes.t.test can be called in the same way as t.test 
+#' # so you can both supply two vectors...
 #' 
-#' Descritions description description
+#' bayes.t.test(sleep$extra[sleep$group == 1], sleep$extra[sleep$group == 2])
 #' 
-#' Details details details
+#' # ... or use the formula interface.
 #' 
-#' \figure{one_sample_best_diagram.png}{A graphical diagram of the one sample the BEST model}
-#' \figure{two_sample_best_diagram.png}{A graphical diagram of the two sample the BEST model}
+#' bayes.t.test(extra ~ group, data = sleep)
 #' 
-#' \deqn{y \sim \mathrm{Norm}(\mu, \sigma)}{y ~ Norm(mu, sigma)}
+#' # Save the return value in order to inspect the model result further.
+#' fit <- bayes.t.test(extra ~ group, data = sleep)
+#' summary(fit)
+#' plot(fit)
 #' 
-#' @param x a (non-empty) numeric vector of data values.
-#' @param y an optional (non-empty) numeric vector of data values.
-#' @param alternative ignored and is only retained in order to mantain 
-#'   compatibility with \code{\link{t.test}}.
-#' @param mu a fixed relative mean value to compare with the estimated mean (or
-#'   the difference in means when performing a two sample BEST).
-#' @param paired a logical indicating whether you want to assume the data is 
-#'   paired and you want to run a one sample BEST of the pair difference.
-#' @param var.equal ignored and is only retained in order to mantain 
-#'   compatibility with \code{\link{t.test}}.
-#' @param cred.mass the amount of probability mass that will be contained in 
-#'   reported credible intervals. This argument fills a similar role as
-#'   \code{conf.level} in \code{\link{t.test}}.
-#' @param n.iter The number of iterations to run the MCMC sampling.
-#' @param progress.bar The type of progress bar. Possible values are "text",
-#'   "gui", and "none".
-#' @param conf.level same as \code{cred.mass} and is only retained in order to 
-#'   mantain compatibility with \code{\link{binom.test}}.
-#' @param formula a formula of the form \code{lhs ~ rhs} where \code{lhs} is a
-#'   numeric variable giving the data values and \code{rhs} a factor with two
-#'   levels giving the corresponding groups.
-#' @param data an optional matrix or data frame (or similar: see
-#'   \code{\link{model.frame}}) containing the variables in the formula formula.
-#'   By default the variables are taken from \code{environment(formula)}.
-#' @param subset an optional vector specifying a subset of observations to be 
-#'   used.
-#' @param na.action a function which indicates what should happen when the data 
-#'   contain \code{NA}s. Defaults to \code{getOption("na.action")}.
-#' @param ... further arguments to be passed to or from methods.
-#'   
-#'   
-#' @return A list of class \code{bayes_paired_t_test},
-#'   \code{bayes_one_sample_t_test} or \code{bayes_two_sample_t_test} that
-#'   contains information about the analysis. It can be further inspected using
-#'   the functions \code{summary}, \code{plot}, \code{\link{diagnostics}} and 
-#'   \code{\link{model.code}}.
-#' @export
-#' @rdname bayes.t.test
+#' # MCMC diagnostics
+#' diagnostics(fit)
+#' 
+#' # Print out the R code to run the model. This can be copy n' pasted into
+#' # an R-script and further modified.
+#' model.code(fit)
+#'  
+#'@references Kruschke, J. K. (2013). Bayesian estimation supersedes the t test.
+#'  \emph{Journal of Experimental Psychology: General}, 142(2), 573.
+#'  
+#'@export
+#'@rdname bayes.t.test
 bayes.t.test <- function(x, ...) {
   UseMethod("bayes.t.test")
 }
@@ -356,7 +419,7 @@ print.bayes_one_sample_t_test <- function(x, ...) {
 print_bayes_one_sample_t_test_params <- function(x) {
   cat("  Model parameters and generated quantities\n")
   cat("mu: the mean of", x$data_name, "\n")
-  cat("sigma: the standard deviation of", x$data_name,"\n")
+  cat("sigma: the scale of", x$data_name,", a consistent\n  estimate of SD when nu is large.\n")
   cat("nu: the degrees-of-freedom for the t distribution fitted to",x$data_name , "\n")
   cat("eff_size: the effect size calculated as (mu - ", x$comp ,") / sigma\n", sep="")
   cat("x_pred: predicted distribution for a new datapoint generated as",x$data_name , "\n")
@@ -523,11 +586,11 @@ print.bayes_two_sample_t_test <- function(x, ...) {
 print_bayes_two_sample_t_test_params <- function(x) {
   cat("  Model parameters and generated quantities\n")
   cat("mu_x: the mean of", x$x_name, "\n")
-  cat("sigma_x: the standard deviation of", x$x_name,"\n")
+  cat("sigma_x: the scale of", x$x_name,", a consistent\n  estimate of SD when nu is large.\n")
   cat("mu_y: the mean of", x$y_name, "\n")
-  cat("sigma_y: the standard deviation of", x$y_name,"\n")
+  cat("sigma_y: the scale of", x$y_name,"\n")
   cat("mu_diff: the difference in means (mu_x - mu_y)\n")
-  cat("sigma_diff: the difference in SD (sigma_x - sigma_y)\n")
+  cat("sigma_diff: the difference in scale (sigma_x - sigma_y)\n")
   cat("nu: the degrees-of-freedom for the t distribution\n")
   cat("  fitted to",x$data_name , "\n")
   cat("eff_size: the effect size calculated as \n", sep="")
@@ -735,7 +798,7 @@ print_bayes_paired_t_test_params <- function(x) {
 
   cat("  Model parameters and generated quantities\n")
   cat("mu_diff: the mean pairwise difference between", x$x_name, "and", x$y_name, "\n")
-  cat("sigma_diff: the standard deviation of the pairwise difference\n")
+  cat("sigma_diff: the scale of the pairwise difference, a consistent\n  estimate of SD when nu is large.\n")
   cat("nu: the degrees-of-freedom for the t distribution fitted to the pairwise difference\n")
   cat("eff_size: the effect size calculated as (mu_diff - ", x$comp ,") / sigma_diff\n", sep="")
   cat("diff_pred: predicted distribution for a new datapoint generated\n  as the pairwise difference between", x$x_name, "and", x$y_name,"\n")

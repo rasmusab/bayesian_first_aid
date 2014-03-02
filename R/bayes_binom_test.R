@@ -8,8 +8,8 @@
 #'estimates \eqn{\theta}, the relative frequency of success, assuming the
 #'following model:
 #'
-#'\deqn{x \sim \mathrm{Binom}(\theta, n)}{x ~ Binomial(\theta, n)} \deqn{\theta
-#'\sim \mathrm{Beta}(1, 1)}{\theta ~ Beta(1, 1)}
+#' \deqn{x \sim \mathrm{Binom}(\theta, n)}{x ~ Binomial(\theta, n)} 
+#' \deqn{\theta \sim \mathrm{Beta}(1, 1)}{\theta ~ Beta(1, 1)}
 #'
 #'\if{html}{\figure{binom_diagram.svg}{options: height=250}} 
 #'\if{latex}{\figure{binom_diagram.pdf}}

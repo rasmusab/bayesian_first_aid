@@ -2,7 +2,7 @@
 \alias{bayes.t.test}
 \alias{bayes.t.test.default}
 \alias{bayes.t.test.formula}
-\title{Title title title}
+\title{Bayesian First Aid alternative to the t-test}
 \usage{
 bayes.t.test(x, ...)
 
@@ -27,8 +27,7 @@ bayes.t.test(x, ...)
   performing a two sample BEST).}
 
   \item{paired}{a logical indicating whether you want to
-  assume the data is paired and you want to run a one
-  sample BEST of the pair difference.}
+  estimate a paired samples BEST.}
 
   \item{var.equal}{ignored and is only retained in order to
   mantain compatibility with \code{\link{t.test}}.}
@@ -77,17 +76,88 @@ functions \code{summary}, \code{plot},
 \code{\link{diagnostics}} and \code{\link{model.code}}.
 }
 \description{
-Descritions description description
+\code{bayes.t.test} estimates the mean of one group, or the
+difference in means between two groups, using Bayesian
+estimation and is intended as a replacement for
+\code{\link{t.test}}. Is based on Bayesian Estimation
+Supersedes the t-test (BEST) (Kruschke, 2012).
 }
 \details{
-Details details details
+As with the \code{\link{t.test}} function
+\code{bayes.t.test} estimates one of three models depending
+on the arguments given. All three models are based on the
+\emph{Bayesian Estimation Supersedes the t test} (BEST)
+model developed by Kruschke (2013).
+
+If one vecor is supplied a one sample BEST is run. BEST
+assumes the data (\eqn{x}) is distributed as a t
+distribution, a more robust alternative to the normal
+distribution due to its wider tails. Except for the mean
+(\eqn{\mu}) and the scale (\eqn{\sigma}) the t has one
+additional parameter, the degree-of-freedoms (\eqn{\nu}),
+where the lower \eqn{\nu} is the wider the tails become.
+When \eqn{\nu} gets larger the t distribution approaches
+the normal distribution. While it would be possible to fix
+\eqn{\nu} to a single value BEST instead estimates
+\eqn{\nu} allowing the t-distribution to become more or
+less normal depending on the data. Here is the full model
+for the one sample BEST:
+
+\deqn{x_i \sim \mathrm{t}(\mu, \sigma, \nu)}{x[i] ~ t(\mu,
+\sigma, \nu)} \deqn{\mu \sim \mathrm{Normal}(M_\mu,
+S_\mu)}{\mu ~ Normal(M[\mu], S[\mu])} \deqn{\sigma \sim
+\mathrm{Uniform}(L_\sigma, H__\sigma)}{\sigma ~
+Uniform(L[\sigma], H[\sigma])} \deqn{\nu \sim
+\mathrm{Shifted-Exp}(1/29, \mathrm{shift}=1)}{\nu ~
+Shifted-Exp(1/29, shift=1)}
 
 \figure{one_sample_best_diagram.png}{A graphical diagram of
 the one sample the BEST model}
+
+The constants \eqn{M_\mu, S_\mu, L_\sigma,
+H__\sigma}{M[\mu], S[\mu], L[\sigma]} and
+\eqn{H__\sigma}{H[\sigma]} are set so that the priors on
+\eqn{\mu} and \eqn{\sigma} are essentially flat.
+
+If two vectors are supplied a two sample BEST is run. This
+is essentially the same as estimaiting two separate one
+sample BEST except for that both groups are assumed to have
+the same \eqn{\nu}. Here is a Kruschke style diagram
+showing the two sample BEST model:
+
 \figure{two_sample_best_diagram.png}{A graphical diagram of
 the two sample the BEST model}
 
-\deqn{y \sim \mathrm{Norm}(\mu, \sigma)}{y ~ Norm(mu,
-sigma)}
+If two vectors are supplied and \code{paired=TRUE} then the
+paired difference between \code{x - y} is modeled using the
+one sample BEST.
+}
+\examples{
+# Using Student's sleep data as in the t.test example
+# bayes.t.test can be called in the same way as t.test
+# so you can both supply two vectors...
+
+bayes.t.test(sleep$extra[sleep$group == 1], sleep$extra[sleep$group == 2])
+
+# ... or use the formula interface.
+
+bayes.t.test(extra ~ group, data = sleep)
+
+# Save the return value in order to inspect the model result further.
+fit <- bayes.t.test(extra ~ group, data = sleep)
+summary(fit)
+plot(fit)
+
+# MCMC diagnostics
+diagnostics(fit)
+
+# Print out the R code to run the model. This can be copy n' pasted into
+# an R-script and further modified.
+model.code(fit)
+}
+\references{
+Kruschke, J. K. (2013). Bayesian estimation supersedes the
+t test.  \emph{Journal of Experimental Psychology:
+General}, 142(2), 573.
 }
 
