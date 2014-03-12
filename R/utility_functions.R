@@ -71,14 +71,17 @@ discrete_hist <- function(x, xlim, col="skyblue", lwd=3, x_marked = c(), marked_
 
 # Plots a histogram of x with curves of t distributions
 # specified by mu, sigma and nu
-# data_mu and data_sigma are should be point estimates
+# data_mu and data_sigma should be point estimates
 # Adapted from Kruschkes BEST1Gplot
-hist_with_t_curves <- function(data, data_mu, data_sigma, mu, sigma, nu, data_name, main, x_range) {
+hist_with_t_curves <- function(data, data_mu, data_sigma, mu, sigma, nu, data_name = "", main = "",
+                               x_range = range(data), horiz=FALSE, plot_n = TRUE, x_lim=NULL, axs= "r",...) {
   n_curves <- length(mu)
   
-  # Calculating limits for the curves
-  x_lim = c( x_range[1]-0.1*(x_range[2]-x_range[1]) , 
-             x_range[2]+0.1*(x_range[2]-x_range[1]) )
+  if(is.null(x_lim)) {
+    # Calculating limits for the curves
+    x_lim = c( x_range[1]-0.1*(x_range[2]-x_range[1]) , 
+               x_range[2]+0.1*(x_range[2]-x_range[1]) )
+  }
   x = seq( x_lim[1] , x_lim[2] , length=200 )
   
   # Limits and bins for the histogram
@@ -102,16 +105,34 @@ hist_with_t_curves <- function(data, data_mu, data_sigma, mu, sigma, nu, data_na
   max_y = max( curve_maxs, max(hist_y, na.rm=T))
   
   # Plotting
-  plot( x , dt( (x - mu[1]) / sigma[1] , df=nu[1] ) / sigma[1] , 
-        ylim=c(0,max_y) , cex.lab=1.5 ,
-        type="l" , col="skyblue" , lwd=1 , xlab=data_name , ylab="Probability" , 
-        main=main)
-  for ( i in 2:length(mu) ) {
-    lines(x, dt( (x - mu[i]) / sigma[i] , df=nu[i] ) / sigma[i] , 
-          type="l" , col="skyblue" , lwd=1 )
+  if(!horiz) {
+    plot( x , dt( (x - mu[1]) / sigma[1] , df=nu[1] ) / sigma[1] , 
+          ylim=c(0,max_y) , cex.lab=1.5, xaxs=axs, yaxs=axs,
+          type="l" , col="skyblue" , lwd=1 , xlab=data_name , ylab="Probability", 
+          main=main, ...)
+    for ( i in 2:length(mu) ) {
+      lines(x, dt( (x - mu[i]) / sigma[i] , df=nu[i] ) / sigma[i] , 
+            type="l" , col="skyblue" , lwd=1 )
+    }
+    points( hist_x , hist_y , type="h" , lwd=3 , col="red" ,lend=1 )
+    if(plot_n) {
+      text( max(x) , max_y , bquote(N==.(length(data))) , adj=c(1.1,1.1) )
+    }
+  } else {
+    plot( y=x , x=dt( (x - mu[1]) / sigma[1] , df=nu[1] ) / sigma[1] , 
+          xlim=c(0,max_y) , cex.lab=1.5, xaxs=axs, yaxs=axs,
+          type="l" , col="skyblue" , lwd=1 , ylab=data_name , xlab="Probability", 
+          main=main, ...)
+    for ( i in 2:length(mu) ) {
+      lines(y = x, x=dt( (x - mu[i]) / sigma[i] , df=nu[i] ) / sigma[i] , 
+            type="l" , col="skyblue" , lwd=1 )
+    }
+    segments(x0= rep(0, length(hist_y)), y0= hist_x, x1 = hist_y, y1=hist_x, lwd=3 , col="red" ,lend=1 )
+    if(plot_n) {
+      text( y=max(x) , x=max_y , bquote(N==.(length(data))) , adj=c(1.1,1.1) )
+    }
+    
   }
-  points( hist_x , hist_y , type="h" , lwd=3 , col="red" )
-  text( max(x) , max_y , bquote(N==.(length(data))) , adj=c(1.1,1.1) )
 }
   
   
