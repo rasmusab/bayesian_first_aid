@@ -81,6 +81,18 @@ bayes.cor.test.default <- function (x, y, alternative = c("two.sided", "less", "
     cred.mass <- conf.level
   }
   
+  if(! missing(alternative)) {
+    warning("The argument 'alternative' is ignored by bayes.binom.test")
+  }
+  
+  if(! missing(exact)) {
+    warning("The argument 'exact' is ignored by bayes.binom.test")
+  }
+  
+  if(! missing(continuity)) {
+    warning("The argument 'continuity' is ignored by bayes.binom.test")
+  }
+  
   ### BEGIN code from cor.test.default ###
   alternative <- match.arg(alternative)
   method <- match.arg(method)
@@ -131,11 +143,16 @@ bayes.cor.test.formula <- function (formula, data, subset, na.action, ...)
   if (length(mf) != 2L) 
     stop("invalid formula")
   DNAME <- paste(names(mf), collapse = " and ")
+  x_name <- names(mf)[1]
+  y_name <- names(mf)[2]
   names(mf) <- c("x", "y")
   ### END code from cor.test.formula ###
   
   bfa_result <- do.call("bayes.cor.test.default", c(mf, list(...)))
   bfa_result$data_name <- DNAME
+  bfa_result$x_name <- x_name
+  bfa_result$y_name <- y_name
+  
   bfa_result
 }
 
@@ -143,14 +160,48 @@ bayes.cor.test.formula <- function (formula, data, subset, na.action, ...)
 
 #' @export
 print.bayes_cor_test <- function(x, ...) {
-  cat("\n --- Bayesian first aid cor test ---\n\n")
-  print(summary(x$mcmc_samples))
+  s <- format_stats(x$stats)["rho",]
+  
+  cat("\n")
+  cat("\tBayesian First Aid Pearson's Correlation Coefficient Test\n")
+  cat("\n")
+  cat("data: ", x$data_name, " (n = ", length(x$x) ,")\n", sep="")
+  cat("Estimated correlation:\n")
+  cat(" ", s["median"], "\n")
+  cat(s["HDI%"],"% credible interval:\n", sep="")
+  cat(" ", s[ c("HDIlo", "HDIup")], "\n")
+  cat("The correlation is more than", s["comp"] , "by a probability of", s["%>comp"], "\n")
+  cat("and less than", s["comp"] , "by a probability of", s["%<comp"], "\n")
+  cat("\n")
 }
 
 #' @export
 summary.bayes_cor_test <- function(object, ...) {
-  cat("\nSummary\n")
-  print(object)
+  s <- round(object$stats, 3)
+  
+  cat("  Data\n")
+  cat(x$data_name, ", n = ", length(x$x) ,"\n", sep="")
+  cat("\n")
+  
+  cat("  Model parameters\n")
+  cat("rho: the correlation between", object$data_name, "\n")
+  cat("mu[1]: the mean of", object$x_name, "\n")
+  cat("sigma[1]: the scale of", object$x_name,", a consistent\n  estimate of SD when nu is large.\n")
+  cat("mu[2]: the mean of", object$y_name, "\n")
+  cat("sigma[2]: the scale of", object$y_name,"\n")
+  cat("nu: the degrees-of-freedom for the bivariate t distribution\n")
+
+  cat("\n")
+  cat("  Measures\n" )
+  print(s[, c("mean", "sd", "HDIlo", "HDIup", "%<comp", "%>comp")])
+  cat("\n")
+  cat("'HDIlo' and 'HDIup' are the limits of a ", s[1, "HDI%"] ,"% HDI credible interval.\n", sep="")
+  cat("'%<comp' and '%>comp' are the probabilities of the respective parameter being\n")
+  cat("smaller or larger than ", s[1, "comp"] ,".\n", sep="")
+  
+  cat("\n")
+  cat("  Quantiles\n" )
+  print(s[, c("q2.5%", "q25%", "median","q75%", "q97.5%")] )
 }
 
 #' @export
@@ -171,7 +222,8 @@ plot.bayes_cor_test <- function(x, ...) {
   
   ### fig 1, the posterior of rho ###
   par(mar = c(2,2,2,2))
-  plotPost(rho, comp_val=0, cred_mass=0.95, xlim=c(-1, 1), xlab="", main=expression(Correlation ~ (rho)))
+  plotPost(rho, comp_val=0, cred_mass=0.95, xlim=c(-1, 1), xlab="", main=expression(Correlation ~ (rho)),
+           show_median=TRUE)
   
   
   ### fig 2, the scatterplot ###
