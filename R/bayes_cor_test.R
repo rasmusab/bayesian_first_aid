@@ -175,6 +175,16 @@ print.bayes_cor_test <- function(x, ...) {
   cat("\n")
 }
 
+print_bayes_cor_test_params <- function(object) {
+  cat("  Model parameters\n")
+  cat("rho: the correlation between", object$data_name, "\n")
+  cat("mu[1]: the mean of", object$x_name, "\n")
+  cat("sigma[1]: the scale of", object$x_name,", a consistent\n  estimate of SD when nu is large.\n")
+  cat("mu[2]: the mean of", object$y_name, "\n")
+  cat("sigma[2]: the scale of", object$y_name,"\n")
+  cat("nu: the degrees-of-freedom for the bivariate t distribution\n")
+}
+
 #' @export
 summary.bayes_cor_test <- function(object, ...) {
   s <- round(object$stats, 3)
@@ -183,13 +193,7 @@ summary.bayes_cor_test <- function(object, ...) {
   cat(x$data_name, ", n = ", length(x$x) ,"\n", sep="")
   cat("\n")
   
-  cat("  Model parameters\n")
-  cat("rho: the correlation between", object$data_name, "\n")
-  cat("mu[1]: the mean of", object$x_name, "\n")
-  cat("sigma[1]: the scale of", object$x_name,", a consistent\n  estimate of SD when nu is large.\n")
-  cat("mu[2]: the mean of", object$y_name, "\n")
-  cat("sigma[2]: the scale of", object$y_name,"\n")
-  cat("nu: the degrees-of-freedom for the bivariate t distribution\n")
+  print_bayes_cor_test_params(object)
 
   cat("\n")
   cat("  Measures\n" )
@@ -305,8 +309,16 @@ plot.bayes_cor_test <- function(x, ...) {
 
 #' @export
 diagnostics.bayes_cor_test <- function(fit) {
-  cat("Not implemented\n")
+  print_mcmc_info(fit$mcmc_samples)  
+  cat("\n")
+  print_diagnostics_measures(round(fit$stats, 3))
+  cat("\n")
+  print_bayes_cor_test_params(fit)
+  cat("\n")
+  
+  old_par <- par( mar=c(3.5,2.5,2.5,0.5) , mgp=c(2.25,0.7,0) )
   plot(fit$mcmc_samples)
+  par(old_par)
 }
 
 #' @export
