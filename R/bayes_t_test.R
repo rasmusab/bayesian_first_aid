@@ -407,8 +407,8 @@ print.bayes_one_sample_t_test <- function(x, ...) {
   cat("data: ", x$data_name,  ", n = ", length(x$x),"\n", sep="")
   cat("\n")
   cat("  Estimates [", s[1, "HDI%"] ,"% credible interval]\n", sep="")
-  cat("mean of ",  x$x_name, ": ", s["mu", "mean"], " [", s["mu", "HDIlo"], ", ", s["mu", "HDIup"] , "]\n",sep="")
-  cat("sd of ",  x$x_name, ": ", s["sigma", "mean"], " [", s["sigma", "HDIlo"], ", ", s["sigma", "HDIup"] , "]\n",sep="")
+  cat("mean of ",  x$x_name, ": ", s["mu", "median"], " [", s["mu", "HDIlo"], ", ", s["mu", "HDIup"] , "]\n",sep="")
+  cat("sd of ",  x$x_name, ": ", s["sigma", "median"], " [", s["sigma", "HDIlo"], ", ", s["sigma", "HDIup"] , "]\n",sep="")
   
   cat("\n")
   cat("The mean is more than", s["mu","comp"] , "by a probability of", s["mu","%>comp"], "\n")
@@ -474,15 +474,15 @@ plot.bayes_one_sample_t_test <- function(x, ...) {
   # distribution of mu:
   xlim = range( c( mu , x$comp ) )
   plotPost(mu ,  xlim=xlim , cex.lab = 1.75 , comp_val = x$comp, cred_mass= x$cred_mass,
-           xlab=bquote(mu) , main=paste("Mean") , col="skyblue" )
+           xlab=bquote(mu) , main=paste("Mean") , col="skyblue", show_median=TRUE )
   
   # distribution of sigma:
   plotPost(sigma, cex.lab = 1.75, xlab=bquote(sigma), main=paste("Std. Dev."),  
-           cred_mass= x$cred_mass, col="skyblue" , show_mode=TRUE )
+           cred_mass= x$cred_mass, col="skyblue" , show_median=TRUE )
 
   # effect size:
   plotPost(samples_mat[, "eff_size"] , comp_val=0 , xlab=bquote( (mu-.(x$comp)) / sigma ),
-           cred_mass= x$cred_mass, show_mode=TRUE , cex.lab=1.75 , main="Effect Size" , col="skyblue" )
+           cred_mass= x$cred_mass, show_median=TRUE , cex.lab=1.75 , main="Effect Size" , col="skyblue" )
   par(old_par)
   invisible(NULL)
 }
@@ -570,11 +570,11 @@ print.bayes_two_sample_t_test <- function(x, ...) {
   cat("data: ", x$x_name, " (n = ", length(x$x) ,") and ", x$y_name," (n = ", length(x$y) ,")\n", sep="")
   cat("\n")
   cat("  Estimates [", s[1, "HDI%"] ,"% credible interval]\n", sep="")
-  cat("mean of ",  x$x_name, ": ", s["mu_x", "mean"], " [", s["mu_x", "HDIlo"], ", ", s["mu_x", "HDIup"] , "]\n",sep="")
-  cat("mean of ",  x$y_name, ": ", s["mu_y", "mean"], " [", s["mu_y", "HDIlo"], ", ", s["mu_y", "HDIup"] , "]\n",sep="")
-  cat("difference of the means: ", s["mu_diff", "mean"], " [", s["mu_diff", "HDIlo"], ", ", s["mu_diff", "HDIup"] , "]\n",sep="")
-  cat("sd of ",  x$x_name, ": ", s["sigma_x", "mean"], " [", s["sigma_x", "HDIlo"], ", ", s["sigma_x", "HDIup"] , "]\n",sep="")
-  cat("sd of ",  x$y_name, ": ", s["sigma_y", "mean"], " [", s["sigma_y", "HDIlo"], ", ", s["sigma_y", "HDIup"] , "]\n",sep="")
+  cat("mean of ",  x$x_name, ": ", s["mu_x", "median"], " [", s["mu_x", "HDIlo"], ", ", s["mu_x", "HDIup"] , "]\n",sep="")
+  cat("mean of ",  x$y_name, ": ", s["mu_y", "median"], " [", s["mu_y", "HDIlo"], ", ", s["mu_y", "HDIup"] , "]\n",sep="")
+  cat("difference of the means: ", s["mu_diff", "median"], " [", s["mu_diff", "HDIlo"], ", ", s["mu_diff", "HDIup"] , "]\n",sep="")
+  cat("sd of ",  x$x_name, ": ", s["sigma_x", "median"], " [", s["sigma_x", "HDIlo"], ", ", s["sigma_x", "HDIup"] , "]\n",sep="")
+  cat("sd of ",  x$y_name, ": ", s["sigma_y", "median"], " [", s["sigma_y", "HDIlo"], ", ", s["sigma_y", "HDIup"] , "]\n",sep="")
   
   cat("\n")
   cat("The difference of the means is greater than", s["mu_diff","comp"] , "by a probability of", s["mu_diff","%>comp"], "\n")
@@ -657,12 +657,12 @@ plot.bayes_two_sample_t_test <- function(x, ...) {
   
   # Plot posterior distribution of parameters mu_x, mu_y, and their difference:
   xlim = range( c( mu_x , mu_y ) )
-  plotPost( mu_x ,  xlim=xlim , cex.lab = 1.75 , cred_mass= x$cred_mass,
+  plotPost( mu_x ,  xlim=xlim , cex.lab = 1.75 , cred_mass= x$cred_mass, show_median=TRUE,
             xlab=bquote(mu[x]) , main=paste(x$x_name,"Mean") , col="skyblue" )
-  plotPost( mu_y ,  xlim=xlim , cex.lab = 1.75 ,  cred_mass= x$cred_mass,
+  plotPost( mu_y ,  xlim=xlim , cex.lab = 1.75 ,  cred_mass= x$cred_mass, show_median=TRUE,
             xlab=bquote(mu[y]) , main=paste(x$y_name,"Mean") , col="skyblue" )
   plotPost( samples_mat[,"mu_diff"] , comp_val= x$comp , cred_mass= x$cred_mass,
-            xlab=bquote(mu[x] - mu[y]) , cex.lab = 1.75 , 
+            xlab=bquote(mu[x] - mu[y]) , cex.lab = 1.75 , show_median=TRUE,
             main="Difference of Means" , col="skyblue" )
   
   # Save this to var.test
@@ -683,7 +683,7 @@ plot.bayes_two_sample_t_test <- function(x, ...) {
   # Macmillan & Creelman, 1991; Simpson & Fitter, 1973; Swets, 1986a, 1986b.
   plotPost( samples_mat[, "eff_size"] , comp_val=0 , cred_mass= x$cred_mass,
             xlab=bquote( (mu[x]-mu[y]) / sqrt((sigma[x]^2 +sigma[y]^2 )/2 ) ),
-            show_mode=TRUE , cex.lab=1.0 , main="Effect Size" , col="skyblue" )
+            show_median=TRUE , cex.lab=1.0 , main="Effect Size" , col="skyblue" )
   
   par(old_par)
 }
@@ -772,8 +772,8 @@ print.bayes_paired_t_test <- function(x, ...) {
   cat("data: ", x$data_name,  ", n = ", length(x$pair_diff),"\n", sep="")
   cat("\n")
   cat("  Estimates [", s[1, "HDI%"] ,"% credible interval]\n", sep="")
-  cat("mean paired difference: ", s["mu_diff", "mean"], " [", s["mu_diff", "HDIlo"], ", ", s["mu_diff", "HDIup"] , "]\n",sep="")
-  cat("sd of the paired differences: ", s["sigma_diff", "mean"], " [", s["sigma_diff", "HDIlo"], ", ", s["sigma_diff", "HDIup"] , "]\n",sep="")
+  cat("mean paired difference: ", s["mu_diff", "median"], " [", s["mu_diff", "HDIlo"], ", ", s["mu_diff", "HDIup"] , "]\n",sep="")
+  cat("sd of the paired differences: ", s["sigma_diff", "median"], " [", s["sigma_diff", "HDIlo"], ", ", s["sigma_diff", "HDIup"] , "]\n",sep="")
   
   cat("\n")
   cat("The mean difference is more than", s["mu_diff","comp"] , "by a probability of", s["mu_diff","%>comp"], "\n")
@@ -854,15 +854,15 @@ plot.bayes_paired_t_test <- function(x, ...) {
   # distribution of mu_diff:
   xlim = range( c( mu_diff , x$comp ) )
   plotPost(mu_diff ,  xlim=xlim , cex.lab = 1.75 , comp_val = x$comp, cred_mass= x$cred_mass,
-           xlab=bquote(mu[diff]) , main=paste("Mean difference") , col="skyblue" )
+           xlab=bquote(mu[diff]) , main=paste("Mean difference") , col="skyblue", show_median=TRUE )
   
   # distribution of sigma_diff:
   plotPost(sigma_diff, cex.lab = 1.75, xlab=bquote(sigma[diff]), main=paste("Std. Dev. of difference"),  
-           cred_mass= x$cred_mass, col="skyblue" , show_mode=TRUE )
+           cred_mass= x$cred_mass, col="skyblue" , show_median=TRUE )
   
   # effect size:
   plotPost(samples_mat[, "eff_size"] , comp_val=0 , xlab=bquote( (mu[diff] -.(x$comp)) / sigma[diff] ),
-           cred_mass= x$cred_mass, show_mode=TRUE , cex.lab=1.75 , main="Effect Size" , col="skyblue" )
+           cred_mass= x$cred_mass, show_median=TRUE , cex.lab=1.75 , main="Effect Size" , col="skyblue" )
   par(old_par)
   invisible(NULL)
 }

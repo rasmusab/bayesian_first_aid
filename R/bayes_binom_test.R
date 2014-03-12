@@ -150,7 +150,7 @@ print.bayes_binom_test <- function(x, ...) {
   cat("data: ", x$data_name, "\n", sep="")
   cat("number of successes = ", x$x,", number of trials = ", x$n, "\n", sep="")
   cat("Estimated relative frequency of success:\n")
-  cat(" ", s["mean"], "\n")
+  cat(" ", s["median"], "\n")
   cat(s["HDI%"],"% credible interval:\n", sep="")
   cat(" ", s[ c("HDIlo", "HDIup")], "\n")
   cat("The relative frequency of success is more than", s["comp"] , "by a probability of", s["%>comp"], "\n")
@@ -181,8 +181,6 @@ summary.bayes_binom_test <- function(object, ...) {
   cat("\n")
   cat("  Quantiles\n" )
   print(s[, c("q2.5%", "q25%", "median","q75%", "q97.5%")] )
-  # Lägga till HDI
-  # 'HDIlo' and 'HDIup' are the limits of a 95% HDI credible interval.
 }
 
 

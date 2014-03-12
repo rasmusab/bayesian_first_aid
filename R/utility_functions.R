@@ -251,8 +251,8 @@ HDIofMCMC = function( sampleVec , credMass=0.95 ) {
 plotPost = function( param_sample_vec , cred_mass=0.95 , comp_val=NULL ,
                      HDI_text_place=0.7 , ROPE=NULL , yaxt=NULL , ylab=NULL ,
                      xlab=NULL , cex.lab=NULL , cex=NULL , xlim=NULL , main=NULL ,
-                     col=NULL , border=NULL , show_mode=F , show_curve=F , breaks=NULL , 
-                     ... ) {
+                     col=NULL , border=NULL , show_mode=FALSE , show_median = FALSE,
+                     show_curve=FALSE , breaks=NULL , ... ) {
   # Override defaults of hist function, if not specified by user:
   # (additional arguments "..." are passed to the hist function)
   if ( is.null(xlab) ) xlab="Parameter"
@@ -304,16 +304,22 @@ plotPost = function( param_sample_vec , cred_mass=0.95 , comp_val=NULL ,
   cvHt = 0.7*max(histinfo$density)
   ROPEtextHt = 0.55*max(histinfo$density)
   # Display mean or mode:
-  if ( show_mode==F ) {
-    meanParam = mean( param_sample_vec )
-    text( meanParam , cenTendHt ,
-          bquote(mean==.(signif(meanParam,3))) , adj=c(.5,0) , cex=cex )
-  } else {
+  if ( show_mode==T )   {
     dres = density( param_sample_vec )
     modeParam = dres$x[which.max(dres$y)]
     text( modeParam , cenTendHt ,
           bquote(mode==.(signif(modeParam,3))) , adj=c(.5,0) , cex=cex )
+  } else if(show_median) {
+    medianParam = median( param_sample_vec )
+    text( medianParam , cenTendHt ,
+          bquote(median==.(signif(medianParam,3))) , adj=c(.5,0) , cex=cex )
+  } else { # Show the mean
+    meanParam = mean( param_sample_vec )
+    text( meanParam , cenTendHt ,
+        bquote(mean==.(signif(meanParam,3))) , adj=c(.5,0) , cex=cex )
   }
+  
+  
   # Display the comparison value.
   if ( !is.null( comp_val ) ) {
     cvCol = "darkgreen"
