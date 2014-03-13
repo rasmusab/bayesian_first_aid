@@ -36,29 +36,33 @@ cor_model_string <- "model {
     xy[i,1:2] ~ dmt(mu[], prec[ , ], nu) 
   }
 
-  ## priors for elements of the precision matrix
+  ## Creating the precision matrix (the inverse of the covariance matrix)
   prec[1:2,1:2] <- inverse(cov[,])
-  
   cov[1,1] <- sigma[1] * sigma[1]
   cov[1,2] <- sigma[1] * sigma[2] * rho
   cov[2,1] <- sigma[1] * sigma[2] * rho
   cov[2,2] <- sigma[2] * sigma[2]
-  
-  sigma[1] ~ dunif(0, 1000) 
-  sigma[2] ~ dunif(0, 1000)
-  tau[1] <- 1 / pow(sigma[1], 2)
-  tau[2] <- 1 / pow(sigma[2], 2)
+
+  ## Priors  
   rho ~ dunif(-1, 1)
-
-  mu[1] ~ dnorm(0, 0.0001)
-  mu[2] ~ dnorm(0, 0.0001)
-
+  sigma[1] ~ dunif(sigmaLow, sigmaHigh) 
+  sigma[2] ~ dunif(sigmaLow, sigmaHigh)
+  mu[1] ~ dnorm(mean_mu, precision_mu)
+  mu[2] ~ dnorm(mean_mu, precision_mu)
   nu <- nuMinusOne+1
   nuMinusOne ~ dexp(1/29)
 }"
 
 jags_cor_test <- function(x, y, n.adapt= 500, n.chains=3, n.update = 100, n.iter=5000, thin=1, progress.bar="text") {
-  data_list = list(xy = cbind(x, y), n = length(x))
+  
+  data_list = list(
+    xy = cbind(x, y), 
+    n = length(x),
+    mean_mu = mean(c(x, y), trim=0.2) ,
+    precision_mu = 1 / (max(mad(x), mad(y))^2 * 1000000),
+    sigmaLow = max(mad(x), mad(y)) / 1000 ,
+    sigmaHigh = min(mad(x), mad(y)) * 1000)
+  
   # Use robust estimates of the parameters as initial values
   inits_list = list(mu=c(mean(x, trim=0.2), mean(y, trim=0.2)), rho=cor(x, y, method="spearman"), 
                     sigma = c(mad(x), mad(y)), nuMinusOne = 5)
@@ -116,10 +120,11 @@ bayes.cor.test.default <- function (x, y, alternative = c("two.sided", "less", "
   if (method == "kendall" || method == "spearman") {
     stop("no non-parametric correlation comparable to Kendall's tau or Spearman's rho has been implemented yet.")
   }
-  mcmc_samples <- jags_cor_test(x, y, n.chains=3, n.iter=ceiling(n.iter / 3), progress.bar=progress.bar)
+  mcmc_samples <- jags_cor_test(x, y, n.chains=3, n.iter=ceiling(n.iter / 3), thin=1, progress.bar=progress.bar)
   stats <- mcmc_stats(mcmc_samples, cred_mass = cred.mass, comp_val = 0)
   bfa_result <- list(x = x, y = y, cred_mass = cred.mass, x_name = x_name, y_name = y_name, 
-                     data_name = data_name, mcmc_samples = mcmc_samples, stats = stats)
+                     data_name = data_name, x_data_expr = x_name, y_data_expr = x_name,
+                     mcmc_samples = mcmc_samples, stats = stats)
   class(bfa_result) <- c("bayes_cor_test", "bayesian_first_aid")
   bfa_result
   
@@ -152,6 +157,14 @@ bayes.cor.test.formula <- function (formula, data, subset, na.action, ...)
   bfa_result$data_name <- DNAME
   bfa_result$x_name <- x_name
   bfa_result$y_name <- y_name
+  if(!missing(data)) {
+    data_expr <- deparse(substitute(data))
+    bfa_result$x_data_expr <- paste(data_expr, '[ , "', x_name,'"]',sep="")
+    bfa_result$y_data_expr <- paste(data_expr, '[ , "', y_name,'"]',sep="")
+  } else {
+    bfa_result$x_data_expr <- x_name
+    bfa_result$y_data_expr <- y_name
+  }
   
   bfa_result
 }
@@ -323,5 +336,48 @@ diagnostics.bayes_cor_test <- function(fit) {
 
 #' @export
 model.code.bayes_cor_test <- function(fit) {
-  print(jags_cor_test)
+  cat("## Model code for the Bayesian First Aid alternative to Pearson's correlation test. ##\n")
+  
+  cat("require(rjags)\n\n")
+  cat("# Setting up the data\n")
+  cat("x <-", fit$x_data_expr, "\n")
+  cat("y <-", fit$y_data_expr, "\n")
+  cat("\n")
+  pretty_print_function_body(cor_model_code)
 }
+
+# Not to be run, just to be printed
+cor_model_code <- function() {
+  # The model string written in the JAGS language
+  BayesianFirstAid::replace_this_with_model_string
+  
+  # Initializing the data list and setting parameters for the priors
+  # that in practice will result in flat priors on mu and sigma.
+  data_list = list(
+    xy = cbind(x, y), 
+    n = length(x),
+    mean_mu = mean(c(x, y), trim=0.2) ,
+    precision_mu = 1 / (max(mad(x), mad(y))^2 * 1000000),
+    sigmaLow = max(mad(x), mad(y)) / 1000 ,
+    sigmaHigh = min(mad(x), mad(y)) * 1000)
+  
+  # Initializing parameters to sensible starting values helps the convergence
+  # of the MCMC sampling. Here using robust estimates of the mean (trimmed)
+  # and standard deviation (MAD).
+  inits_list = list(mu=c(mean(x, trim=0.2), mean(y, trim=0.2)), rho=cor(x, y, method="spearman"), 
+                    sigma = c(mad(x), mad(y)), nuMinusOne = 5)
+  
+  # The parameters to monitor.
+  params <- c("rho", "mu", "sigma", "nu")
+    
+  # Running the model
+  model <- jags.model(textConnection(model_string), data = data_list,
+                      inits = inits_list, n.chains = 3, n.adapt=1000)
+  update(model, 500) # Burning some samples to the MCMC gods....
+  samples <- coda.samples(model, params, n.iter=5000)
+  
+  # Inspecting the posterior
+  plot(samples)
+  summary(samples)  
+}
+cor_model_code <- inject_model_string(cor_model_code, cor_model_string)
