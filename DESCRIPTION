@@ -19,8 +19,11 @@ Authors@R: c(person("Rasmus", "Bååth", role = c("aut", "cre"),
     "ctb"))
 Depends:
     R (>= 3.0.1),
-    rjags (>= 3-10),
+    rjags (>= 3-11),
     coda (>= 0.16-1)
+Imports:
+    MASS (>= 7.3),
+    mnormt (>= 1.4)
 URL: http://www.sumsar.net
 License: GPL-3
 LazyData: true
