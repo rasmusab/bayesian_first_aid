@@ -123,7 +123,7 @@ bayes.cor.test.default <- function (x, y, alternative = c("two.sided", "less", "
   mcmc_samples <- jags_cor_test(x, y, n.chains=3, n.iter=ceiling(n.iter / 3), thin=1, progress.bar=progress.bar)
   stats <- mcmc_stats(mcmc_samples, cred_mass = cred.mass, comp_val = 0)
   bfa_result <- list(x = x, y = y, cred_mass = cred.mass, x_name = x_name, y_name = y_name, 
-                     data_name = data_name, x_data_expr = x_name, y_data_expr = x_name,
+                     data_name = data_name, x_data_expr = x_name, y_data_expr = y_name,
                      mcmc_samples = mcmc_samples, stats = stats)
   class(bfa_result) <- c("bayes_cor_test", "bayesian_first_aid")
   bfa_result
@@ -203,7 +203,7 @@ summary.bayes_cor_test <- function(object, ...) {
   s <- round(object$stats, 3)
   
   cat("  Data\n")
-  cat(x$data_name, ", n = ", length(x$x) ,"\n", sep="")
+  cat(object$data_name, ", n = ", length(object$x) ,"\n", sep="")
   cat("\n")
   
   print_bayes_cor_test_params(object)
@@ -245,8 +245,11 @@ plot.bayes_cor_test <- function(x, ...) {
   
   ### fig 2, the scatterplot ###
   
-  # Sampling from the posterior predictive distribution 
-  xy_rep <- do.call(rbind, lapply(sample(1:nrow(samples_mat), 1000), function(i) {
+  # Sampling from the posterior predictive distribution
+  # picking out 1000 samples and for each sample generate 100 samples from the corresponding
+  # bivariate t distribution. (This is faster than picking out 100000 samples and generating)
+  # one bivariate t sample per sample.
+  xy_rep <- do.call(rbind, lapply(sample(1:nrow(samples_mat), 1000, replace=T), function(i) {
     sigma1 <- samples_mat[i, "sigma[1]"]
     sigma2 <- samples_mat[i, "sigma[2]"]
     rho <- samples_mat[i, "rho"]

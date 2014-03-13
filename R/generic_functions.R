@@ -43,7 +43,7 @@ model.code <- function(fit) {
 #' A data frame
 #' @export
 as.data.frame.bayesian_first_aid <- function(x, ...) {
-  as.data.frame(as.matrix(fit$mcmc_samples))
+  as.data.frame(as.matrix(x$mcmc_samples))
 }
 
 #' Returns the MCMC samples from a Bayesian First Aid fit as a matrix.
@@ -58,5 +58,5 @@ as.data.frame.bayesian_first_aid <- function(x, ...) {
 #' A matrix
 #' @export
 as.matrix.bayesian_first_aid <- function(x, ...) {
-  as.matrix(fit$mcmc_samples)
+  as.matrix(x$mcmc_samples)
 }
