@@ -145,9 +145,9 @@ bayes.t.test.default <- function(x, y = NULL, alternative = c("two.sided", "less
   
   # removing incomplete cases and preparing the data vectors (x & y)
   if (!is.null(y)) {
-    xname <- deparse(substitute(x))
-    yname <- deparse(substitute(y))
-    dname <- paste(xname, "and", yname)
+    x_name <- deparse(substitute(x))
+    y_name <- deparse(substitute(y))
+    data_name <- paste(x_name, "and", y_name)
     if (paired) 
       xok <- yok <- complete.cases(x, y)
     else {
@@ -157,8 +157,8 @@ bayes.t.test.default <- function(x, y = NULL, alternative = c("two.sided", "less
     y <- y[yok]
   }
   else {
-    xname <- deparse(substitute(x))
-    dname <- xname
+    x_name <- deparse(substitute(x))
+    data_name <- x_name
     if (paired) 
       stop("'y' is missing for paired test")
     xok <- !is.na(x)
@@ -202,24 +202,24 @@ bayes.t.test.default <- function(x, y = NULL, alternative = c("two.sided", "less
     mcmc_samples <- jags_paired_t_test(x, y, n.chains= 3, n.iter = ceiling(n.iter / 3), progress.bar=progress.bar)
     stats <- mcmc_stats(mcmc_samples, cred_mass = cred.mass, comp_val = mu)
     bfa_object <- list(x = x, y = y, pair_diff = x - y, comp = mu, cred_mass = cred.mass,
-                       x_name = xname, y_name = yname, data_name = dname,
-                       x_data_expr = xname, y_data_expr = yname,
+                       x_name = x_name, y_name = y_name, data_name = data_name,
+                       x_data_expr = x_name, y_data_expr = y_name,
                        mcmc_samples = mcmc_samples, stats = stats)
     class(bfa_object) <- c("bayes_paired_t_test", "bayesian_first_aid")
     
   } else if(is.null(y)) {
     mcmc_samples <- jags_one_sample_t_test(x, comp_mu = mu, n.chains= 3, n.iter = ceiling(n.iter / 3), progress.bar=progress.bar)
     stats <- mcmc_stats(mcmc_samples, cred_mass = cred.mass, comp_val = mu)
-    bfa_object <- list(x = x, comp = mu, cred_mass = cred.mass, x_name = xname, x_data_expr = xname,
-                       data_name = dname, mcmc_samples = mcmc_samples, stats = stats)
+    bfa_object <- list(x = x, comp = mu, cred_mass = cred.mass, x_name = x_name, x_data_expr = x_name,
+                       data_name = data_name, mcmc_samples = mcmc_samples, stats = stats)
     class(bfa_object) <- c("bayes_one_sample_t_test", "bayesian_first_aid")
     
   } else { # is two sample t.test
     mcmc_samples <- jags_two_sample_t_test(x, y, n.chains= 3, n.iter = ceiling(n.iter / 3), progress.bar=progress.bar)
     stats <- mcmc_stats(mcmc_samples, cred_mass = cred.mass, comp_val = mu)
     bfa_object <- list(x = x, y = y, comp = mu, cred_mass = cred.mass,
-                       x_name = xname, y_name = yname, data_name = dname,
-                       x_data_expr = xname, y_data_expr = yname,
+                       x_name = x_name, y_name = y_name, data_name = data_name,
+                       x_data_expr = x_name, y_data_expr = y_name,
                        mcmc_samples = mcmc_samples, stats = stats)
     class(bfa_object) <- c("bayes_two_sample_t_test", "bayesian_first_aid")
   }
@@ -240,7 +240,7 @@ bayes.t.test.formula <- function(formula, data, subset, na.action, ...) {
   m[[1L]] <- quote(stats::model.frame)
   m$... <- NULL
   mf <- eval(m, parent.frame())
-  DNAME <- paste(names(mf), collapse = " by ")
+  data_name <- paste(names(mf), collapse = " by ")
   response_name <- names(mf)[1]
   group_name <- names(mf)[2]
   names(mf) <- NULL
@@ -252,16 +252,25 @@ bayes.t.test.formula <- function(formula, data, subset, na.action, ...) {
   
   ### Own code starts here ###
   bfa_object <- do.call("bayes.t.test", c(DATA, list(...)))
-  bfa_object$data_name <- DNAME
+  bfa_object$data_name <- data_name
   bfa_object$x_name <- paste("group", levels(g)[1])
   bfa_object$y_name <- paste("group", levels(g)[2])
-  data_expr <- deparse(substitute(data))
-  bfa_object$x_data_expr <- 
-    paste("subset(", data_expr, ", as.factor(", group_name, ") == ",
-          deparse(levels(g)[1]), ", ", response_name, ", drop = TRUE)", sep="")
-  bfa_object$y_data_expr <- 
-    paste("subset(", data_expr, ", as.factor(", group_name, ") == ",
-          deparse(levels(g)[2]), ", ", response_name, ", drop = TRUE)", sep="")
+  if(!missing(data)) {
+    data_expr <- deparse(substitute(data))
+    bfa_object$x_data_expr <- 
+      paste("subset(", data_expr, ", as.factor(", group_name, ") == ",
+            deparse(levels(g)[1]), ", ", response_name, ", drop = TRUE)", sep="")
+    bfa_object$y_data_expr <- 
+      paste("subset(", data_expr, ", as.factor(", group_name, ") == ",
+            deparse(levels(g)[2]), ", ", response_name, ", drop = TRUE)", sep="")
+  } else {
+    bfa_object$x_data_expr <- 
+      paste(response_name, "[", "as.factor(", group_name, ") == ",
+            deparse(levels(g)[1]),"]",sep="")
+    bfa_object$y_data_expr <- 
+      paste(response_name, "[", "as.factor(", group_name, ") == ",
+            deparse(levels(g)[2]),"]",sep="")
+  }
   bfa_object  
 }
 
@@ -275,7 +284,7 @@ one_sample_t_model_string <- "model {
 
   mu ~ dnorm( mean_mu , precision_mu )
   tau <- 1/pow( sigma , 2 )
-  sigma ~ dunif( sigmaLow , sigmaHigh )
+  sigma ~ dunif( sigma_low , sigma_high )
   # A trick to get an exponentially distributed prior on nu that starts at 1.
   nu <- nuMinusOne + 1 
   nuMinusOne ~ dexp(1/29)
@@ -286,8 +295,8 @@ jags_one_sample_t_test <- function(x, comp_mu = 0,n.adapt= 500, n.chains=3, n.up
     x = x,
     mean_mu = mean(x, trim=0.2) ,
     precision_mu = 1 / (mad(x)^2 * 1000000),
-    sigmaLow = mad(x) / 1000 ,
-    sigmaHigh = mad(x) * 1000 ,
+    sigma_low = mad(x) / 1000 ,
+    sigma_high = mad(x) * 1000 ,
     comp_mu = comp_mu
   )
   
@@ -315,11 +324,11 @@ two_sample_t_model_string <- "model {
   # The priors
   mu_x ~ dnorm( mean_mu , precision_mu )
   tau_x <- 1/pow( sigma_x , 2 )
-  sigma_x ~ dunif( sigmaLow , sigmaHigh )
+  sigma_x ~ dunif( sigma_low , sigma_high )
 
   mu_y ~ dnorm( mean_mu , precision_mu )
   tau_y <- 1/pow( sigma_y , 2 )
-  sigma_y ~ dunif( sigmaLow , sigmaHigh )
+  sigma_y ~ dunif( sigma_low , sigma_high )
 
   # A trick to get an exponentially distributed prior on nu that starts at 1.
   nu <- nuMinusOne+1
@@ -333,8 +342,8 @@ jags_two_sample_t_test <- function(x, y, n.adapt= 500, n.chains=3, n.update = 10
     y = y ,
     mean_mu = mean(c(x, y), trim=0.2) ,
     precision_mu = 1 / (mad(c(x, y))^2 * 1000000),
-    sigmaLow = mad(c(x, y)) / 1000 ,
-    sigmaHigh = mad(c(x, y)) * 1000 
+    sigma_low = mad(c(x, y)) / 1000 ,
+    sigma_high = mad(c(x, y)) * 1000 
   )
   
   inits_list <- list(
@@ -364,7 +373,7 @@ paired_samples_t_model_string <- "model {
   
   mu_diff ~ dnorm( mean_mu , precision_mu )
   tau_diff <- 1/pow( sigma_diff , 2 )
-  sigma_diff ~ dunif( sigmaLow , sigmaHigh )
+  sigma_diff ~ dunif( sigma_low , sigma_high )
   # A trick to get an exponentially distributed prior on nu that starts at 1.
   nu <- nuMinusOne + 1 
   nuMinusOne ~ dexp(1/29)
@@ -377,8 +386,8 @@ jags_paired_t_test <- function(x, y, comp_mu = 0, n.adapt= 500, n.chains=3, n.up
     pair_diff = pair_diff,
     mean_mu = mean(pair_diff, trim=0.2) ,
     precision_mu = 1 / (mad(pair_diff)^2 * 1000000),
-    sigmaLow = mad(pair_diff) / 1000 ,
-    sigmaHigh = mad(pair_diff) * 1000 ,
+    sigma_low = mad(pair_diff) / 1000 ,
+    sigma_high = mad(pair_diff) * 1000 ,
     comp_mu = comp_mu
   )
   
@@ -524,8 +533,8 @@ one_sample_t_test_model_code <- function() {
   # in flat priors on mu and sigma.
   mean_mu = mean(x, trim=0.2)
   precision_mu = 1 / (mad(x)^2 * 1000000)
-  sigmaLow = mad(x) / 1000 
-  sigmaHigh = mad(x) * 1000
+  sigma_low = mad(x) / 1000 
+  sigma_high = mad(x) * 1000
   
   # Initializing parameters to sensible starting values helps the convergence
   # of the MCMC sampling. Here using robust estimates of the mean (trimmed)
@@ -537,8 +546,8 @@ one_sample_t_test_model_code <- function() {
     comp_mu = comp_mu,
     mean_mu = mean_mu,
     precision_mu = precision_mu,
-    sigmaLow = sigmaLow,
-    sigmaHigh = sigmaHigh)
+    sigma_low = sigma_low,
+    sigma_high = sigma_high)
   
   # The parameters to monitor.
   params <- c("mu", "sigma", "nu", "eff_size", "x_pred")
@@ -724,8 +733,8 @@ two_sample_t_test_model_code <- function() {
   # in flat priors on the mu's and sigma's.
   mean_mu = mean( c(x, y), trim=0.2)
   precision_mu = 1 / (mad( c(x, y) )^2 * 1000000)
-  sigmaLow = mad( c(x, y) ) / 1000 
-  sigmaHigh = mad( c(x, y) ) * 1000
+  sigma_low = mad( c(x, y) ) / 1000 
+  sigma_high = mad( c(x, y) ) * 1000
   
   # Initializing parameters to sensible starting values helps the convergence
   # of the MCMC sampling. Here using robust estimates of the mean (trimmed)
@@ -739,8 +748,8 @@ two_sample_t_test_model_code <- function() {
     x = x, y = y,    
     mean_mu = mean_mu,
     precision_mu = precision_mu,
-    sigmaLow = sigmaLow,
-    sigmaHigh = sigmaHigh)
+    sigma_low = sigma_low,
+    sigma_high = sigma_high)
   
   # The parameters to monitor.
   params <- c("mu_x", "mu_y", "mu_diff", "sigma_x", "sigma_y", "sigma_diff",
@@ -904,8 +913,8 @@ paired_samples_t_test_model_code <- function() {
   # in flat priors on mu and sigma.
   mean_mu = mean(pair_diff, trim=0.2)
   precision_mu = 1 / (mad(pair_diff)^2 * 1000000)
-  sigmaLow = mad(pair_diff) / 1000 
-  sigmaHigh = mad(pair_diff) * 1000
+  sigma_low = mad(pair_diff) / 1000 
+  sigma_high = mad(pair_diff) * 1000
   
   # Initializing parameters to sensible starting values helps the convergence
   # of the MCMC sampling. Here using robust estimates of the mean (trimmed)
@@ -920,8 +929,8 @@ paired_samples_t_test_model_code <- function() {
     comp_mu = comp_mu,
     mean_mu = mean_mu,
     precision_mu = precision_mu,
-    sigmaLow = sigmaLow,
-    sigmaHigh = sigmaHigh)
+    sigma_low = sigma_low,
+    sigma_high = sigma_high)
   
   # The parameters to monitor.
   params <- c("mu_diff", "sigma_diff", "nu", "eff_size", "diff_pred")
