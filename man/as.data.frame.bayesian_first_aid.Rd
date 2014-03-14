@@ -5,10 +5,10 @@
 \method{as.data.frame}{bayesian_first_aid}(x, ...)
 }
 \arguments{
-  \item{fit}{}
+  \item{x}{The output from a Bayesian First Aid model.}
 }
 \value{
-A data frame
+A data frame with one column per parameter.
 }
 \description{
 Returns a dataframe with the MCMC samples from a Bayesian
@@ -17,6 +17,15 @@ phase and all chains are collapsed in the resulting data
 frame.
 }
 \details{
-Details details details
+In the case where there are many parameters with the same
+name but different index (for example, mu[1], mu[2], mu[3],
+etc.) these names will be rewritten by removing the
+brackets (that is, mu[1] -> mu1, mu[2] -> mu2, sigma[1,2]
+-> sigma12, etc.).
+}
+\examples{
+fit <- bayes.t.test(rnorm(10), rnorm(10))
+d <- as.data.frame(fit)
+mean(d$mu_x)
 }
 

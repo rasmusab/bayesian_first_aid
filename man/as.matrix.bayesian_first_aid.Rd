@@ -5,10 +5,10 @@
 \method{as.matrix}{bayesian_first_aid}(x, ...)
 }
 \arguments{
-  \item{fit}{}
+  \item{x}{The output from a Bayesian First Aid model.}
 }
 \value{
-A matrix
+A matrix with one column per parameter.
 }
 \description{
 Returns a matrix with the MCMC samples from a Bayesian
@@ -16,6 +16,14 @@ First Aid Object. The samples does not include the burn in
 phase and all chains are collapsed in the resulting matrix.
 }
 \details{
-Details details details
+This is just a wrapper for the \code{as.matrix} from the
+coda package. Therefor, paramameters with the same name but
+different index will be column names that includes brackets
+(for example, "mu[1]", "mu[2]", "sigma[1,2], etc.)
+}
+\examples{
+fit <- bayes.t.test(rnorm(10), rnorm(10))
+d <- as.matrix(fit)
+mean(d[,"mu_x"])
 }
 
