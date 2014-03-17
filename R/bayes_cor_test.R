@@ -36,14 +36,17 @@ cor_model_string <- "model {
     xy[i,1:2] ~ dmt(mu[], prec[ , ], nu) 
   }
 
-  ## Creating the precision matrix (the inverse of the covariance matrix)
+  # JAGS parameterizes the multivariate t using precision (inverse of variance) 
+  # rather than variance, therefore here inverting the covariance matrix.
   prec[1:2,1:2] <- inverse(cov[,])
+
+  # Constructing the covariance matrix
   cov[1,1] <- sigma[1] * sigma[1]
   cov[1,2] <- sigma[1] * sigma[2] * rho
   cov[2,1] <- sigma[1] * sigma[2] * rho
   cov[2,2] <- sigma[2] * sigma[2]
 
-  ## Priors  
+  # Priors  
   rho ~ dunif(-1, 1)
   sigma[1] ~ dunif(sigmaLow, sigmaHigh) 
   sigma[2] ~ dunif(sigmaLow, sigmaHigh)
@@ -345,6 +348,7 @@ model.code.bayes_cor_test <- function(fit) {
   cat("# Setting up the data\n")
   cat("x <-", fit$x_data_expr, "\n")
   cat("y <-", fit$y_data_expr, "\n")
+  cat("xy <- cbind(x, y)\n")
   cat("\n")
   pretty_print_function_body(cor_model_code)
 }

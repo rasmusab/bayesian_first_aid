@@ -8,8 +8,8 @@ bayes.cor.test(x, ...)
 
 \method{bayes.cor.test}{default}(x, y, alternative = c("two.sided", "less",
   "greater"), method = c("pearson", "kendall", "spearman"), exact = NULL,
-  conf.level = 0.95, continuity = FALSE, n.iter = 15000,
-  progress.bar = "text", ...)
+  cred.mass = 0.95, continuity = FALSE, n.iter = 15000,
+  progress.bar = "text", conf.level, ...)
 
 \method{bayes.cor.test}{formula}(formula, data, subset, na.action, ...)
 }
@@ -26,7 +26,7 @@ bayes.cor.test(x, ...)
 
   \item{exact}{}
 
-  \item{conf.level}{}
+  \item{cred.mass}{}
 
   \item{continuity}{}
 
@@ -42,6 +42,8 @@ bayes.cor.test(x, ...)
   \item{subset}{}
 
   \item{na.action}{}
+
+  \item{conf.level}{}
 }
 \value{
 A list of class \code{bayes_cor_test} that contains
