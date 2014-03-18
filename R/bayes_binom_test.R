@@ -190,7 +190,7 @@ plot.bayes_binom_test <- function(x, ...) {
   old_par <- par( mar=c(3.5,3.5,2.5,0.5) , mgp=c(2.25,0.7,0) )
   sample_mat <- as.matrix(x$mcmc_samples)
   plotPost(sample_mat[, "theta"], cred_mass= x$cred_mass, comp_val=x$comp_theta, xlim=c(0, 1), cex=1, cex.lab=1.5,
-           main = "Relative Frequency of Success", xlab=expression(theta))
+           main = "Relative Frequency of Success", xlab=expression(theta), show_median= TRUE)
   hist_data <- discrete_hist(sample_mat[, "x_pred"], c(0, x$n), ylab="Probability", x_marked= x$x,
                              xlab = "Number of sucesses",main="Data w. Post. Pred.")
   #legend("topright", legend="Data", col="red",  lty=1, lwd=3)
