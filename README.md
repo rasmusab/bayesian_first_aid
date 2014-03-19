@@ -4,7 +4,7 @@ Bayesian First Aid
 Bayesian First Aid is an R package that implements Bayesian alternatives to the most commonly used statistical tests. The package aims at being as easy as possible to pick up and use, especially if you are already used to the classical `.test` functions. The main gimmick is that the Bayesian alternatives will have the same calling semantics as the corresponding classical test functions save for the addition of `bayes.` to the beginning of the function name. That is, going from a classical binomial test:
 
 ``` S
-binom.test(x=7, n=10)
+binom.test(x=7, n=10, p=0.33)
 ```
 
 ```
