@@ -62,13 +62,13 @@ jags_cor_test <- function(x, y, n.adapt= 500, n.chains=3, n.update = 100, n.iter
     xy = cbind(x, y), 
     n = length(x),
     mean_mu = mean(c(x, y), trim=0.2) ,
-    precision_mu = 1 / (max(mad(x), mad(y))^2 * 1000000),
-    sigmaLow = max(mad(x), mad(y)) / 1000 ,
-    sigmaHigh = min(mad(x), mad(y)) * 1000)
+    precision_mu = 1 / (max(mad0(x), mad0(y))^2 * 1000000),
+    sigmaLow = max(mad0(x), mad0(y)) / 1000 ,
+    sigmaHigh = min(mad0(x), mad0(y)) * 1000)
   
   # Use robust estimates of the parameters as initial values
   inits_list = list(mu=c(mean(x, trim=0.2), mean(y, trim=0.2)), rho=cor(x, y, method="spearman"), 
-                    sigma = c(mad(x), mad(y)), nuMinusOne = 5)
+                    sigma = c(mad0(x), mad0(y)), nuMinusOne = 5)
   mcmc_samples <- run_jags(cor_model_string, data = data_list, inits = inits_list, 
                            params = c("rho", "mu", "sigma", "nu"), n.chains = n.chains, n.adapt = n.adapt,
                            n.update = n.update, n.iter = n.iter, thin = thin, progress.bar=progress.bar)
@@ -224,6 +224,7 @@ summary.bayes_cor_test <- function(object, ...) {
   print(s[, c("q2.5%", "q25%", "median","q75%", "q97.5%")] )
 }
 
+#' @method plot bayes_cor_test
 #' @export
 plot.bayes_cor_test <- function(x, ...) {
   stats <- x$stats

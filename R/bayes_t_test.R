@@ -294,13 +294,13 @@ jags_one_sample_t_test <- function(x, comp_mu = 0,n.adapt= 500, n.chains=3, n.up
   data_list <- list(
     x = x,
     mean_mu = mean(x, trim=0.2) ,
-    precision_mu = 1 / (mad(x)^2 * 1000000),
-    sigma_low = mad(x) / 1000 ,
-    sigma_high = mad(x) * 1000 ,
+    precision_mu = 1 / (mad0(x)^2 * 1000000),
+    sigma_low = mad0(x) / 1000 ,
+    sigma_high = mad0(x) * 1000 ,
     comp_mu = comp_mu
   )
   
-  inits_list <- list(mu = mean(x, trim=0.2), sigma = mad(x), nuMinusOne = 4)
+  inits_list <- list(mu = mean(x, trim=0.2), sigma = mad0(x), nuMinusOne = 4)
   params <- c("mu", "sigma", "nu", "eff_size", "x_pred")
   mcmc_samples <- run_jags(one_sample_t_model_string, data = data_list, inits = inits_list, 
                            params = params, n.chains = n.chains, n.adapt = n.adapt,
@@ -341,16 +341,16 @@ jags_two_sample_t_test <- function(x, y, n.adapt= 500, n.chains=3, n.update = 10
     x = x ,
     y = y ,
     mean_mu = mean(c(x, y), trim=0.2) ,
-    precision_mu = 1 / (mad(c(x, y))^2 * 1000000),
-    sigma_low = mad(c(x, y)) / 1000 ,
-    sigma_high = mad(c(x, y)) * 1000 
+    precision_mu = 1 / (mad0(c(x, y))^2 * 1000000),
+    sigma_low = mad0(c(x, y)) / 1000 ,
+    sigma_high = mad0(c(x, y)) * 1000 
   )
   
   inits_list <- list(
     mu_x = mean(x, trim=0.2),
     mu_y = mean(y, trim=0.2),
-    sigma_x = mad(x),
-    sigma_y = mad(y),
+    sigma_x = mad0(x),
+    sigma_y = mad0(y),
     nuMinusOne = 4
   )
   
@@ -385,14 +385,14 @@ jags_paired_t_test <- function(x, y, comp_mu = 0, n.adapt= 500, n.chains=3, n.up
   data_list <- list(
     pair_diff = pair_diff,
     mean_mu = mean(pair_diff, trim=0.2) ,
-    precision_mu = 1 / (mad(pair_diff)^2 * 1000000),
-    sigma_low = mad(pair_diff) / 1000 ,
-    sigma_high = mad(pair_diff) * 1000 ,
+    precision_mu = 1 / (mad0(pair_diff)^2 * 1000000),
+    sigma_low = mad0(pair_diff) / 1000 ,
+    sigma_high = mad0(pair_diff) * 1000 ,
     comp_mu = comp_mu
   )
   
   inits_list <- list(mu_diff = mean(pair_diff, trim=0.2), 
-                     sigma_diff = mad(pair_diff), 
+                     sigma_diff = mad0(pair_diff), 
                      nuMinusOne = 4)
   params <- c("mu_diff", "sigma_diff", "nu", "eff_size", "diff_pred")
   mcmc_samples <- run_jags(paired_samples_t_model_string, data = data_list, inits = inits_list, 
@@ -457,6 +457,7 @@ summary.bayes_one_sample_t_test <- function(object, ...) {
   print(s[, c("q2.5%", "q25%", "median","q75%", "q97.5%")] )
 }
 
+#' @method plot bayes_one_sample_t_test
 #' @export
 plot.bayes_one_sample_t_test <- function(x, ...) {
   stats <- x$stats
@@ -634,6 +635,7 @@ summary.bayes_two_sample_t_test <- function(object, ...) {
   print(s[, c("q2.5%", "q25%", "median","q75%", "q97.5%")] )
 }
 
+#' @method plot bayes_two_sample_t_test
 #' @export
 plot.bayes_two_sample_t_test <- function(x, ...) {
   stats <- x$stats
@@ -837,8 +839,9 @@ summary.bayes_paired_t_test <- function(object, ...) {
   print(s[, c("q2.5%", "q25%", "median","q75%", "q97.5%")] )
 }
 
+#' @method plot bayes_paired_t_test
 #' @export
-plot.bayes_paired_t_test <- function(x, ...) {
+plot.bayes_paired_t_test <- function(x, y, ...) {
   stats <- x$stats
   mcmc_samples <- x$mcmc_samples
   samples_mat <- as.matrix(mcmc_samples)

@@ -51,6 +51,18 @@ print_diagnostics_measures <- function(s) {
   cat("Rhat: the potential scale reduction factor (at convergence, Rhat=1).\n")
 }
 
+# A version of mad (median absolute deviation), that guards against mad returning zero by
+# replacing 0 it by the SD instead. Also removes NAs by default.
+
+mad0 <- function(..., na.rm=TRUE) {
+  mad_est <- mad(..., na.rm=na.rm)
+  if(mad_est != 0) {
+    mad_est
+  } else {
+    sd(..., na.rm=na.rm)
+  }
+}
+
 # Estimate the mode of a continous distribution given by x
 # from and to limits the location of the mode
 estimate_mode <- function(x,from=min(x), to=max(x)) {
