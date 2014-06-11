@@ -183,7 +183,7 @@ summary.bayes_binom_test <- function(object, ...) {
   print(s[, c("q2.5%", "q25%", "median","q75%", "q97.5%")] )
 }
 
-
+#' @method plot bayes_binom_test
 #' @export
 plot.bayes_binom_test <- function(x, ...) {
   layout(matrix(c(1,2), nrow=2, ncol=1 , byrow=FALSE) )

@@ -110,6 +110,7 @@ summary.bayes_one_sample_poisson_test <- function(object, ...) {
   print(object)
 }
 
+#' @method plot bayes_one_sample_poisson_test
 #' @export
 plot.bayes_one_sample_poisson_test <- function(x, ...) {
   plot(x$mcmc_samples)
@@ -128,6 +129,7 @@ model.code.bayes_one_sample_poisson_test <- function(fit) {
 
 ### Two sample poisson test S3 methods ###
 
+
 #' @export
 print.bayes_two_sample_poisson_test <- function(x, ...) {
   cat("\n --- Bayesian first aid two sample poisson test ---\n\n")
@@ -140,6 +142,7 @@ summary.bayes_two_sample_poisson_test <- function(object, ...) {
   print(object)
 }
 
+#' @method plot bayes_two_sample_poisson_test
 #' @export
 plot.bayes_two_sample_poisson_test <- function(x, ...) {
   plot(x$mcmc_samples)
