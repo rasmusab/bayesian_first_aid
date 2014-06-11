@@ -63,8 +63,8 @@ jags_cor_test <- function(x, y, n.adapt= 500, n.chains=3, n.update = 100, n.iter
     n = length(x),
     mean_mu = mean(c(x, y), trim=0.2) ,
     precision_mu = 1 / (max(mad0(x), mad0(y))^2 * 1000000),
-    sigmaLow = max(mad0(x), mad0(y)) / 1000 ,
-    sigmaHigh = min(mad0(x), mad0(y)) * 1000)
+    sigmaLow = min(mad0(x), mad0(y)) / 1000 ,
+    sigmaHigh = max(mad0(x), mad0(y)) * 1000)
   
   # Use robust estimates of the parameters as initial values
   inits_list = list(mu=c(mean(x, trim=0.2), mean(y, trim=0.2)), rho=cor(x, y, method="spearman"), 
@@ -366,8 +366,8 @@ cor_model_code <- function() {
     n = length(x),
     mean_mu = mean(c(x, y), trim=0.2) ,
     precision_mu = 1 / (max(mad(x), mad(y))^2 * 1000000),
-    sigmaLow = max(mad(x), mad(y)) / 1000 ,
-    sigmaHigh = min(mad(x), mad(y)) * 1000)
+    sigmaLow = min(mad(x), mad(y)) / 1000 ,
+    sigmaHigh = max(mad(x), mad(y)) * 1000)
   
   # Initializing parameters to sensible starting values helps the convergence
   # of the MCMC sampling. Here using robust estimates of the mean (trimmed)
