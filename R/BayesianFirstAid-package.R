@@ -24,7 +24,7 @@
 #'
 #' @name BayesianFirstAid
 #' @docType package
-#' @import coda rjags MASS mnormt
+#' @import coda rjags MASS mnormt stringr
 #' @include utility_functions.R
 #' @include generic_functions.R
 NULL

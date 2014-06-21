@@ -1,19 +1,6 @@
+# Todo
+# comp.theta kan inte vara olika för de olika grupperna, men det kan p i prop.test
 
-
-prop_model_string <- "model {
-  for(i in 1:length(x)) {
-    x[i] ~ dbinom(theta[i], n[i])
-    theta[i] ~ dbeta(1, 1)
-    x_pred[i] ~ dbinom(theta[i], n[i])
-  }
-}"
-
-jags_prop_test <- function(x, n, n.chains=3, n.iter=5000, progress.bar="none") {
-  mcmc_samples <- run_jags(prop_model_string, data = list(x = x, n = n), inits = list(theta = (x + 1) / (n + 2)), 
-                           params = c("theta", "x_pred"), n.chains = n.chains, n.adapt = 0,
-                           n.update = 0, n.iter = n.iter, thin = 1, progress.bar=progress.bar)
-  mcmc_samples
-}
 
 #'Bayesian First Aid Alternative to a Test of Proportions
 #'
@@ -118,7 +105,8 @@ bayes.prop.test <- function (x, n, comp.theta = NULL, alternative = NULL, cred.m
   
   x_name <- deparse(substitute(x))
   n_name <- deparse(substitute(n))
-  ### Begin code from prop.test 
+  
+  ### Begin slightly modified code from prop.test 
   DNAME <- deparse(substitute(x))
   if (is.table(x) && length(dim(x)) == 1L) {
     if (dim(x) != 2L) 
@@ -150,14 +138,14 @@ bayes.prop.test <- function (x, n, comp.theta = NULL, alternative = NULL, cred.m
     stop("elements of 'x' must be nonnegative")
   if (any(x > n)) 
     stop("elements of 'x' must not be greater than those of 'n'")
+  if(length(comp.theta) == 1) {
+    comp.theta <- rep(comp.theta, length(x))
+  }
   if (is.null(comp.theta) && (k == 1)) 
     comp.theta <- 0.5
   if (!is.null(comp.theta)) {
-    DNAME <- paste0(DNAME, ", null ", if (k == 1) 
-      "probability "
-      else "probabilities ", deparse(substitute(comp.theta)))
     if (length(comp.theta) != l) 
-      stop("'comp.theta' must have the same length as 'x' and 'n'")
+      stop("'comp.theta' must have the same length as 'x' and 'n' or be a single number")
     comp.theta <- comp.theta[OK]
     if (any((comp.theta <= 0) | (comp.theta >= 1))) 
       stop("elements of 'comp.theta' must be in (0,1)")
@@ -165,14 +153,106 @@ bayes.prop.test <- function (x, n, comp.theta = NULL, alternative = NULL, cred.m
   if ((length(cred.mass) != 1L) || is.na(cred.mass) ||
         (cred.mass <= 0) || (cred.mass >= 1)) 
     stop("'cred.mass' must be a single number between 0 and 1")
-  
+
   ### END code from prop.test 
   
+  if(length(x) == 1) {
+    return(bayes.binom.test(x, n, comp.theta, cred.mass = ifelse(is.null(cred.mass), 0.5, cred.mass),
+                            n.iter = n.iter, progress.bar = progress.bar))
+  }
+  
   mcmc_samples <- jags_prop_test(x, n, n.chains = 3, n.iter = ceiling(n.iter / 3) , progress.bar=progress.bar)
-  stats <- mcmc_stats(mcmc_samples, cred_mass = cred.mass, comp_val = ifelse(is.null(comp.theta), 0.5, comp.theta) )
+  if(is.null(comp.theta)) {
+    stats <- mcmc_stats(mcmc_samples, cred_mass = cred.mass, comp_val = 0.5)
+  } else {
+    stats <- mcmc_stats(mcmc_samples, cred_mass = cred.mass, comp_val = comp.theta)
+  }
+ 
   bfa_object <- list(x = x, n = n, comp_theta = comp.theta, cred_mass = cred.mass,
                      x_name = x_name, n_name = n_name, data_name = DNAME,
                      mcmc_samples = mcmc_samples, stats = stats) 
   class(bfa_object) <- c("bayes_prop_test", "bayesian_first_aid")
   bfa_object
 }
+
+prop_model_string <- "model {
+  for(i in 1:length(x)) {
+    x[i] ~ dbinom(theta[i], n[i])
+    theta[i] ~ dbeta(1, 1)
+    x_pred[i] ~ dbinom(theta[i], n[i])
+  }
+}"
+
+jags_prop_test <- function(x, n, n.chains=3, n.iter=5000, progress.bar="none") {
+  mcmc_samples <- run_jags(prop_model_string, data = list(x = x, n = n), inits = list(theta = (x + 1) / (n + 2)), 
+                           params = c("theta", "x_pred"), n.chains = n.chains, n.adapt = 0,
+                           n.update = 0, n.iter = n.iter, thin = 1, progress.bar=progress.bar)
+  mcmc_samples
+}
+
+
+format_group_diffs <- function(bfa_object) {
+  samples <- as.matrix(bfa_object$mcmc_samples)
+  param_names <- colnames(samples)[ str_detect(colnames(samples), "theta")]
+  diff_mat <- matrix("", nrow = (length(param_names) - 1) * 2, ncol = length(param_names) - 1)
+  for(i in 1:(length(param_names) - 1)) {
+    for(j in 2:length(param_names)) {
+      if(! i >= j) { 
+        param1 <- paste("theta[", i, "]",sep="")
+        param2 <- paste("theta[", j, "]", sep="")
+        theta_diff <- samples[,param1] - samples[,param2]
+        med_theta <- round(median(theta_diff), 2)
+        hdi <- signif(HDIofMCMC(theta_diff, bfa_object$cred_mass), 2)
+        diff_mat[1 + (i - 1) * 2, j - 1] <- med_theta
+        diff_mat[2 + (i - 1) * 2, j - 1] <- paste("[", hdi[1], ", ", hdi[2], "]", sep="")
+      }
+    }
+  }
+  diff_mat <- format(diff_mat, width = max(nchar(diff_mat)), justify = "centre")
+  rownames(diff_mat) <- rep(1:ceiling(nrow(diff_mat) / 2), each = 2)
+  rownames(diff_mat)[1:nrow(diff_mat) %% 2 == 0] <- ""
+  rownames(diff_mat) <- paste0("  ", rownames(diff_mat))
+  colnames(diff_mat) <- format(as.character(1:ncol(diff_mat) + 1), width = max(nchar(diff_mat)), justify = "centre")
+  diff_mat
+}
+
+
+#' @export
+print.bayes_prop_test <- function(x, ...) {
+  
+  s <- format_stats(x$stats)
+  
+  cat("\n")
+  cat("\tBayesian First Aid propotion test\n")
+  cat("\n")
+  cat("data: ", x$data_name, "\n", sep="")
+  pad_width <- max(nchar(as.character(c(x$x, x$n)))) + 1
+  cat("number of successes: ", paste(str_pad(x$x, pad_width), collapse = ","), "\n", sep="")
+  cat("number of trials:    ", paste(str_pad(x$n, pad_width), collapse = ","), "\n", sep="")
+  cat("Estimated relative frequency of success [", s[1, "HDI%"] ,"% credible interval]:\n", sep="")
+  for(param_i in which(str_detect(rownames(s), "theta"))) {
+    param <- paste("theta[", param_i, "]", sep="")
+    cat("  Group ", param_i,": " ,s[param, "median"], " [", paste(s[param, c("HDIlo", "HDIup")], collapse = ", "),"]\n", sep = "")
+  }
+  
+  group_diffs <- format_group_diffs(x)
+  if(ncol(group_diffs) > 1) {
+    cat("Estimated pairwise group differences (row - column) with", s[1, "HDI%"] ,"% cred. intervals:\n")
+    cat(format("Group", width = 2 + nchar(rownames(group_diffs)[1]) * 2 + sum(nchar(colnames(group_diffs))),
+               justify = "centre"), "\n", sep="") 
+    print(format_group_diffs(x), quote=FALSE)
+  } else {
+    cat("Estimated group difference (Group 1 - Group 2):\n")  
+    cat("  ", str_trim(group_diffs[1,1]), " ",group_diffs[2,1], "\n", sep="")
+  }
+
+  if(! is.null(fit$comp_theta)) {
+    cat("The prob. that the relative frequency of success is less/more than comp. val:\n")
+    comp_table <- s[str_detect(rownames(s), "theta"), c("comp", "%<comp", "%>comp")]
+    rownames(comp_table) <- paste("  Group ", 1:nrow(comp_table), ":", sep="")
+    colnames(comp_table) <- c("comp. val.",  " <", " >") 
+    print(format(comp_table, justify="centre"), quote=FALSE)
+  }
+  cat("\n")
+}
+
