@@ -179,13 +179,19 @@ mcmc_stats <- function(samples, cred_mass = 0.95, comp_val = 0) {
   samples_mat <- as.matrix(samples)
   stats <- data.frame(mean = colMeans(samples_mat))
   stats$sd <- apply(samples_mat, 2, sd)
-  hdi_lim <- apply(samples_mat, 2, HDIofMCMC, credMass=cred_mass)
+  cred_mass <- rep(cred_mass, length.out = ncol(samples_mat))
+  comp_val <- rep(comp_val, length.out = ncol(samples_mat))
   stats$"HDI%" <- cred_mass * 100
-  stats$HDIlo <- hdi_lim[1,]
-  stats$HDIup <- hdi_lim[2,]
   stats$comp <- comp_val
-  stats$"%>comp" <- apply(samples_mat, 2, function(x) { mean(c(x > comp_val, 0, 1)) })
-  stats$"%<comp" <- apply(samples_mat, 2, function(x) { mean(c(x < comp_val, 0, 1)) })
+  stats$HDIlo <- NA
+  stats$HDIup <- NA
+  for(i in 1:ncol(samples_mat)){
+    hdi_lim <- HDIofMCMC(samples_mat[,i], credMass=cred_mass[i])
+    stats$HDIlo[i] <- hdi_lim[1]
+    stats$HDIup[i] <- hdi_lim[2]  
+    stats$"%>comp"[i] <- mean(c(samples_mat[,i] > comp_val[i], 0, 1))
+    stats$"%<comp"[i] <- mean(c(samples_mat[,i] < comp_val[i], 0, 1))
+  }
   stats$"q2.5%" <- apply(samples_mat, 2, quantile,  probs= 0.025)
   stats$"q25%" <- apply(samples_mat, 2, quantile,  probs= 0.25)
   stats$median <- apply(samples_mat, 2, median)
