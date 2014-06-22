@@ -174,7 +174,8 @@ sign_digits <- function(x,d){
 }
 
 # Takes coda samples generates a matrix with different statistics for the
-# parameters
+# parameters. Samples can both be a mcmc.list and a matrix with one column
+# per parameter
 mcmc_stats <- function(samples, cred_mass = 0.95, comp_val = 0) {
   samples_mat <- as.matrix(samples)
   stats <- data.frame(mean = colMeans(samples_mat))
@@ -197,9 +198,14 @@ mcmc_stats <- function(samples, cred_mass = 0.95, comp_val = 0) {
   stats$median <- apply(samples_mat, 2, median)
   stats$"q75%" <- apply(samples_mat, 2, quantile,  probs= 0.75)
   stats$"q97.5%" <- apply(samples_mat, 2, quantile,  probs= 0.975)
-  stats$mcmc_se <- summary(samples)$statistics[,"Time-series SE"]
-  stats$Rhat <- gelman.diag(samples, multivariate = FALSE)$psrf[, 1]
-  stats$n_eff <- as.integer(effectiveSize(samples))
+  stats$mcmc_se <- NA
+  stats$Rhat <- NA
+  stats$n_eff <- NA
+  if(is.mcmc.list(samples)) {
+    stats$mcmc_se <- summary(samples)$statistics[,"Time-series SE"]
+    stats$Rhat <- gelman.diag(samples, multivariate = FALSE)$psrf[, 1]
+    stats$n_eff <- as.integer(effectiveSize(samples))
+  }
   as.matrix(stats) # 'cause it's easier to index
 }
 
@@ -326,15 +332,15 @@ plotPost = function( param_sample_vec , cred_mass=0.95 , comp_val=NULL ,
     dres = density( param_sample_vec )
     modeParam = dres$x[which.max(dres$y)]
     text( modeParam , cenTendHt ,
-          bquote(mode==.(signif(modeParam,3))) , adj=c(.5,0) , cex=cex )
+          bquote(mode==.(sign_digits(modeParam,2))) , adj=c(.5,0) , cex=cex )
   } else if(show_median) {
     medianParam = median( param_sample_vec )
     text( medianParam , cenTendHt ,
-          bquote(median==.(signif(medianParam,3))) , adj=c(.5,0) , cex=cex )
+          bquote(median==.(sign_digits(medianParam,2))) , adj=c(.5,0) , cex=cex )
   } else { # Show the mean
     meanParam = mean( param_sample_vec )
     text( meanParam , cenTendHt ,
-        bquote(mean==.(signif(meanParam,3))) , adj=c(.5,0) , cex=cex )
+        bquote(mean==.(sign_digits(meanParam,2))) , adj=c(.5,0) , cex=cex )
   }
   
   
@@ -348,7 +354,7 @@ plotPost = function( param_sample_vec , cred_mass=0.95 , comp_val=NULL ,
            lty="dotted" , lwd=1 , col=cvCol )
     text( comp_val , cvHt ,
           bquote( .(pcltcomp_val)*"% < " *
-                   .(signif(comp_val,3)) * " < "*.(pcgtcomp_val)*"%" ) ,
+                   .(signif(comp_val,2)) * " < "*.(pcgtcomp_val)*"%" ) ,
           adj=c(pcltcomp_val/100,0) , cex=0.8*cex , col=cvCol )
     postSummary[,"comp_val"] = comp_val
     postSummary[,"pcGTcomp_val"] = ( sum( param_sample_vec > comp_val ) 
@@ -375,9 +381,9 @@ plotPost = function( param_sample_vec , cred_mass=0.95 , comp_val=NULL ,
   lines( HDI , c(0,0) , lwd=4 )
   text( mean(HDI) , 0 , bquote(.(100*cred_mass) * "% HDI" ) ,
         adj=c(.5,-1.7) , cex=cex )
-  text( HDI[1] , 0 , bquote(.(signif(HDI[1],3))) ,
+  text( HDI[1] , 0 , bquote(.(sign_digits(HDI[1],2))) ,
         adj=c(HDI_text_place,-0.5) , cex=cex )
-  text( HDI[2] , 0 , bquote(.(signif(HDI[2],3))) ,
+  text( HDI[2] , 0 , bquote(.(sign_digits(HDI[2],2))) ,
         adj=c(1.0-HDI_text_place,-0.5) , cex=cex )
   par(xpd=F)
   #

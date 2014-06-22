@@ -1,7 +1,3 @@
-# Todo
-# comp.theta kan inte vara olika för de olika grupperna, men det kan p i prop.test
-
-
 #'Bayesian First Aid Alternative to a Test of Proportions
 #'
 #'\code{bayes.prop.test} estimates the relative frequency of success for two or 
@@ -162,17 +158,35 @@ bayes.prop.test <- function (x, n, comp.theta = NULL, alternative = NULL, cred.m
   }
   
   mcmc_samples <- jags_prop_test(x, n, n.chains = 3, n.iter = ceiling(n.iter / 3) , progress.bar=progress.bar)
+  
   if(is.null(comp.theta)) {
-    stats <- mcmc_stats(mcmc_samples, cred_mass = cred.mass, comp_val = 0.5)
+    temp_comp_val <- 0.5
   } else {
-    stats <- mcmc_stats(mcmc_samples, cred_mass = cred.mass, comp_val = comp.theta)
+    temp_comp_val <- comp.theta
   }
- 
+  stats <- mcmc_stats(mcmc_samples, cred_mass = cred.mass, comp_val = temp_comp_val)
+  diff_stats <- mcmc_stats(create_theta_diff_matrix(as.matrix(mcmc_samples)))
+  stats <- rbind(stats, diff_stats)
   bfa_object <- list(x = x, n = n, comp_theta = comp.theta, cred_mass = cred.mass,
                      x_name = x_name, n_name = n_name, data_name = DNAME,
                      mcmc_samples = mcmc_samples, stats = stats) 
   class(bfa_object) <- c("bayes_prop_test", "bayesian_first_aid")
   bfa_object
+}
+
+create_theta_diff_matrix <- function(samples_mat) {
+  n_groups <- sum(str_count(colnames(samples_mat), "theta\\["))
+  combs <- combn(n_groups, 2)
+  theta_diffs <- sapply(1:ncol(combs), function(comb_i) {
+    i <- combs[1, comb_i]
+    j <- combs[2, comb_i]
+    theta_diff <- samples_mat[,paste0("theta[", i,"]")] - samples_mat[,paste0("theta[", j,"]")] 
+    theta_diff <- matrix(theta_diff, nrow = 1, dimnames = NULL)
+    theta_diff
+  })
+  
+  colnames(theta_diffs) <- apply(combs, 2, function(comb) {paste0("theta_diff[", comb[1], ",", comb[2], "]")})
+  theta_diffs
 }
 
 prop_model_string <- "model {
@@ -192,30 +206,72 @@ jags_prop_test <- function(x, n, n.chains=3, n.iter=5000, progress.bar="none") {
 
 
 format_group_diffs <- function(bfa_object) {
-  samples <- as.matrix(bfa_object$mcmc_samples)
-  param_names <- colnames(samples)[ str_detect(colnames(samples), "theta")]
-  diff_mat <- matrix("", nrow = (length(param_names) - 1) * 2, ncol = length(param_names) - 1)
-  for(i in 1:(length(param_names) - 1)) {
-    for(j in 2:length(param_names)) {
-      if(! i >= j) { 
-        param1 <- paste("theta[", i, "]",sep="")
-        param2 <- paste("theta[", j, "]", sep="")
-        theta_diff <- samples[,param1] - samples[,param2]
-        med_theta <- round(median(theta_diff), 2)
-        hdi <- signif(HDIofMCMC(theta_diff, bfa_object$cred_mass), 2)
-        diff_mat[1 + (i - 1) * 2, j - 1] <- med_theta
-        diff_mat[2 + (i - 1) * 2, j - 1] <- paste("[", hdi[1], ", ", hdi[2], "]", sep="")
-      }
-    }
+  s <- bfa_object$stats
+  n_groups <- length(bfa_object$x)
+  med_diff_mat <- matrix("", nrow = n_groups, ncol = n_groups)
+  hdi_diff_mat <- matrix("", nrow = n_groups, ncol = n_groups)
+  diff_names <- rownames(s)[ str_detect(rownames(s), "theta_diff\\[")]
+  for(diff_name in diff_names) {
+    indices_match <- str_match(diff_name, "\\[(\\d+),(\\d+)\\]$")
+    i <- as.numeric(indices_match[1,2])
+    j <- as.numeric(indices_match[1,3])
+    med_diff_mat[i, j] <- as.character(round(s[diff_name, "median"], 2) )
+    hdi_diff_mat[i, j] <- paste("[", signif(s[diff_name, "HDIlo"], 2), ", ", signif(s[diff_name, "HDIup"], 2), "]", sep="")
   }
-  diff_mat <- format(diff_mat, width = max(nchar(diff_mat)), justify = "centre")
-  rownames(diff_mat) <- rep(1:ceiling(nrow(diff_mat) / 2), each = 2)
+  diff_mat <- matrix("", nrow = n_groups * 2, ncol = n_groups)
+  for(i in seq_len(n_groups)) {
+    diff_mat[1 + (i - 1) * 2,] <- med_diff_mat[i,] 
+    diff_mat[2 + (i - 1) * 2,] <- hdi_diff_mat[i,] 
+  }
+  rownames(diff_mat) <- rep(seq_len(n_groups), each = 2)
   rownames(diff_mat)[1:nrow(diff_mat) %% 2 == 0] <- ""
   rownames(diff_mat) <- paste0("  ", rownames(diff_mat))
-  colnames(diff_mat) <- format(as.character(1:ncol(diff_mat) + 1), width = max(nchar(diff_mat)), justify = "centre")
+  diff_mat <- format(diff_mat, width = max(nchar(diff_mat)), justify = "centre")
+  colnames(diff_mat) <- format(as.character(1:ncol(diff_mat)), width = max(nchar(diff_mat)), justify = "centre")
+  diff_mat <- diff_mat[-c(nrow(diff_mat) - 1, nrow(diff_mat)), -1, drop=FALSE]
   diff_mat
 }
 
+
+# TODO
+#' @method plot bayes_prop_test
+#' @export
+plot.bayes_prop_test <- function(x, ...) {
+  samples <- as.matrix(x$mcmc_samples)
+  n_groups <- length(x$x)
+  diff_samples <- create_theta_diff_matrix(as.matrix(x$mcmc_samples)) 
+  layout_mat <- matrix( 0 , nrow=n_groups, ncol=n_groups)
+  #layout_mat[,1] <- seq_len(n_groups)
+  diag(layout_mat) <- seq_len(n_groups)
+  
+  layout_mat <- t(layout_mat)
+  layout_mat[lower.tri(layout_mat)] <- seq(n_groups + 1, by = 2,length.out = (ncol(diff_samples)))
+  layout_mat <- t(layout_mat)
+  layout_mat[lower.tri(layout_mat)] <- seq(n_groups + 2, by = 2,length.out = (ncol(diff_samples)))
+  layout(layout_mat)
+  old_par <- par( mar=c(3.5,2,2,2) , mgp=c(2.25,0.7,0) )
+  plotPost(samples[,"theta[1]"], cex.lab = 1.5, xlab=bquote(theta[1]), main=paste("Rel. Freq. Group 1"),  
+           cred_mass= x$cred_mass, col="#5DE293" , show_median=TRUE, comp_val=x$comp_theta[1], xlim=c(0,1))
+  for(i in 2:n_groups) {
+    plotPost(samples[,paste0("theta[",i, "]")], cex.lab = 1.5, xlab=bquote(theta[.(i)]), main=paste("Group", i),  
+             cred_mass= x$cred_mass, col="#5DE293" , show_median=TRUE, comp_val=x$comp_theta[i], xlim=c(0,1))
+  }
+  diff_xlim <- quantile(diff_samples, c(0.001, 0.999))
+  for(i in 1:ncol(diff_samples)) {
+    diff_name <- colnames(diff_samples)[i]
+    indices_match <- str_match(diff_name, "\\[(\\d+),(\\d+)\\]$")
+    group_i <- as.numeric(indices_match[1,2])
+    group_j <- as.numeric(indices_match[1,3])
+    plotPost(diff_samples[,i], cex.lab = 1.5, xlab=bquote(theta[.(group_i)] - theta[.(group_j)]),
+             main="", cred_mass= x$cred_mass, col="skyblue" , show_median=TRUE, 
+             comp_val=0, xlim=diff_xlim)
+    plotPost(-diff_samples[,i], cex.lab = 1.5, xlab=bquote(theta[.(group_j)] - theta[.(group_i)]),
+             main="", cred_mass= x$cred_mass, col="skyblue" , show_median=TRUE, 
+             comp_val=0, xlim=diff_xlim)
+  }
+
+  par(old_par)
+}
 
 #' @export
 print.bayes_prop_test <- function(x, ...) {
@@ -230,7 +286,7 @@ print.bayes_prop_test <- function(x, ...) {
   cat("number of successes: ", paste(str_pad(x$x, pad_width), collapse = ","), "\n", sep="")
   cat("number of trials:    ", paste(str_pad(x$n, pad_width), collapse = ","), "\n", sep="")
   cat("Estimated relative frequency of success [", s[1, "HDI%"] ,"% credible interval]:\n", sep="")
-  for(param_i in which(str_detect(rownames(s), "theta"))) {
+  for(param_i in which(str_detect(rownames(s), "theta\\["))) {
     param <- paste("theta[", param_i, "]", sep="")
     cat("  Group ", param_i,": " ,s[param, "median"], " [", paste(s[param, c("HDIlo", "HDIup")], collapse = ", "),"]\n", sep = "")
   }
@@ -248,7 +304,7 @@ print.bayes_prop_test <- function(x, ...) {
 
   if(! is.null(fit$comp_theta)) {
     cat("The prob. that the relative frequency of success is less/more than comp. val:\n")
-    comp_table <- s[str_detect(rownames(s), "theta"), c("comp", "%<comp", "%>comp")]
+    comp_table <- s[str_detect(rownames(s), "theta\\["), c("comp", "%<comp", "%>comp")]
     rownames(comp_table) <- paste("  Group ", 1:nrow(comp_table), ":", sep="")
     colnames(comp_table) <- c("comp. val.",  " <", " >") 
     print(format(comp_table, justify="centre"), quote=FALSE)
@@ -256,3 +312,80 @@ print.bayes_prop_test <- function(x, ...) {
   cat("\n")
 }
 
+#' @export
+summary.bayes_prop_test <- function(object, ...) {
+  
+  s <- round(object$stats, 3)
+  
+  cat("  Data\n")
+  pad_width <- max(nchar(as.character(c(object$x, object$n)))) + 1
+  cat("number of successes: ", paste(str_pad(object$x, pad_width), collapse = ","), "\n", sep="")
+  cat("number of trials:    ", paste(str_pad(object$n, pad_width), collapse = ","), "\n", sep="")
+  cat("\n")
+  
+  cat("  Model parameters and generated quantities\n")
+  cat("theta[i]: the relative frequency of success for Group i\n")
+  cat("x_pred[i]: predicted number of successes in a replication for Group i\n")
+  cat("theta_diff[i,j]: the difference between two groups (theta[i] - theta[j])\n")
+  cat("\n")
+  cat("  Measures\n" )
+  print(s[, c("mean", "sd", "HDIlo", "HDIup", "%<comp", "%>comp")])
+  cat("\n")
+  cat("'HDIlo' and 'HDIup' are the limits of a ", s[1, "HDI%"] ,"% HDI credible interval.\n", sep="")
+  cat("'%<comp' and '%>comp' are the probabilities of the respective parameter being\n")
+  cat("smaller or larger than ", s[1, "comp"] ,".\n", sep="")
+  
+  cat("\n")
+  cat("  Quantiles\n" )
+  print(s[, c("q2.5%", "q25%", "median","q75%", "q97.5%")] )
+}
+
+#' @export
+diagnostics.bayes_prop_test <- function(fit) {
+  print_mcmc_info(fit$mcmc_samples)  
+  cat("\n")
+  print_diagnostics_measures(round(fit$stats, 3))
+  cat("\n")
+  
+  cat("  Model parameters and generated quantities\n")
+  cat("theta: The relative frequency of success\n")
+  cat("x_pred: Predicted number of successes in a replication\n")
+  cat("theta_diff[i,j]: the difference between two groups (theta[i] - theta[j])\n")
+  old_par <- par( mar=c(3.5,2.5,2.5,0.6) , mgp=c(2.25,0.7,0) )
+  plot(fit$mcmc_samples)
+  par(old_par)
+}
+
+#' @export
+model.code.bayes_prop_test <- function(fit) {
+  cat("### Model code for the Bayesian First Aid alternative to the binomial test ###\n")
+  cat("require(rjags)\n\n")
+  
+  cat("# Setting up the data\n")
+  cat("x <-", deparse(fit$x, ), "\n")
+  cat("n <-", deparse(fit$n), "\n")
+  cat("\n")
+  pretty_print_function_body(prop_model_code)
+}
+
+# Not to be run, just to be printed
+prop_model_code <- function() {
+  # The model string written in the JAGS language
+  BayesianFirstAid::replace_this_with_model_string
+  
+  # Running the model
+  model <- jags.model(textConnection(model_string), data = list(x = x, n = n), 
+                      n.chains = 3, n.adapt=1000)
+  samples <- coda.samples(model, c("theta", "x_pred"), n.iter=5000)
+  
+  # Inspecting the posterior
+  plot(samples)
+  summary(samples)
+  
+  # You can extract the mcmc samples as a matrix and compare the thetas 
+  # of the groups. For example, the following shows the median and 95%
+  # credible interval for the difference between Group 1 and Group 2.
+  samp_mat <- as.matrix(samples)
+  quantile(samp_mat[, "theta[1]"] - samp_mat[, "theta[2]"], c(0.025, 0.5, 0.975))
+}
+prop_model_code <- inject_model_string(prop_model_code, prop_model_string)
