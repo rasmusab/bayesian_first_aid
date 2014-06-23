@@ -1,6 +1,6 @@
-context("BFA t-test")
+context("bayes.t.test")
 
-test_that("bfa.t.test.default accepts the same format as t.test.default", {
+test_that("bayes.t.test.default accepts the same format as t.test.default", {
   library(datasets)
   ## The examples from the t.test documentation. Uses Student's sleep data from datasets.
   expect_that(bayes.t.test(1:10, y = c(7:20), n.iter=30), is_a("bayes_two_sample_t_test"))      # P = .00001855
@@ -9,7 +9,7 @@ test_that("bfa.t.test.default accepts the same format as t.test.default", {
   expect_that(bayes.t.test(extra ~ group, data = sleep, n.iter=30), is_a("bayes_two_sample_t_test"))
 })
 
-test_that("bfa_t_test returns bfa_t_test* object of the right class", {
+test_that("bayes.t.test returns bayes_*_t_test object of the right class", {
   x <- rnorm(10)
   y <- rnorm(10)
   

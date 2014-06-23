@@ -1,6 +1,6 @@
-context("BFA binomial test")
+context("bayes.binom.test")
 
-test_that("bfa.binom.test accepts the same format as binom.test and returns a bayes_binom_test object", {
+test_that("bayes.binom.test accepts the same format as binom.test and returns a bayes_binom_test object", {
   
   ## These examples are from the binom.test documentation.
   expect_that(bayes.binom.test(c(682, 243), p = 3/4, n.iter=30), is_a("bayes_binom_test"))
