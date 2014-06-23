@@ -267,7 +267,7 @@ plot.bayes_prop_test <- function(x, ...) {
              comp_val=0, xlim=diff_xlim)
     plotPost(-diff_samples[,i], cex.lab = 1.5, xlab=bquote(theta[.(group_j)] - theta[.(group_i)]),
              main="", cred_mass= x$cred_mass, col="skyblue" , show_median=TRUE, 
-             comp_val=0, xlim=diff_xlim)
+             comp_val=0, xlim=sort(-diff_xlim))
   }
 
   par(old_par)
