@@ -271,12 +271,12 @@ HDIofMCMC = function( sampleVec , credMass=0.95 ) {
   return( HDIlim )
 }
 
-# Author John Kruschke
+# Author John Kruschke, slightly modified
 plotPost = function( param_sample_vec , cred_mass=0.95 , comp_val=NULL ,
                      HDI_text_place=0.7 , ROPE=NULL , yaxt=NULL , ylab=NULL ,
                      xlab=NULL , cex.lab=NULL , cex=NULL , xlim=NULL , main=NULL ,
                      col=NULL , border=NULL , show_mode=FALSE , show_median = FALSE,
-                     show_curve=FALSE , breaks=NULL , ... ) {
+                     show_curve=FALSE , breaks=NULL , show_labels = TRUE,... ) {
   # Override defaults of hist function, if not specified by user:
   # (additional arguments "..." are passed to the hist function)
   if ( is.null(xlab) ) xlab="Parameter"
@@ -331,16 +331,28 @@ plotPost = function( param_sample_vec , cred_mass=0.95 , comp_val=NULL ,
   if ( show_mode==T )   {
     dres = density( param_sample_vec )
     modeParam = dres$x[which.max(dres$y)]
-    text( modeParam , cenTendHt ,
-          bquote(mode==.(sign_digits(modeParam,2))) , adj=c(.5,0) , cex=cex )
+    if(show_labels) {
+      text_label <-  bquote(mode==.(sign_digits(modeParam,2)))
+    } else {
+      text_label <-  sign_digits(modeParam,2)
+    }
+    text( modeParam , cenTendHt , text_label, adj=c(.5,0) , cex=cex )
   } else if(show_median) {
     medianParam = median( param_sample_vec )
-    text( medianParam , cenTendHt ,
-          bquote(median==.(sign_digits(medianParam,2))) , adj=c(.5,0) , cex=cex )
+    if(show_labels) {
+      text_label <-  bquote(median==.(sign_digits(medianParam,2)))
+    } else {
+      text_label <-  sign_digits(medianParam,2)
+    }
+    text( medianParam , cenTendHt , text_label, adj=c(.5,0) , cex=cex )
   } else { # Show the mean
     meanParam = mean( param_sample_vec )
-    text( meanParam , cenTendHt ,
-        bquote(mean==.(sign_digits(meanParam,2))) , adj=c(.5,0) , cex=cex )
+    if(show_labels) {
+      text_label <-  bquote(mean==.(sign_digits(meanParam,2)))
+    } else {
+      text_label <-  sign_digits(meanParam,2)
+    }
+    text( meanParam , cenTendHt ,  text_label, adj=c(.5,0) , cex=cex )
   }
   
   
@@ -379,8 +391,10 @@ plotPost = function( param_sample_vec , cred_mass=0.95 , comp_val=NULL ,
   }
   # Display the HDI.
   lines( HDI , c(0,0) , lwd=4 )
-  text( mean(HDI) , 0 , bquote(.(100*cred_mass) * "% HDI" ) ,
-        adj=c(.5,-1.7) , cex=cex )
+  if(show_labels) {
+    text( mean(HDI) , 0 , bquote(.(100*cred_mass) * "% HDI" ) ,
+          adj=c(.5,-1.7) , cex=cex )
+  }
   text( HDI[1] , 0 , bquote(.(sign_digits(HDI[1],2))) ,
         adj=c(HDI_text_place,-0.5) , cex=cex )
   text( HDI[2] , 0 , bquote(.(sign_digits(HDI[2],2))) ,

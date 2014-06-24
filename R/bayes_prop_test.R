@@ -254,7 +254,7 @@ plot.bayes_prop_test <- function(x, ...) {
            cred_mass= x$cred_mass, col="#5DE293" , show_median=TRUE, comp_val=x$comp_theta[1], xlim=c(0,1))
   for(i in 2:n_groups) {
     plotPost(samples[,paste0("theta[",i, "]")], cex.lab = 1.5, xlab=bquote(theta[.(i)]), main=paste("Group", i),  
-             cred_mass= x$cred_mass, col="#5DE293" , show_median=TRUE, comp_val=x$comp_theta[i], xlim=c(0,1))
+             cred_mass= x$cred_mass, col="#5DE293" , show_median=TRUE, comp_val=x$comp_theta[i], xlim=c(0,1), show_labels = FALSE)
   }
   diff_xlim <- quantile(diff_samples, c(0.001, 0.999))
   for(i in 1:ncol(diff_samples)) {
@@ -264,10 +264,10 @@ plot.bayes_prop_test <- function(x, ...) {
     group_j <- as.numeric(indices_match[1,3])
     plotPost(diff_samples[,i], cex.lab = 1.5, xlab=bquote(theta[.(group_i)] - theta[.(group_j)]),
              main="", cred_mass= x$cred_mass, col="skyblue" , show_median=TRUE, 
-             comp_val=0, xlim=diff_xlim)
+             comp_val=0, xlim=diff_xlim, show_labels = FALSE)
     plotPost(-diff_samples[,i], cex.lab = 1.5, xlab=bquote(theta[.(group_j)] - theta[.(group_i)]),
              main="", cred_mass= x$cred_mass, col="skyblue" , show_median=TRUE, 
-             comp_val=0, xlim=sort(-diff_xlim))
+             comp_val=0, xlim=sort(-diff_xlim), show_labels = FALSE)
   }
 
   par(old_par)
