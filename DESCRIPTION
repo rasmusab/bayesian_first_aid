@@ -36,4 +36,5 @@ Collate:
     'bayes_binom_test.R'
     'bayes_cor_test.R'
     'bayes_poisson_test.R'
+    'bayes_prop_test.R'
     'bayes_t_test.R'
