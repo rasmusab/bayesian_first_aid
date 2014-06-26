@@ -189,6 +189,7 @@ print.bayes_cor_test <- function(x, ...) {
   cat("The correlation is more than", s["comp"] , "by a probability of", s["%>comp"], "\n")
   cat("and less than", s["comp"] , "by a probability of", s["%<comp"], "\n")
   cat("\n")
+  invisible(NULL)
 }
 
 print_bayes_cor_test_params <- function(object) {
@@ -222,6 +223,7 @@ summary.bayes_cor_test <- function(object, ...) {
   cat("\n")
   cat("  Quantiles\n" )
   print(s[, c("q2.5%", "q25%", "median","q75%", "q97.5%")] )
+  invisible(NULL)
 }
 
 #' @method plot bayes_cor_test
@@ -339,6 +341,7 @@ diagnostics.bayes_cor_test <- function(fit) {
   old_par <- par( mar=c(3.5,2.5,2.5,0.5) , mgp=c(2.25,0.7,0) )
   plot(fit$mcmc_samples)
   par(old_par)
+  invisible(NULL)
 }
 
 #' @export
@@ -352,6 +355,7 @@ model.code.bayes_cor_test <- function(fit) {
   cat("xy <- cbind(x, y)\n")
   cat("\n")
   pretty_print_function_body(cor_model_code)
+  invisible(NULL)
 }
 
 # Not to be run, just to be printed

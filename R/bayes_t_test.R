@@ -423,6 +423,7 @@ print.bayes_one_sample_t_test <- function(x, ...) {
   cat("The mean is more than", s["mu","comp"] , "by a probability of", s["mu","%>comp"], "\n")
   cat("and less than", s["mu", "comp"] , "by a probability of", s["mu", "%<comp"], "\n")
   cat("\n")
+  invisible(NULL)
 }
 
 print_bayes_one_sample_t_test_params <- function(x) {
@@ -455,6 +456,7 @@ summary.bayes_one_sample_t_test <- function(object, ...) {
   cat("\n")
   cat("  Quantiles\n" )
   print(s[, c("q2.5%", "q25%", "median","q75%", "q97.5%")] )
+  invisible(NULL)
 }
 
 #' @method plot bayes_one_sample_t_test
@@ -510,7 +512,7 @@ diagnostics.bayes_one_sample_t_test <- function(fit) {
   old_par <- par( mar=c(3.5,2.5,2.5,0.5) , mgp=c(2.25,0.7,0) )
   plot(fit$mcmc_samples)
   par(old_par)
-  
+  invisible(NULL)
 }
 
 #' @export
@@ -523,6 +525,7 @@ model.code.bayes_one_sample_t_test <- function(fit) {
   cat("comp_mu <- ", fit$comp, "\n")
   cat("\n")
   pretty_print_function_body(one_sample_t_test_model_code)
+  invisible(NULL)
 }
 
 # Not to be run, just to be printed
@@ -590,6 +593,7 @@ print.bayes_two_sample_t_test <- function(x, ...) {
   cat("The difference of the means is greater than", s["mu_diff","comp"] , "by a probability of", s["mu_diff","%>comp"], "\n")
   cat("and less than", s["mu_diff", "comp"] , "by a probability of", s["mu_diff", "%<comp"], "\n")
   cat("\n")
+  invisible(NULL)
 }
  
 
@@ -609,6 +613,7 @@ print_bayes_two_sample_t_test_params <- function(x) {
   cat("  generated as",x$x_name , "\n")
   cat("y_pred: predicted distribution for a new datapoint\n")
   cat("  generated as",x$y_name , "\n")
+  invisible(NULL)
 }
 
 #' @export
@@ -633,6 +638,7 @@ summary.bayes_two_sample_t_test <- function(object, ...) {
   cat("\n")
   cat("  Quantiles\n" )
   print(s[, c("q2.5%", "q25%", "median","q75%", "q97.5%")] )
+  invisible(NULL)
 }
 
 #' @method plot bayes_two_sample_t_test
@@ -711,7 +717,7 @@ diagnostics.bayes_two_sample_t_test <- function(fit) {
   old_par <- par( mar=c(3.5,2.5,2.5,0.5) , mgp=c(2.25,0.7,0) )
   plot(fit$mcmc_samples)
   par(old_par)
-  
+  invisible(NULL)
 }
 
 #' @export
@@ -724,6 +730,7 @@ model.code.bayes_two_sample_t_test <- function(fit) {
   cat("y <-", fit$y_data_expr, "\n")
   cat("\n")
   pretty_print_function_body(two_sample_t_test_model_code)
+  invisible(NULL)
 }
 
 # Not to be run, just to be printed
@@ -790,18 +797,7 @@ print.bayes_paired_t_test <- function(x, ...) {
   cat("The mean difference is more than", s["mu_diff","comp"] , "by a probability of", s["mu_diff","%>comp"], "\n")
   cat("and less than", s["mu_diff", "comp"] , "by a probability of", s["mu_diff", "%<comp"], "\n")
   cat("\n")
-  
-  #   Paired t-test
-  #   
-  #   data:  runif(10) and rnorm(10)
-  #   t = 1.9, df = 9, p-value = 0.0896
-  #   alternative hypothesis: true difference in means is not equal to 0
-  #   95 percent confidence interval:
-  #     -0.106  1.230
-  #   sample estimates:
-  #     mean of the differences 
-  #   0.562 
-  
+  invisible(NULL)
 }
 
 
@@ -837,6 +833,7 @@ summary.bayes_paired_t_test <- function(object, ...) {
   cat("\n")
   cat("  Quantiles\n" )
   print(s[, c("q2.5%", "q25%", "median","q75%", "q97.5%")] )
+  invisible(NULL)
 }
 
 #' @method plot bayes_paired_t_test
@@ -891,6 +888,7 @@ diagnostics.bayes_paired_t_test <- function(fit) {
   old_par <- par( mar=c(3.5,2.5,2.5,0.5) , mgp=c(2.25,0.7,0) )
   plot(fit$mcmc_samples)
   par(old_par)
+  invisible(NULL)
 }
 
 #' @export
@@ -905,6 +903,7 @@ model.code.bayes_paired_t_test <- function(fit) {
   cat("comp_mu <- ", fit$comp, "\n")
   cat("\n")
   pretty_print_function_body(paired_samples_t_test_model_code)
+  invisible(NULL)
 }
 
 # Not to be run, just to be printed

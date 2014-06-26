@@ -6,16 +6,10 @@
 model.code(fit)
 }
 \arguments{
-\item{fit}{}
-}
-\value{
-An object of type something...
+\item{fit}{The output from a Bayesian First Aid model.}
 }
 \description{
 This is good if you better want to understand how the model is
 implemented or if you want to run a modified version of the code.
-}
-\details{
-Details details details
 }
 

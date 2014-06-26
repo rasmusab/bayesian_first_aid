@@ -156,6 +156,7 @@ print.bayes_binom_test <- function(x, ...) {
   cat("The relative frequency of success is more than", s["comp"] , "by a probability of", s["%>comp"], "\n")
   cat("and less than", s["comp"] , "by a probability of", s["%<comp"], "\n")
   cat("\n")
+  invisible(NULL)
 }
 
 
@@ -181,6 +182,7 @@ summary.bayes_binom_test <- function(object, ...) {
   cat("\n")
   cat("  Quantiles\n" )
   print(s[, c("q2.5%", "q25%", "median","q75%", "q97.5%")] )
+  invisible(NULL)
 }
 
 #' @method plot bayes_binom_test
@@ -195,6 +197,7 @@ plot.bayes_binom_test <- function(x, ...) {
                              xlab = "Number of sucesses",main="Data w. Post. Pred.")
   #legend("topright", legend="Data", col="red",  lty=1, lwd=3)
   par(old_par)
+  invisible(NULL)
 }
 
 
@@ -211,6 +214,7 @@ diagnostics.bayes_binom_test <- function(fit) {
   old_par <- par( mar=c(3.5,2.5,2.5,0.6) , mgp=c(2.25,0.7,0) )
   plot(fit$mcmc_samples)
   par(old_par)
+  invisible(NULL)
 }
 
 
@@ -224,6 +228,7 @@ model.code.bayes_binom_test <- function(fit) {
   cat("n <-", fit$n, "\n")
   cat("\n")
   pretty_print_function_body(binom_model_code)
+  invisible(NULL)
 }
 
 # Not to be run, just to be printed

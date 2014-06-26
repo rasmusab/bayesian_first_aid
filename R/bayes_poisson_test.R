@@ -102,29 +102,34 @@ jags_two_sample_poisson_test <- function(x1, t1, x2, t2, n.adapt= 500, n.chains=
 print.bayes_one_sample_poisson_test <- function(x, ...) {
   cat("\n --- Bayesian first aid one sample poisson test ---\n\n")
   print(summary(x$mcmc_samples))
+  invisible(NULL)
 }
 
 #' @export
 summary.bayes_one_sample_poisson_test <- function(object, ...) {
   cat("\nSummary\n")
   print(object)
+  invisible(NULL)
 }
 
 #' @method plot bayes_one_sample_poisson_test
 #' @export
 plot.bayes_one_sample_poisson_test <- function(x, ...) {
   plot(x$mcmc_samples)
+  invisible(NULL)
 }
 
 #' @export
 diagnostics.bayes_one_sample_poisson_test <- function(fit) {
   cat("Not implemented\n")
   plot(fit$mcmc_samples)
+  invisible(NULL)
 }
 
 #' @export
 model.code.bayes_one_sample_poisson_test <- function(fit) {
   print(jags_one_sample_poisson_test)
+  invisible(NULL)
 }
 
 ### Two sample poisson test S3 methods ###
@@ -134,27 +139,32 @@ model.code.bayes_one_sample_poisson_test <- function(fit) {
 print.bayes_two_sample_poisson_test <- function(x, ...) {
   cat("\n --- Bayesian first aid two sample poisson test ---\n\n")
   print(summary(x$mcmc_samples))
+  invisible(NULL)
 }
 
 #' @export
 summary.bayes_two_sample_poisson_test <- function(object, ...) {
   cat("\nSummary\n")
   print(object)
+  invisible(NULL)
 }
 
 #' @method plot bayes_two_sample_poisson_test
 #' @export
 plot.bayes_two_sample_poisson_test <- function(x, ...) {
   plot(x$mcmc_samples)
+  invisible(NULL)
 }
 
 #' @export
 diagnostics.bayes_two_sample_poisson_test <- function(fit) {
   cat("Not implemented\n")
   plot(fit$mcmc_samples)
+  invisible(NULL)
 }
 
 #' @export
 model.code.bayes_two_sample_poisson_test <- function(fit) {
   print(jags_two_sample_poisson_test)
+  invisible(NULL)
 }

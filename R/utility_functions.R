@@ -306,8 +306,9 @@ plotPost = function( param_sample_vec , cred_mass=0.95 , comp_val=NULL ,
   
   # Plot histogram.
   if ( is.null(breaks) ) {
+    HDI95 = HDIofMCMC( param_sample_vec , 0.95 )
     breaks = c( seq( from=min(param_sample_vec) , to=max(param_sample_vec) ,
-                     by=(HDI[2]-HDI[1])/18 ) , max(param_sample_vec) )
+                     by=(HDI95[2]-HDI95[1])/18 ) , max(param_sample_vec) )
   }
   if ( !show_curve ) {
     par(xpd=NA)

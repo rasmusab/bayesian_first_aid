@@ -23,7 +23,8 @@ Depends:
     coda (>= 0.16-1)
 Imports:
     MASS (>= 7.3),
-    mnormt (>= 1.4)
+    mnormt (>= 1.4),
+    stringr (>= 0.6)
 URL: http://www.sumsar.net
 License: GPL-3
 LazyData: true

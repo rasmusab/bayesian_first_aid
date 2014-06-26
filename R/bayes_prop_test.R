@@ -284,6 +284,7 @@ plot.bayes_prop_test <- function(x, ...) {
   }
 
   par(old_par)
+  invisible(NULL)
 }
 
 #' @export
@@ -315,14 +316,19 @@ print.bayes_prop_test <- function(x, ...) {
     cat("  ", str_trim(group_diffs[1,1]), " ",group_diffs[2,1], "\n", sep="")
   }
 
-  if(! is.null(fit$comp_theta)) {
+  if(! is.null(x$comp_theta)) {
     cat("The prob. that the relative frequency of success is less/more than comp. val:\n")
     comp_table <- s[str_detect(rownames(s), "theta\\["), c("comp", "%<comp", "%>comp")]
     rownames(comp_table) <- paste("  Group ", 1:nrow(comp_table), ":", sep="")
     colnames(comp_table) <- c("comp. val.",  " <", " >") 
     print(format(comp_table, justify="centre"), quote=FALSE)
   }
+  if(ncol(group_diffs) == 1) {
+    cat("The relative frequency of success is larger for Group 1 by a probability\n")
+    cat("of", s["theta_diff[1,2]", "%>comp"], "and larger for Group 2 by a probability of", s["theta_diff[1,2]", "%<comp"], ".\n")
+  }
   cat("\n")
+  invisible(NULL)
 }
 
 #' @export
@@ -351,6 +357,7 @@ summary.bayes_prop_test <- function(object, ...) {
   cat("\n")
   cat("  Quantiles\n" )
   print(s[, c("q2.5%", "q25%", "median","q75%", "q97.5%")] )
+  invisible(NULL)
 }
 
 #' @export
@@ -367,11 +374,14 @@ diagnostics.bayes_prop_test <- function(fit) {
   old_par <- par( mar=c(3.5,2.5,2.5,0.6) , mgp=c(2.25,0.7,0) )
   plot(fit$mcmc_samples)
   par(old_par)
+  invisible(NULL)
 }
+
+# Model code for the Bayesian First Aid alternative to the test of proportions #
 
 #' @export
 model.code.bayes_prop_test <- function(fit) {
-  cat("### Model code for the Bayesian First Aid alternative to the binomial test ###\n")
+  cat("### Model code for the Bayesian First Aid  ###\n### alternative to the test of proportions ###\n")
   cat("require(rjags)\n\n")
   
   cat("# Setting up the data\n")
@@ -379,6 +389,7 @@ model.code.bayes_prop_test <- function(fit) {
   cat("n <-", deparse(fit$n), "\n")
   cat("\n")
   pretty_print_function_body(prop_model_code)
+  invisible(NULL)
 }
 
 # Not to be run, just to be printed

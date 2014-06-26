@@ -6,15 +6,9 @@
 diagnostics(fit)
 }
 \arguments{
-\item{fit}{}
-}
-\value{
-An object of type something...
+\item{fit}{The output from a Bayesian First Aid model.}
 }
 \description{
-Descritions description description
-}
-\details{
-Details details details
+Plots and prints diagnostics regarding the convergence of the model.
 }
 
