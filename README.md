@@ -77,7 +77,7 @@ Currently Bayesian First Aid implements five alternative models to classical tes
 * Pearson Correlation Test: `bayes.cor.test(x,y)` . [Code example and details](http://sumsar.net/blog/2014/03/bayesian-first-aid-pearson-correlation-test/)
 * Test of Proportions: `prop.test` . [Code example and details](http://sumsar.net/blog/2014/06/bayesian-first-aid-prop-test/)
 
-It should be easy to start tinkering with the models underlying Bayesian First Aid. The generic function `model.code` takes a Bayesian Fist Aid object and prints out the underlying model which is ready to be copy-n-pasted into an R script and tinkered with from there. In addition to `model.code` all Bayesian First Aid objects will be `plot`able and `summary`iseable. A call to `diagnostics` will show some MCMC diagnostics (even if this shouldn't be necessary to look at for the simple models). For an example of how this would work, see the example further down.
+It should be easy to start tinkering with the models underlying Bayesian First Aid. The generic function `model.code` takes a Bayesian First Aid object and prints out the underlying model which is ready to be copy-n-pasted into an R script and tinkered with from there. In addition to `model.code` all Bayesian First Aid objects will be `plot`able and `summary`iseable. A call to `diagnostics` will show some MCMC diagnostics (even if this shouldn't be necessary to look at for the simple models). For an example of how this would work, see the example further down.
 
 Except for the already implemented Bayesian alternatives "replacing" the following tests are currently on the todo list:
 
