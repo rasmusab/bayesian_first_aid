@@ -1,28 +1,39 @@
-#' Title title title
+#' Bayesian First Aid Alternative to Pearson Correlation Test
 #' 
-#' Descritions description description
+#' This is an implementation of an alternative to Person Correlation test as
+#' implemented by \code{\link{cor.test}}. It accepts the same arguments as
+#' \code{\link{cor.test}}. For more information regarding the model assumptions see:
+#' \url{http://sumsar.net/blog/2014/03/bayesian-first-aid-pearson-correlation-test/}
 #' 
-#' Details details details
-#' 
-#' @param x 
-#' @param ... 
-#' @param y 
-#' @param alternative 
-#' @param method 
-#' @param exact 
-#' @param cred.mass
-#' @param continuity 
-#' @param n.iter
-#' @param progress.bar The type of progress bar. Possible values are "text",
+#' @param x,y numeric vectors of data values. \code{x} and \code{y} must have 
+#'   the same length.
+#' @param ... not used
+#' @param alternative ignored and is only retained in order to mantain 
+#'   compatibility with \code{\link{cor.test}}
+#' @param method ignored
+#' @param exact ignored
+#' @param cred.mass the amount of probability mass that will be contained in 
+#'  reported credible intervals. This argument fills a similar role as 
+#'  \code{conf.level} in \code{\link{cor.test}}.
+#' @param continuity ignored
+#' @param n.iter The number of iterations to run the MCMC sampling.
+#' @param progress.bar The type of progress bar. Possible values are "text", 
 #'   "gui", and "none".
-#' @param formula 
-#' @param data 
-#' @param subset 
-#' @param na.action
-#' @param conf.level 
-#' 
+#' @param formula a formula of the form \code{~ u + v}, where each of \code{u} 
+#'   and \code{v} are numeric variables giving the data values for one sample. 
+#'   The samples must be of the same length.
+#' @param data an optional matrix or data frame containing the variables in the 
+#'   formula \code{formula}. By default the variables are taken from 
+#'   \code{environment(formula)}.
+#' @param subset an optional vector specifying a subset of observations to be 
+#'   used.
+#' @param na.action a function which indicates what should happen when the data 
+#'   contain NAs. Defaults to \code{getOption("na.action")}.
+#' @param conf.level same as \code{cred.mass} and is only retained in order to 
+#'   mantain compatibility with \code{\link{cor.test}}.
+#'   
 #' @return A list of class \code{bayes_cor_test} that contains information about
-#'   the analysis. It can be further inspected using the functions
+#'   the analysis. It can be further inspected using the functions 
 #'   \code{summary}, \code{plot}, \code{\link{diagnostics}} and 
 #'   \code{\link{model.code}}.
 #' @export
@@ -359,14 +370,14 @@ model.code.bayes_cor_test <- function(fit) {
 }
 
 # Not to be run, just to be printed
-cor_model_code <- function() {
+cor_model_code <- function(x, y, xy) {
   # The model string written in the JAGS language
   BayesianFirstAid::replace_this_with_model_string
   
   # Initializing the data list and setting parameters for the priors
   # that in practice will result in flat priors on mu and sigma.
   data_list = list(
-    xy = cbind(x, y), 
+    xy = xy, 
     n = length(x),
     mean_mu = mean(c(x, y), trim=0.2) ,
     precision_mu = 1 / (max(mad(x), mad(y))^2 * 1000000),

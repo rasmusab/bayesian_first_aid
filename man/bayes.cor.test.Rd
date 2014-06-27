@@ -3,7 +3,7 @@
 \alias{bayes.cor.test}
 \alias{bayes.cor.test.default}
 \alias{bayes.cor.test.formula}
-\title{Title title title}
+\title{Bayesian First Aid Alternative to Pearson Correlation Test}
 \usage{
 bayes.cor.test(x, ...)
 
@@ -15,36 +15,45 @@ bayes.cor.test(x, ...)
 \method{bayes.cor.test}{formula}(formula, data, subset, na.action, ...)
 }
 \arguments{
-\item{x}{}
+\item{x,y}{numeric vectors of data values. \code{x} and \code{y} must have
+the same length.}
 
-\item{...}{}
+\item{...}{not used}
 
-\item{y}{}
+\item{alternative}{ignored and is only retained in order to mantain
+compatibility with \code{\link{cor.test}}}
 
-\item{alternative}{}
+\item{method}{ignored}
 
-\item{method}{}
+\item{exact}{ignored}
 
-\item{exact}{}
+\item{cred.mass}{the amount of probability mass that will be contained in
+reported credible intervals. This argument fills a similar role as
+\code{conf.level} in \code{\link{cor.test}}.}
 
-\item{cred.mass}{}
+\item{continuity}{ignored}
 
-\item{continuity}{}
-
-\item{n.iter}{}
+\item{n.iter}{The number of iterations to run the MCMC sampling.}
 
 \item{progress.bar}{The type of progress bar. Possible values are "text",
 "gui", and "none".}
 
-\item{formula}{}
+\item{formula}{a formula of the form \code{~ u + v}, where each of \code{u}
+and \code{v} are numeric variables giving the data values for one sample.
+The samples must be of the same length.}
 
-\item{data}{}
+\item{data}{an optional matrix or data frame containing the variables in the
+formula \code{formula}. By default the variables are taken from
+\code{environment(formula)}.}
 
-\item{subset}{}
+\item{subset}{an optional vector specifying a subset of observations to be
+used.}
 
-\item{na.action}{}
+\item{na.action}{a function which indicates what should happen when the data
+contain NAs. Defaults to \code{getOption("na.action")}.}
 
-\item{conf.level}{}
+\item{conf.level}{same as \code{cred.mass} and is only retained in order to
+  mantain compatibility with \code{\link{cor.test}}.}
 }
 \value{
 A list of class \code{bayes_cor_test} that contains information about
@@ -53,9 +62,9 @@ A list of class \code{bayes_cor_test} that contains information about
   \code{\link{model.code}}.
 }
 \description{
-Descritions description description
-}
-\details{
-Details details details
+This is an implementation of an alternative to Person Correlation test as
+implemented by \code{\link{cor.test}}. It accepts the same arguments as
+\code{\link{cor.test}}. For more information regarding the model assumptions see:
+\url{http://sumsar.net/blog/2014/03/bayesian-first-aid-pearson-correlation-test/}
 }
 
