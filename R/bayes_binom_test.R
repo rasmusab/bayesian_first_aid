@@ -232,7 +232,7 @@ model.code.bayes_binom_test <- function(fit) {
 }
 
 # Not to be run, just to be printed
-binom_model_code <- function() {
+binom_model_code <- function(x, n) {
   # The model string written in the JAGS language
   BayesianFirstAid::replace_this_with_model_string
   

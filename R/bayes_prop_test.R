@@ -5,8 +5,9 @@
 #'\code{\link{prop.test}}.
 #'
 #'Given data on the number of successes and failures \code{bayes.prop.test} 
-#'estimates \eqn{\theta}₁…ₘ, the relative frequencies of success for each of the
-#'\eqn{m} groups. The following model is assumed for each group:
+#'estimates \ifelse{latex}{\eqn{\theta_{1...m}}}{\eqn{\theta}₁…ₘ}, the relative
+#'frequencies of success for each of the \eqn{m} groups. The following model is
+#'assumed for each group:
 #'
 #'\deqn{x \sim \mathrm{Binom}(\theta, n)}{x ~ Binomial(\theta, n)} \deqn{\theta 
 #'\sim \mathrm{Beta}(1, 1)}{\theta ~ Beta(1, 1)}
@@ -393,7 +394,7 @@ model.code.bayes_prop_test <- function(fit) {
 }
 
 # Not to be run, just to be printed
-prop_model_code <- function() {
+prop_model_code <- function(x, n) {
   # The model string written in the JAGS language
   BayesianFirstAid::replace_this_with_model_string
   

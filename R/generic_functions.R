@@ -32,6 +32,7 @@ model.code <- function(fit) {
 #' sigma12, etc.).
 #' 
 #' @param x The output from a Bayesian First Aid model.
+#' @param ... Not used.
 #'   
 #' @return A data frame with one column per parameter.
 #' 
@@ -59,6 +60,7 @@ as.data.frame.bayesian_first_aid <- function(x, ...) {
 #' etc.)
 #' 
 #' @param x The output from a Bayesian First Aid model.
+#' @param ... Not used
 #'   
 #' @return A matrix with one column per parameter.
 #' 

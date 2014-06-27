@@ -54,8 +54,9 @@ more groups using Bayesian estimation and is intended as a replacement for
 }
 \details{
 Given data on the number of successes and failures \code{bayes.prop.test}
-estimates \eqn{\theta}₁…ₘ, the relative frequencies of success for each of the
-\eqn{m} groups. The following model is assumed for each group:
+estimates \ifelse{latex}{\eqn{\theta_{1...m}}}{\eqn{\theta}₁…ₘ}, the relative
+frequencies of success for each of the \eqn{m} groups. The following model is
+assumed for each group:
 
 \deqn{x \sim \mathrm{Binom}(\theta, n)}{x ~ Binomial(\theta, n)} \deqn{\theta
 \sim \mathrm{Beta}(1, 1)}{\theta ~ Beta(1, 1)}

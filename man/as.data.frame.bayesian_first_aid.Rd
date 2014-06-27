@@ -7,6 +7,8 @@
 }
 \arguments{
 \item{x}{The output from a Bayesian First Aid model.}
+
+\item{...}{Not used.}
 }
 \value{
 A data frame with one column per parameter.

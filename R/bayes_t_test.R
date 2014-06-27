@@ -529,7 +529,7 @@ model.code.bayes_one_sample_t_test <- function(fit) {
 }
 
 # Not to be run, just to be printed
-one_sample_t_test_model_code <- function() {
+one_sample_t_test_model_code <- function(x, comp_mu) {
   # The model string written in the JAGS language
   BayesianFirstAid::replace_this_with_model_string
   
@@ -734,7 +734,7 @@ model.code.bayes_two_sample_t_test <- function(fit) {
 }
 
 # Not to be run, just to be printed
-two_sample_t_test_model_code <- function() {
+two_sample_t_test_model_code <- function(x, y) {
   # The model string written in the JAGS language
   BayesianFirstAid::replace_this_with_model_string
   
@@ -907,7 +907,7 @@ model.code.bayes_paired_t_test <- function(fit) {
 }
 
 # Not to be run, just to be printed
-paired_samples_t_test_model_code <- function() {
+paired_samples_t_test_model_code <- function(pair_diff, comp_mu) {
   # The model string written in the JAGS language
   BayesianFirstAid::replace_this_with_model_string
   
