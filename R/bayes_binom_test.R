@@ -188,8 +188,7 @@ summary.bayes_binom_test <- function(object, ...) {
 #' @method plot bayes_binom_test
 #' @export
 plot.bayes_binom_test <- function(x, ...) {
-  layout(matrix(c(1,2), nrow=2, ncol=1 , byrow=FALSE) )
-  old_par <- par( mar=c(3.5,3.5,2.5,0.5) , mgp=c(2.25,0.7,0) )
+  old_par <- par( mar=c(3.5,3.5,2.5,0.5) , mgp=c(2.25,0.7,0), mfcol=c(2,1))
   sample_mat <- as.matrix(x$mcmc_samples)
   plotPost(sample_mat[, "theta"], cred_mass= x$cred_mass, comp_val=x$comp_theta, xlim=c(0, 1), cex=1, cex.lab=1.5,
            main = "Relative Frequency of Success", xlab=expression(theta), show_median= TRUE)
