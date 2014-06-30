@@ -252,6 +252,8 @@ format_group_diffs <- function(bfa_object) {
 #' @export
 plot.bayes_prop_test <- function(x, ...) {
   samples <- as.matrix(x$mcmc_samples)
+  # Throw away everything except the what we want to plot, the theta samples.
+  samples <- samples[,str_detect(colnames(samples), "^theta\\[")]
   n_groups <- length(x$x)
   diff_samples <- create_theta_diff_matrix(as.matrix(x$mcmc_samples)) 
   layout_mat <- matrix( 0 , nrow=n_groups, ncol=n_groups)
@@ -264,13 +266,27 @@ plot.bayes_prop_test <- function(x, ...) {
   layout_mat[lower.tri(layout_mat)] <- seq(n_groups + 2, by = 2,length.out = (ncol(diff_samples)))
   layout(layout_mat)
   old_par <- par( mar=c(3.5,2,2,2) , mgp=c(2.25,0.7,0) )
+  post_xlim <- range(apply(samples, 2, quantile, probs = c(0.001, 0.999)))
+  # Some rules for making the post_xlim nice, with a preference for showing endpoints of the scale
+  xlim_length <- abs(diff(post_xlim))
+  if( post_xlim[1] - xlim_length < 0) {
+    post_xlim[1] <- 0
+  }
+  if(post_xlim[2] + xlim_length > 1) {
+    post_xlim[2] <- 1
+  }
   plotPost(samples[,"theta[1]"], cex.lab = 1.5, xlab=bquote(theta[1]), main=paste("Rel. Freq. Group 1"),  
-           cred_mass= x$cred_mass, col="#5DE293" , show_median=TRUE, comp_val=x$comp_theta[1], xlim=c(0,1))
+           cred_mass= x$cred_mass, col="#5DE293" , show_median=TRUE, comp_val=x$comp_theta[1], xlim=post_xlim)
   for(i in 2:n_groups) {
     plotPost(samples[,paste0("theta[",i, "]")], cex.lab = 1.5, xlab=bquote(theta[.(i)]), main=paste("Group", i),  
-             cred_mass= x$cred_mass, col="#5DE293" , show_median=TRUE, comp_val=x$comp_theta[i], xlim=c(0,1), show_labels = FALSE)
+             cred_mass= x$cred_mass, col="#5DE293" , show_median=TRUE, comp_val=x$comp_theta[i], xlim=post_xlim, show_labels = FALSE)
   }
-  diff_xlim <- quantile(diff_samples, c(0.001, 0.999))
+  diff_xlim <- range(apply(diff_samples, 2, quantile, probs = c(0.001, 0.999)))
+  if(all(diff_xlim < 0)) {
+    diff_xlim[2] <- 0
+  } else if(all(diff_xlim > 0)) {
+    diff_xlim[1] <- 0
+  }
   for(i in 1:ncol(diff_samples)) {
     diff_name <- colnames(diff_samples)[i]
     indices_match <- str_match(diff_name, "\\[(\\d+),(\\d+)\\]$")
