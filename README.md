@@ -44,8 +44,18 @@ Hence the name of the package: Bayesian First Aid.
 <img src="http://i.imgur.com/gQAiFkD.png"/>
 </center>
 
-Read more about the rational behind Bayesian First aid in [the announcement on my blog](http://sumsar.net/blog/2014/01/bayesian-first-aid/).
+Read more about the rational behind Bayesian First aid in [the announcement on my blog](http://sumsar.net/blog/2014/01/bayesian-first-aid/). If you use Bayesian First Aid and want to cite it, please use the following citation:
 
+Bååth, R., (2014) Bayesian First Aid: A Package that Implements Bayesian Alternatives to the Classical \*.test Functions in R. In the proceedings of *UseR! 2014 - the International R User Conference*. [pdf](http://sumsar.net/files/academia/baath_user14_abstract.pdf)
+
+```
+@inproceedings{baath2014bayesian,
+  title={Bayesian First Aid: A Package that Implements Bayesian Alternatives to the Classical *.test Functions in R},
+  author={B{\aa}{\aa}th, Rasmus},
+  booktitle={UseR! 2014 - the International R User Conference},
+  year={2014}
+}
+```
 *Be aware that Bayesian First Aid is under heavy development and is still in a beta stage.*
 
 Installation
