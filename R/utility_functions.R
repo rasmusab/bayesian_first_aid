@@ -173,6 +173,19 @@ sign_digits <- function(x,d){
   s
 }
 
+# rounds to d decimal places or to d significan digets depending on which leads to
+# the least absolute error.
+round_or_signif <- function(x, d) {
+  x_round <- round(x, d)
+  x_signif <- signif(x, d)
+  least_error <- sapply(seq_len(length(x)), function(i) {
+    which.min(c(abs(x[i] - x_signif[i]), abs(x[i] - x_round[i])))
+  })
+  x[least_error == 1] <- x_signif[least_error == 1]
+  x[least_error == 2] <- x_round[least_error == 2]
+  x  
+}
+
 # Takes coda samples generates a matrix with different statistics for the
 # parameters. Samples can both be a mcmc.list and a matrix with one column
 # per parameter
