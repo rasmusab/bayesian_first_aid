@@ -129,12 +129,12 @@ bayes.poisson.test <- function (x, T = 1, r = 1, alternative = c("two.sided", "l
 one_sample_poisson_model_string <- "model {
   x ~ dpois(rate * t)
   rate ~ dgamma(0.5, 0.00001)
-  x_rep ~ dpois(rate * t)
+  x_pred ~ dpois(rate * t)
 }"
 
 jags_one_sample_poisson_test <- function(x, t, n.chains, n.iter, progress.bar) {  
   mcmc_samples <- run_jags(one_sample_poisson_model_string, data = list(x = x, t = t), inits = list(rate = (x + 0.5) / t), 
-                           params = c("rate", "x_rep"), n.chains = n.chains, n.adapt = 0,
+                           params = c("rate", "x_pred"), n.chains = n.chains, n.adapt = 0,
                            n.update = 100, n.iter = n.iter, thin = 1, progress.bar=progress.bar)
   mcmc_samples
 }
@@ -144,7 +144,7 @@ two_sample_poisson_model_string <- "model {
   for(group_i in 1:2) {
     x[group_i] ~ dpois(rate[group_i] * t[group_i])
     rate[group_i] ~ dgamma(0.5, 0.00001)
-    x_rep[group_i] ~ dpois(rate[group_i] * t[group_i])
+    x_pred[group_i] ~ dpois(rate[group_i] * t[group_i])
   }
   rate_diff <- rate[1] - rate[2]
   rate_ratio <- rate[1] / rate[2]
@@ -155,7 +155,7 @@ jags_two_sample_poisson_test <- function(x1, t1, x2, t2, n.chains, n.iter, progr
   data_list = list(x = c(x1, x2), t = c(t1, t2))
   init_list = list(rate = ( c(x1, x2) + 0.5 ) / c(t1, t2) )
   mcmc_samples <- run_jags(two_sample_poisson_model_string, data = data_list, inits = init_list, 
-                           params = c("rate", "x_rep","rate_diff", "rate_ratio"), n.chains = n.chains, n.adapt = 0,
+                           params = c("rate", "x_pred","rate_diff", "rate_ratio"), n.chains = n.chains, n.adapt = 0,
                            n.update = 100, n.iter = n.iter, thin = 1, progress.bar=progress.bar)
   mcmc_samples
 }
@@ -186,8 +186,22 @@ print.bayes_one_sample_poisson_test <- function(x, ...) {
 
 #' @export
 summary.bayes_one_sample_poisson_test <- function(object, ...) {
-  cat("\nSummary\n")
-  print(object)
+  s <- round_or_signif(object$stats, 3)
+  
+  cat("  Model parameters and generated quantities\n")
+  cat("rate: the rate of the process.\n")
+  cat("x_pred: predicted event count during", object$t ,"periods.\n")
+  cat("\n")
+  cat("  Measures\n" )
+  print(s[, c("mean", "sd", "HDIlo", "HDIup", "%<comp", "%>comp")])
+  cat("\n")
+  cat("'HDIlo' and 'HDIup' are the limits of a ", s[1, "HDI%"] ,"% HDI credible interval.\n", sep="")
+  cat("'%<comp' and '%>comp' are the probabilities of the respective parameter being\n")
+  cat("smaller or larger than ", s[1, "comp"] ,".\n", sep="")
+  
+  cat("\n")
+  cat("  Quantiles\n" )
+  print(s[, c("q2.5%", "q25%", "median","q75%", "q97.5%")] )
   invisible(NULL)
 }
 
@@ -200,8 +214,18 @@ plot.bayes_one_sample_poisson_test <- function(x, ...) {
 
 #' @export
 diagnostics.bayes_one_sample_poisson_test <- function(fit) {
-  cat("Not implemented\n")
+  print_mcmc_info(fit$mcmc_samples)  
+  cat("\n")
+  print_diagnostics_measures(round(fit$stats, 3))
+  cat("\n")
+  cat("  Model parameters and generated quantities\n")
+  cat("rate: the rate of the process.\n")
+  cat("x_pred: predicted event count during", fit$t ,"periods.\n")
+  cat("\n")
+  
+  old_par <- par( mar=c(3.5,2.5,2.5,0.5) , mgp=c(2.25,0.7,0) )
   plot(fit$mcmc_samples)
+  par(old_par)
   invisible(NULL)
 }
 
@@ -233,10 +257,33 @@ print.bayes_two_sample_poisson_test <- function(x, ...) {
   invisible(NULL)
 }
 
+print_bayes_two_sample_poisson_test_params <- function(x) {
+  cat("  Model parameters and generated quantities\n")
+  cat("rate[1]: the rate of the process of group 1.\n")
+  cat("rate[2]: the rate of the process of group 2.\n")
+  cat("x_pred[1]: predicted event count of group 1 during", x$t[1] ,"periods.\n")
+  cat("x_pred[2]: predicted event count of group 2 during", x$t[2] ,"periods.\n")
+  cat("rate_diff: The difference rate[1] - rate[2].\n")
+  cat("rate_ratio: The ratio rate[1] / rate[2].\n")
+  invisible(NULL)
+}
+
 #' @export
 summary.bayes_two_sample_poisson_test <- function(object, ...) {
-  cat("\nSummary\n")
-  print(object)
+  s <- round_or_signif(object$stats, 3)
+  
+  print_bayes_two_sample_poisson_test_params(object)
+  cat("\n")
+  cat("  Measures\n" )
+  print(s[, c("mean", "sd", "HDIlo", "HDIup", "%<comp", "%>comp")])
+  cat("\n")
+  cat("'HDIlo' and 'HDIup' are the limits of a ", s[1, "HDI%"] ,"% HDI credible interval.\n", sep="")
+  cat("'%<comp' and '%>comp' are the probabilities of the respective parameter being\n")
+  cat("smaller or larger than ", s[1, "comp"] ,".\n", sep="")
+  
+  cat("\n")
+  cat("  Quantiles\n" )
+  print(s[, c("q2.5%", "q25%", "median","q75%", "q97.5%")] )
   invisible(NULL)
 }
 
@@ -249,8 +296,16 @@ plot.bayes_two_sample_poisson_test <- function(x, ...) {
 
 #' @export
 diagnostics.bayes_two_sample_poisson_test <- function(fit) {
-  cat("Not implemented\n")
+  print_mcmc_info(fit$mcmc_samples)  
+  cat("\n")
+  print_diagnostics_measures(round(fit$stats, 3))
+  cat("\n")
+  print_bayes_two_sample_poisson_test_params(fit)
+  cat("\n")
+  
+  old_par <- par( mar=c(3.5,2.5,2.5,0.5) , mgp=c(2.25,0.7,0) )
   plot(fit$mcmc_samples)
+  par(old_par)
   invisible(NULL)
 }
 
