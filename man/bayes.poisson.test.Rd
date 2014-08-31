@@ -4,34 +4,79 @@
 \title{Bayesian First Aid Alternative to the Poisson Test}
 \usage{
 bayes.poisson.test(x, T = 1, r = 1, alternative = c("two.sided", "less",
-  "greater"), conf.level = 0.95, n.iter = 15000, progress.bar = "none")
+  "greater"), cred.mass = 0.95, n.iter = 15000, progress.bar = "none",
+  conf.level)
 }
 \arguments{
-\item{x}{}
+\item{x}{number of events. A vector of length one or two.}
 
-\item{T}{}
+\item{T}{time base for event count. A vector of length one or two.}
 
-\item{r}{}
+\item{r}{hypothesized rate or rate ratio}
 
-\item{alternative}{}
+\item{alternative}{ignored and is only retained in order to mantain
+compatibility with \code{\link{poisson.test}}.}
 
-\item{conf.level}{}
+\item{cred.mass}{the amount of probability mass that will be contained in
+reported credible intervals. This argument fills a similar role as
+\code{conf.level} in \code{\link{poisson.test}}.}
 
 \item{n.iter}{}
 
 \item{progress.bar}{The type of progress bar. Possible values are "text",
-  "gui", and "none".}
+"gui", and "none".}
+
+\item{conf.level}{same as \code{cred.mass} and is only retained in order to
+ mantain compatibility with \code{\link{poisson.test}}.}
 }
 \value{
 A list of class \code{bayes_one_sample_poisson_test} or
-  \code{bayes_two_sample_poisson_test} that contains information about the
-  analysis. It can be further inspected using the functions \code{summary},
-  \code{plot}, \code{\link{diagnostics}} and \code{\link{model.code}}.
+ \code{bayes_two_sample_poisson_test} that contains information about the
+ analysis. It can be further inspected using the functions \code{summary},
+ \code{plot}, \code{\link{diagnostics}} and \code{\link{model.code}}.
 }
 \description{
-Descritions description description
+\code{poisson.test} estimates the rate parameter for one or two groups of
+counts using Bayesian estimation assuming a Poisson distribution. This
+procedure is intended as a replacement for \code{\link{prop.test}}.
 }
 \details{
-Details details details
+Give data on the number of counts {\eqn{x}} during {\eqn{T}} periods (e.g.,
+days, hours, years, etc.) the underlying rate \eqn{\lambda} is estimated
+assuming the following model:
+
+\deqn{x \sim \mathrm{Poisson}(\lambda \cdot T}{x ~ Poisson(\lambda·T)}
+\deqn{\lambda \sim \mathrm{Gamma}(0.5, 0.00001)}{\lambda ~ Gamma(0.5,
+0.00001)}
+
+Here the Gamma prior on \eqn{\lambda} is an approximation of Jeffrey's' prior
+for this model. In the case of two groups, both rate parameters are separately
+estimated using the model above.
+}
+\examples{
+# Data from Boice, J. D., & Monson, R. R. (1977).
+# Breast cancer in women after repeated fluoroscopic examinations of the chest.
+# Journal of the National Cancer Institute, 59(3), 823-832.
+
+# 41 cases of breast cancer during 28,010 person-years in the treatment group
+# of women receiving X-ray fluoroscopy and 15 cases of breast cancer during
+# 19 017 person-years in the control group.
+
+no_cases <- c(41, 15)
+no_years <- c(28010, 19017)
+
+bayes.poisson.test(no_cases, no_years)
+
+# Save the return value in order to inspect the model result further.
+fit <- bayes.poisson.test(no_cases, no_years)
+summary(fit)
+plot(fit)
+
+# MCMC diagnostics (should not be necessary for such a simple model)
+diagnostics(fit)
+
+# Print out the R code to run the model. This can be copy'n'pasted into
+# an R-script and further modified.
+model.code(fit)
 }
 
