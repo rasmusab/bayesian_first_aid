@@ -127,14 +127,14 @@ bayes.poisson.test <- function (x, T = 1, r = 1, alternative = c("two.sided", "l
 }
 
 one_sample_poisson_model_string <- "model {
-  x ~ dpois(rate * t)
-  rate ~ dgamma(0.5, 0.00001)
-  x_pred ~ dpois(rate * t)
+  x ~ dpois(lambda * t)
+  lambda ~ dgamma(0.5, 0.00001)
+  x_pred ~ dpois(lambda * t)
 }"
 
 jags_one_sample_poisson_test <- function(x, t, n.chains, n.iter, progress.bar) {  
-  mcmc_samples <- run_jags(one_sample_poisson_model_string, data = list(x = x, t = t), inits = list(rate = (x + 0.5) / t), 
-                           params = c("rate", "x_pred"), n.chains = n.chains, n.adapt = 0,
+  mcmc_samples <- run_jags(one_sample_poisson_model_string, data = list(x = x, t = t), inits = list(lambda = (x + 0.5) / t), 
+                           params = c("lambda", "x_pred"), n.chains = n.chains, n.adapt = 0,
                            n.update = 100, n.iter = n.iter, thin = 1, progress.bar=progress.bar)
   mcmc_samples
 }
@@ -142,20 +142,20 @@ jags_one_sample_poisson_test <- function(x, t, n.chains, n.iter, progress.bar) {
 
 two_sample_poisson_model_string <- "model {
   for(group_i in 1:2) {
-    x[group_i] ~ dpois(rate[group_i] * t[group_i])
-    rate[group_i] ~ dgamma(0.5, 0.00001)
-    x_pred[group_i] ~ dpois(rate[group_i] * t[group_i])
+    x[group_i] ~ dpois(lambda[group_i] * t[group_i])
+    lambda[group_i] ~ dgamma(0.5, 0.00001)
+    x_pred[group_i] ~ dpois(lambda[group_i] * t[group_i])
   }
-  rate_diff <- rate[1] - rate[2]
-  rate_ratio <- rate[1] / rate[2]
+  rate_diff <- lambda[1] - lambda[2]
+  rate_ratio <- lambda[1] / lambda[2]
 
 }"
 
 jags_two_sample_poisson_test <- function(x1, t1, x2, t2, n.chains, n.iter, progress.bar) {
   data_list = list(x = c(x1, x2), t = c(t1, t2))
-  init_list = list(rate = ( c(x1, x2) + 0.5 ) / c(t1, t2) )
+  init_list = list(lambda = ( c(x1, x2) + 0.5 ) / c(t1, t2) )
   mcmc_samples <- run_jags(two_sample_poisson_model_string, data = data_list, inits = init_list, 
-                           params = c("rate", "x_pred","rate_diff", "rate_ratio"), n.chains = n.chains, n.adapt = 0,
+                           params = c("lambda", "x_pred","rate_diff", "rate_ratio"), n.chains = n.chains, n.adapt = 0,
                            n.update = 100, n.iter = n.iter, thin = 1, progress.bar=progress.bar)
   mcmc_samples
 }
@@ -175,11 +175,11 @@ print.bayes_one_sample_poisson_test <- function(x, ...) {
   cat("number of events: ", x$x, ", time periods: ", x$t, sep="")
   cat("\n")
   cat("Estimated event rate:\n")
-  cat(" ", s["rate", "median"], "\n")
-  cat(s["rate","HDI%"],"% credible interval:\n", sep="")
-  cat(" ", s["rate",  c("HDIlo", "HDIup")], "\n")
-  cat("The event rate is more than", s["rate", "comp"] , "by a probability of", s["rate", "%>comp"], "\n")
-  cat("and less than", s["rate", "comp"] , "by a probability of", s["rate", "%<comp"], " .\n")
+  cat(" ", s["lambda", "median"], "\n")
+  cat(s["lambda","HDI%"],"% credible interval:\n", sep="")
+  cat(" ", s["lambda",  c("HDIlo", "HDIup")], "\n")
+  cat("The event rate is more than", s["lambda", "comp"] , "by a probability of", s["lambda", "%>comp"], "\n")
+  cat("and less than", s["lambda", "comp"] , "by a probability of", s["lambda", "%<comp"], " .\n")
   cat("\n")
   invisible(NULL)
 }
@@ -189,7 +189,7 @@ summary.bayes_one_sample_poisson_test <- function(object, ...) {
   s <- round_or_signif(object$stats, 3)
   
   cat("  Model parameters and generated quantities\n")
-  cat("rate: the rate of the process.\n")
+  cat("lambda: the rate of the process.\n")
   cat("x_pred: predicted event count during", object$t ,"periods.\n")
   cat("\n")
   cat("  Measures\n" )
@@ -208,7 +208,28 @@ summary.bayes_one_sample_poisson_test <- function(object, ...) {
 #' @method plot bayes_one_sample_poisson_test
 #' @export
 plot.bayes_one_sample_poisson_test <- function(x, ...) {
-  plot(x$mcmc_samples)
+  old_par <- par( mar=c(3.5,3.5,2.5,0.5) , mgp=c(2.25,0.7,0), mfcol=c(2,1))
+  sample_mat <- as.matrix(x$mcmc_samples)
+  lambda <- sample_mat[, "lambda"]
+  # Calculating the xlim to include the comparison rate and 0 *unless* they are too 
+  # far away from the samples.
+  xlim = range(lambda)
+  if(0 > xlim[1] - diff(range(lambda)) / 2) {
+    xlim[1] <- 0
+  }
+  if(x$r > xlim[1] - diff(range(lambda)) / 2) {
+    xlim[1] <- min(x$r, xlim[1])
+  }
+  if(x$r < xlim[2] + diff(range(lambda)) / 2) {
+    xlim[2] <- max(x$r, xlim[2])
+  }
+    
+  plotPost(sample_mat[, "lambda"], cred_mass= x$cred_mass, comp_val=x$r, cex=1, cex.lab=1.5,
+           xlim=xlim, main = "Rate of occurence", xlab=expression(lambda), show_median= TRUE)
+  hist_data <- discrete_hist(sample_mat[, "x_pred"], c(0, max(sample_mat[, "x_pred"])), ylab="Probability", x_marked= x$x,
+                             xlab = paste("Event count during", x$t, "periods"), main="Data w. Post. Pred.")
+  #legend("topright", legend="Data", col="red",  lty=1, lwd=3)
+  par(old_par)
   invisible(NULL)
 }
 
@@ -219,7 +240,7 @@ diagnostics.bayes_one_sample_poisson_test <- function(fit) {
   print_diagnostics_measures(round(fit$stats, 3))
   cat("\n")
   cat("  Model parameters and generated quantities\n")
-  cat("rate: the rate of the process.\n")
+  cat("lambda: the rate of the process.\n")
   cat("x_pred: predicted event count during", fit$t ,"periods.\n")
   cat("\n")
   
@@ -248,8 +269,8 @@ print.bayes_two_sample_poisson_test <- function(x, ...) {
   cat("number of events: ", paste(x$x[1], " and ", x$x[2], sep=""), ", time periods: ", paste(x$t[1], " and ", x$t[2], sep=""), "\n", sep="")
   cat("\n")
   cat("  Estimated event rate [", s[1, "HDI%"] ,"% credible interval]\n", sep="")
-  cat("Group 1: ", s["rate[1]", "median"], " [", s["rate[1]", "HDIlo"], ", ", s["rate[1]", "HDIup"], "]","\n", sep="")
-  cat("Group 2: ", s["rate[2]", "median"], " [", s["rate[2]", "HDIlo"], ", ", s["rate[2]", "HDIup"], "]","\n", sep="")
+  cat("Group 1: ", s["lambda[1]", "median"], " [", s["lambda[1]", "HDIlo"], ", ", s["lambda[1]", "HDIup"], "]","\n", sep="")
+  cat("Group 2: ", s["lambda[2]", "median"], " [", s["lambda[2]", "HDIlo"], ", ", s["lambda[2]", "HDIup"], "]","\n", sep="")
   cat("\n")
   cat("The event rate of group 1 is more than",  s["rate_ratio", "comp"], "times that of group 2 by a probability", "\n")
   cat("of", s["rate_ratio", "%>comp"], "and less than",  s["rate_ratio", "comp"], "times that of group 2 by a probability of", s["rate_ratio", "%<comp"], " .\n")
@@ -259,12 +280,12 @@ print.bayes_two_sample_poisson_test <- function(x, ...) {
 
 print_bayes_two_sample_poisson_test_params <- function(x) {
   cat("  Model parameters and generated quantities\n")
-  cat("rate[1]: the rate of the process of group 1.\n")
-  cat("rate[2]: the rate of the process of group 2.\n")
+  cat("lambda[1]: the rate of the process of group 1.\n")
+  cat("lambda[2]: the rate of the process of group 2.\n")
   cat("x_pred[1]: predicted event count of group 1 during", x$t[1] ,"periods.\n")
   cat("x_pred[2]: predicted event count of group 2 during", x$t[2] ,"periods.\n")
-  cat("rate_diff: The difference rate[1] - rate[2].\n")
-  cat("rate_ratio: The ratio rate[1] / rate[2].\n")
+  cat("rate_diff: The difference lambda[1] - lambda[2].\n")
+  cat("rate_ratio: The ratio lambda[1] / lambda[2].\n")
   invisible(NULL)
 }
 
