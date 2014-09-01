@@ -298,7 +298,7 @@ plotPost = function( param_sample_vec , cred_mass=0.95 , comp_val=NULL ,
                      HDI_text_place=0.7 , ROPE=NULL , yaxt=NULL , ylab=NULL ,
                      xlab=NULL , cex.lab=NULL , cex=NULL , xlim=NULL , main=NULL ,
                      col=NULL , border=NULL , show_mode=FALSE , show_median = FALSE,
-                     show_curve=FALSE , breaks=NULL , show_labels = TRUE,... ) {
+                     show_curve=FALSE , breaks=NULL , show_labels = TRUE, log_base = NULL,... ) {
   # Override defaults of hist function, if not specified by user:
   # (additional arguments "..." are passed to the hist function)
   if ( is.null(xlab) ) xlab="Parameter"
@@ -322,22 +322,43 @@ plotPost = function( param_sample_vec , cred_mass=0.95 , comp_val=NULL ,
   mcmcDensity = density(param_sample_vec)
   postSummary[,"mode"] = mcmcDensity$x[which.max(mcmcDensity$y)]
   HDI = HDIofMCMC( param_sample_vec , cred_mass )
+  if(! is.null(log_base)) {
+    HDI = log_base^HDIofMCMC( log(param_sample_vec, log_base) , cred_mass )
+  } else {
+    HDI = HDIofMCMC( param_sample_vec , cred_mass )
+  }
+    
   postSummary[,"hdiMass"]=cred_mass
   postSummary[,"hdiLow"]=HDI[1]
   postSummary[,"hdiHigh"]=HDI[2]
   
   # Plot histogram.
   if ( is.null(breaks) ) {
-    HDI95 = HDIofMCMC( param_sample_vec , 0.95 )
-    breaks = c( seq( from=min(param_sample_vec) , to=max(param_sample_vec) ,
-                     by=(HDI95[2]-HDI95[1])/18 ) , max(param_sample_vec) )
+    if(! is.null(log_base) ) {
+      log_param_sample_vec <- log(param_sample_vec, log_base)
+      HDI95 = HDIofMCMC( log_param_sample_vec , 0.95 )
+      breaks = c( seq( from=min(log_param_sample_vec) , to=max(log_param_sample_vec) ,
+                       by=(HDI95[2]-HDI95[1])/18 ) , max(log_param_sample_vec) )  
+    } else {
+      HDI95 = HDIofMCMC( param_sample_vec , 0.95 )
+      breaks = c( seq( from=min(param_sample_vec) , to=max(param_sample_vec) ,
+                       by=(HDI95[2]-HDI95[1])/18 ) , max(param_sample_vec) )
+    }
+    
   }
   if ( !show_curve ) {
     par(xpd=NA)
-    histinfo = hist( param_sample_vec , xlab=xlab , yaxt=yaxt , ylab=ylab ,
-                     freq=F , border=border , col=col ,
-                     xlim=xlim , main=main , cex=cex , cex.lab=cex.lab ,
-                     breaks=breaks , ... )
+    if(! is.null(log_base)) {
+      histinfo <- hist( log(param_sample_vec, log_base) , xaxt = "n",xlab=xlab , yaxt=yaxt , ylab=ylab ,
+               freq=F , border=border , col=col , xlim=log(xlim, log_base) , main=main , cex=cex , cex.lab=cex.lab ,
+               breaks=breaks , ... )
+      axis(1, at = axTicks(1), labels = fractions(log_base^axTicks(1)))
+    } else {
+      histinfo = hist( param_sample_vec , xlab=xlab , yaxt=yaxt , ylab=ylab ,
+                       freq=F , border=border , col=col ,
+                       xlim=xlim , main=main , cex=cex , cex.lab=cex.lab ,
+                       breaks=breaks , ... )
+    }
   }
   if ( show_curve ) {
     par(xpd=NA)
@@ -359,7 +380,11 @@ plotPost = function( param_sample_vec , cred_mass=0.95 , comp_val=NULL ,
     } else {
       text_label <-  sign_digits(modeParam,2)
     }
-    text( modeParam , cenTendHt , text_label, adj=c(.5,0) , cex=cex )
+    if(! is.null(log_base)) {
+      text( log(modeParam, log_base) , cenTendHt , text_label, adj=c(.5,0) , cex=cex )
+    } else {
+      text( modeParam , cenTendHt , text_label, adj=c(.5,0) , cex=cex )
+    }
   } else if(show_median) {
     medianParam = median( param_sample_vec )
     if(show_labels) {
@@ -367,7 +392,11 @@ plotPost = function( param_sample_vec , cred_mass=0.95 , comp_val=NULL ,
     } else {
       text_label <-  sign_digits(medianParam,2)
     }
-    text( medianParam , cenTendHt , text_label, adj=c(.5,0) , cex=cex )
+    if(! is.null(log_base)) {
+      text( log(medianParam, log_base) , cenTendHt , text_label, adj=c(.5,0) , cex=cex )
+    } else {
+      text( medianParam , cenTendHt , text_label, adj=c(.5,0) , cex=cex )
+    }
   } else { # Show the mean
     meanParam = mean( param_sample_vec )
     if(show_labels) {
@@ -375,7 +404,11 @@ plotPost = function( param_sample_vec , cred_mass=0.95 , comp_val=NULL ,
     } else {
       text_label <-  sign_digits(meanParam,2)
     }
-    text( meanParam , cenTendHt ,  text_label, adj=c(.5,0) , cex=cex )
+    if(! is.null(log_base)) {
+      text( log(meanParam, log_base) , cenTendHt ,  text_label, adj=c(.5,0) , cex=cex )
+    } else {
+      text( meanParam , cenTendHt ,  text_label, adj=c(.5,0) , cex=cex )
+    }
   }
   
   
@@ -385,9 +418,15 @@ plotPost = function( param_sample_vec , cred_mass=0.95 , comp_val=NULL ,
     pcgtcomp_val = round( 100 * sum( param_sample_vec > comp_val )
                           / length( param_sample_vec )  , 1 )
     pcltcomp_val = 100 - pcgtcomp_val
-    lines( c(comp_val,comp_val) , c(0.96*cvHt,0) ,
+    if(! is.null(log_base)) {
+      comp_val_pos <- log(comp_val, log_base)
+    } else {
+      comp_val_pos <- comp_val
+    }
+    
+    lines( c(comp_val_pos,comp_val_pos) , c(0.96*cvHt,0) ,
            lty="dotted" , lwd=1 , col=cvCol )
-    text( comp_val , cvHt ,
+    text( comp_val_pos , cvHt ,
           bquote( .(pcltcomp_val)*"% < " *
                    .(signif(comp_val,2)) * " < "*.(pcgtcomp_val)*"%" ) ,
           adj=c(pcltcomp_val/100,0) , cex=0.8*cex , col=cvCol )
@@ -400,11 +439,17 @@ plotPost = function( param_sample_vec , cred_mass=0.95 , comp_val=NULL ,
     ropeCol = "darkred"
     pcInROPE = ( sum( param_sample_vec > ROPE[1] & param_sample_vec < ROPE[2] )
                  / length( param_sample_vec ) )
-    lines( c(ROPE[1],ROPE[1]) , c(0.96*ROPEtextHt,0) , lty="dotted" , lwd=2 ,
+    if(! is.null(log_base)) {
+      ROPE_pos <- log(ROPE, log_base)
+    } else {
+      ROPE_pos <- ROPE
+    }
+  
+    lines( c(ROPE_pos[1],ROPE_pos[1]) , c(0.96*ROPEtextHt,0) , lty="dotted" , lwd=2 ,
            col=ropeCol )
-    lines( c(ROPE[2],ROPE[2]) , c(0.96*ROPEtextHt,0) , lty="dotted" , lwd=2 ,
+    lines( c(ROPE_pos[2],ROPE_pos[2]) , c(0.96*ROPEtextHt,0) , lty="dotted" , lwd=2 ,
            col=ropeCol)
-    text( mean(ROPE) , ROPEtextHt ,
+    text( mean(ROPE_pos) , ROPEtextHt ,
           bquote( .(round(100*pcInROPE))*"% in ROPE" ) ,
           adj=c(.5,0) , cex=1 , col=ropeCol )
     
@@ -413,14 +458,20 @@ plotPost = function( param_sample_vec , cred_mass=0.95 , comp_val=NULL ,
     postSummary[,"pcInROPE"]=pcInROPE
   }
   # Display the HDI.
-  lines( HDI , c(0,0) , lwd=4 )
+  if(! is.null(log_base)) {
+    HDI_pos <- log(HDI, log_base)
+  } else {
+    HDI_pos <- HDI
+  }
+  
+  lines( HDI_pos , c(0,0) , lwd=4 )
   if(show_labels) {
-    text( mean(HDI) , 0 , bquote(.(100*cred_mass) * "% HDI" ) ,
+    text( mean(HDI_pos) , 0 , bquote(.(100*cred_mass) * "% HDI" ) ,
           adj=c(.5,-1.7) , cex=cex )
   }
-  text( HDI[1] , 0 , bquote(.(sign_digits(HDI[1],2))) ,
+  text( HDI_pos[1] , 0 , bquote(.(sign_digits(HDI[1],2))) ,
         adj=c(HDI_text_place,-0.5) , cex=cex )
-  text( HDI[2] , 0 , bquote(.(sign_digits(HDI[2],2))) ,
+  text( HDI_pos[2] , 0 , bquote(.(sign_digits(HDI[2],2))) ,
         adj=c(1.0-HDI_text_place,-0.5) , cex=cex )
   par(xpd=F)
   #
