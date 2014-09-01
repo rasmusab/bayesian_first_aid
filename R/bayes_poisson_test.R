@@ -224,7 +224,7 @@ plot.bayes_one_sample_poisson_test <- function(x, ...) {
     xlim[2] <- max(x$r, xlim[2])
   }
     
-  plotPost(sample_mat[, "lambda"], cred_mass= x$cred_mass, comp_val=x$r, cex=1, cex.lab=1.5,
+  plotPost(lambda, cred_mass= x$cred_mass, comp_val=x$r, cex=1, cex.lab=1.5,
            xlim=xlim, main = "Rate of occurence", xlab=expression(lambda), show_median= TRUE)
   hist_data <- discrete_hist(sample_mat[, "x_pred"], c(0, max(sample_mat[, "x_pred"])), ylab="Probability", x_marked= x$x,
                              xlab = paste("Event count during", x$t, "periods"), main="Data w. Post. Pred.")
@@ -311,7 +311,27 @@ summary.bayes_two_sample_poisson_test <- function(object, ...) {
 #' @method plot bayes_two_sample_poisson_test
 #' @export
 plot.bayes_two_sample_poisson_test <- function(x, ...) {
-  plot(x$mcmc_samples)
+  old_par <- par( mar=c(3.5,3.5,2.5,0.5) , mgp=c(2.25,0.7,0), mfcol=c(3,1))
+  sample_mat <- as.matrix(x$mcmc_samples)
+  lambda1 <- sample_mat[, "lambda[1]"]
+  lambda2 <- sample_mat[, "lambda[2]"]
+  
+  xlim <- range(lambda1, lambda2)
+  if(0 > xlim[1] - diff(range(lambda1, lambda2)) / 2) {
+    xlim[1] <- 0
+  }
+  plotPost(lambda1, cred_mass= x$cred_mass, cex=1.5, cex.lab=1.8, xlim=xlim,
+           main = "Rate of occurence for group 1", xlab=expression(lambda[1]), show_median= TRUE)
+  plotPost(lambda2, cred_mass= x$cred_mass, cex=1.5, cex.lab=1.8, xlim=xlim,
+           main = "Rate of occurence for group 2", xlab=expression(lambda[2]), show_median= TRUE)
+  
+  # Centers the ratio plot on 1.0.
+  xlim <- 2^(max(abs(range(log2(sample_mat[, "rate_ratio"])))) * c(-1, 1))
+  plotPost(sample_mat[, "rate_ratio"], cred_mass= x$cred_mass, comp_val = x$r, cex=1.5, cex.lab=1.8, xlim=xlim,
+           main = "Rate ratio between group 1 and group 2", xlab=expression(lambda[1] / lambda[2]), show_median= TRUE, log_base = 2)
+  
+  
+  par(old_par)
   invisible(NULL)
 }
 
