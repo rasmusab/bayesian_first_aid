@@ -14,7 +14,11 @@
 #'
 #'Here the Gamma prior on \eqn{\lambda} is an approximation of Jeffrey's' prior 
 #'for this model. In the case of two groups, both rate parameters are separately
-#'estimated using the model above.
+#'estimated using the model above. For two groups, the ratio of the rates is 
+#'calculated where a ratio of, say, 2.5 would mean that the rate of group 1 is 
+#'2.5 times that of group 2. Note that the mean and the highest desity interval
+#'for the rate ratio are calculated on the log transformed samples and then
+#'transformed back to the original scale.
 #'
 #'@param x number of events. A vector of length one or two.
 #'@param T time base for event count. A vector of length one or two.
@@ -111,6 +115,13 @@ bayes.poisson.test <- function (x, T = 1, r = 1, alternative = c("two.sided", "l
     mcmc_samples <- jags_two_sample_poisson_test(x[1], T[1], x[2], T[2], 
                                                  n.chains=3, n.iter= ceiling(n.iter / 3), progress.bar=progress.bar)
     stats <- mcmc_stats(mcmc_samples, cred_mass = cred.mass, comp_val = r)
+    
+    # Calculating the rate_ratio mean and HDI on the log scale.
+    ratio_stats <- mcmc_stats(log(as.matrix(mcmc_samples)[,"rate_ratio"]), cred_mass = cred.mass, comp_val = log(r))
+    stats["rate_ratio", c("mean", "HDIlo", "HDIup")] <- exp(ratio_stats[,c("mean", "HDIlo", "HDIup")])
+    stats["rate_ratio", "sd"] <- NA # Setting sd to NA, as it is clear what should be presented
+                                    # when the mean was calculated on the log transformed rate_ratio
+    
     bfa_object <- list(x = x, t = T, r = r, cred_mass = cred.mass, x_name = x_name, t_name = t_name,
                        data_name = DNAME, mcmc_samples = mcmc_samples, stats = stats)
     class(bfa_object) <- c("bayes_two_sample_poisson_test", "bayesian_first_aid")
@@ -148,7 +159,6 @@ two_sample_poisson_model_string <- "model {
   }
   rate_diff <- lambda[1] - lambda[2]
   rate_ratio <- lambda[1] / lambda[2]
-
 }"
 
 jags_two_sample_poisson_test <- function(x1, t1, x2, t2, n.chains, n.iter, progress.bar) {
@@ -252,9 +262,31 @@ diagnostics.bayes_one_sample_poisson_test <- function(fit) {
 
 #' @export
 model.code.bayes_one_sample_poisson_test <- function(fit) {
-  print(jags_one_sample_poisson_test)
+  cat("### Model code for the Bayesian First Aid one sample Poisson test ###\n")
+  cat("require(rjags)\n\n")
+  
+  cat("# Setting up the data\n")
+  cat("x <-", fit$x, "\n")
+  cat("t <-", fit$t, "\n")
+  cat("\n")
+  pretty_print_function_body(one_sample_poisson_model_code)
   invisible(NULL)
 }
+
+# Not to be run, just to be printed
+one_sample_poisson_model_code <- function(x, t) {
+  # The model string written in the JAGS language
+  BayesianFirstAid::replace_this_with_model_string
+  
+  # Running the model
+  model <- jags.model(textConnection(model_string), data = list(x = x, t = t), n.chains = 3)
+  samples <- coda.samples(model, c("lambda", "x_pred"), n.iter=5000)
+  
+  # Inspecting the posterior
+  plot(samples)
+  summary(samples)  
+}
+one_sample_poisson_model_code <- inject_model_string(one_sample_poisson_model_code, one_sample_poisson_model_string)
 
 ### Two sample poisson test S3 methods ###
 
@@ -272,8 +304,12 @@ print.bayes_two_sample_poisson_test <- function(x, ...) {
   cat("Group 1: ", s["lambda[1]", "median"], " [", s["lambda[1]", "HDIlo"], ", ", s["lambda[1]", "HDIup"], "]","\n", sep="")
   cat("Group 2: ", s["lambda[2]", "median"], " [", s["lambda[2]", "HDIlo"], ", ", s["lambda[2]", "HDIup"], "]","\n", sep="")
   cat("\n")
+  cat("  Estimated rate ratio (group 1 rate / group 2 rate) [", s[1, "HDI%"] ,"% credible interval]\n", sep="")
+  cat(s["rate_ratio", "median"], " [", s["rate_ratio", "HDIlo"], ", ", s["rate_ratio", "HDIup"], "]","\n", sep="")
+  
+  cat("\n")
   cat("The event rate of group 1 is more than",  s["rate_ratio", "comp"], "times that of group 2 by a probability", "\n")
-  cat("of", s["rate_ratio", "%>comp"], "and less than",  s["rate_ratio", "comp"], "times that of group 2 by a probability of", s["rate_ratio", "%<comp"], " .\n")
+  cat("of", s["rate_ratio", "%>comp"], "and less than",  s["rate_ratio", "comp"], "times that of group 2 by a probability of", s["rate_ratio", "%<comp"], ".\n")
   cat("\n")
   invisible(NULL)
 }
@@ -301,6 +337,9 @@ summary.bayes_two_sample_poisson_test <- function(object, ...) {
   cat("'HDIlo' and 'HDIup' are the limits of a ", s[1, "HDI%"] ,"% HDI credible interval.\n", sep="")
   cat("'%<comp' and '%>comp' are the probabilities of the respective parameter being\n")
   cat("smaller or larger than ", s[1, "comp"] ,".\n", sep="")
+  cat("For rate_ratio the mean, 'HDIlo' and 'HDIup' are calculated on the log transformed\n", sep="")
+  cat("samples and then transformed back to the original scale.\n", sep="")
+  
   
   cat("\n")
   cat("  Quantiles\n" )
@@ -352,6 +391,28 @@ diagnostics.bayes_two_sample_poisson_test <- function(fit) {
 
 #' @export
 model.code.bayes_two_sample_poisson_test <- function(fit) {
-  print(jags_two_sample_poisson_test)
+  cat("### Model code for the Bayesian First Aid two sample Poisson test ###\n")
+  cat("require(rjags)\n\n")
+  
+  cat("# Setting up the data\n")
+  cat("x <-", deparse(fit$x), "\n")
+  cat("t <-", deparse(fit$t), "\n")
+  cat("\n")
+  pretty_print_function_body(two_sample_poisson_model_code)
   invisible(NULL)
 }
+
+# Not to be run, just to be printed
+two_sample_poisson_model_code <- function(x, t) {
+  # The model string written in the JAGS language
+  BayesianFirstAid::replace_this_with_model_string
+  
+  # Running the model
+  model <- jags.model(textConnection(model_string), data = list(x = x, t = t), n.chains = 3)
+  samples <- coda.samples(model, c("lambda", "x_pred", "rate_diff", "rate_ratio"), n.iter=5000)
+  
+  # Inspecting the posterior
+  plot(samples)
+  summary(samples)  
+}
+two_sample_poisson_model_code <- inject_model_string(two_sample_poisson_model_code, two_sample_poisson_model_string)

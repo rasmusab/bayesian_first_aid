@@ -179,7 +179,12 @@ round_or_signif <- function(x, d) {
   x_round <- round(x, d)
   x_signif <- signif(x, d)
   least_error <- sapply(seq_len(length(x)), function(i) {
-    which.min(c(abs(x[i] - x_signif[i]), abs(x[i] - x_round[i])))
+    least_error_i <- which.min(c(abs(x[i] - x_signif[i]), abs(x[i] - x_round[i])))
+    # Guard against NAs and other strangeness in the the input.
+    if(! is.numeric(least_error_i) || length(least_error_i) != 1) {
+      least_error_i <- 1
+    }
+    least_error_i
   })
   x[least_error == 1] <- x_signif[least_error == 1]
   x[least_error == 2] <- x_round[least_error == 2]
