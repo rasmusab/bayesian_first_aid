@@ -354,10 +354,15 @@ plotPost = function( param_sample_vec , cred_mass=0.95 , comp_val=NULL ,
   if ( !show_curve ) {
     par(xpd=NA)
     if(! is.null(log_base)) {
+      old_par <- par(lab=c(6, 5, 7))
       histinfo <- hist( log(param_sample_vec, log_base) , xaxt = "n",xlab=xlab , yaxt=yaxt , ylab=ylab ,
                freq=F , border=border , col=col , xlim=log(xlim, log_base) , main=main , cex=cex , cex.lab=cex.lab ,
                breaks=breaks , ... )
-      axis(1, at = axTicks(1), labels = fractions(log_base^axTicks(1)))
+      log_labels = as.character(fractions(log_base^axTicks(1, ), max.denominator = 2^64))
+      extreme_axis_ticks <- log_base^axTicks(1) > 9999 | log_base^axTicks(1) < 1/9999
+      log_labels[extreme_axis_ticks] <- paste(log_base, "^", axTicks(1)[extreme_axis_ticks], sep="")
+      axis(1, at = axTicks(1), labels = log_labels)
+      par(old_par)
     } else {
       histinfo = hist( param_sample_vec , xlab=xlab , yaxt=yaxt , ylab=ylab ,
                        freq=F , border=border , col=col ,

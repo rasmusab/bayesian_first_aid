@@ -51,7 +51,11 @@ assuming the following model:
 
 Here the Gamma prior on \eqn{\lambda} is an approximation of Jeffrey's' prior
 for this model. In the case of two groups, both rate parameters are separately
-estimated using the model above.
+estimated using the model above. For two groups, the ratio of the rates is
+calculated where a ratio of, say, 2.5 would mean that the rate of group 1 is
+2.5 times that of group 2. Note that the mean and the highest desity interval
+for the rate ratio are calculated on the log transformed samples and then
+transformed back to the original scale.
 }
 \examples{
 # Data from Boice, J. D., & Monson, R. R. (1977).
