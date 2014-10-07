@@ -469,9 +469,10 @@ plot.bayes_one_sample_t_test <- function(x, ...) {
   sigma = samples_mat[,"sigma"]
   nu = samples_mat[,"nu"]
   
+  old_par <- par(no.readonly = TRUE)
   #layout( matrix( c(3,3,4,4,5,5, 1,1,1,1,2,2) , nrow=6, ncol=2 , byrow=FALSE ) )
   layout( matrix( c(2,2,3,3,4,4, 1,1) , nrow=4, ncol=2 , byrow=FALSE ) )
-  old_par <- par( mar=c(3.5,3.5,2.5,0.5) , mgp=c(2.25,0.7,0) )
+  par( mar=c(3.5,3.5,2.5,0.5) , mgp=c(2.25,0.7,0) )
   
   n_curves <- 30
   rand_i <- sample(nrow(samples_mat), n_curves)
@@ -653,9 +654,10 @@ plot.bayes_two_sample_t_test <- function(x, ...) {
   sigma_y = samples_mat[,"sigma_y"]
   nu = samples_mat[,"nu"]
   
+  old_par <- par(no.readonly = TRUE)
   #layout( matrix( c(4,5,7,8,3,1,2,6,9,10) , nrow=5, byrow=FALSE ) )
   layout( matrix( c(3,4,5,1,2,6) , nrow=3, byrow=FALSE ) )
-  old_par <- par( mar=c(3.5,3.5,2.5,0.51) , mgp=c(2.25,0.7,0) )
+  par( mar=c(3.5,3.5,2.5,0.51) , mgp=c(2.25,0.7,0) )
   
   
   # Plot data with post predictive distribution
@@ -846,9 +848,10 @@ plot.bayes_paired_t_test <- function(x, y, ...) {
   sigma_diff = samples_mat[,"sigma_diff"]
   nu = samples_mat[,"nu"]
   
+  old_par <- par(no.readonly = TRUE)
   #layout( matrix( c(3,3,4,4,5,5, 1,1,1,1,2,2) , nrow=6, ncol=2 , byrow=FALSE ) )
   layout( matrix( c(2,2,3,3,4,4, 1,1) , nrow=4, ncol=2 , byrow=FALSE ) )
-  old_par <- par( mar=c(3.5,3.5,2.5,0.5) , mgp=c(2.25,0.7,0) )
+  par( mar=c(3.5,3.5,2.5,0.5) , mgp=c(2.25,0.7,0) )
   
   n_curves <- 30
   rand_i <- sample(nrow(samples_mat), n_curves)

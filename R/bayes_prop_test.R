@@ -260,12 +260,13 @@ plot.bayes_prop_test <- function(x, ...) {
   #layout_mat[,1] <- seq_len(n_groups)
   diag(layout_mat) <- seq_len(n_groups)
   
+  old_par <- par(no.readonly = TRUE)
   layout_mat <- t(layout_mat)
   layout_mat[lower.tri(layout_mat)] <- seq(n_groups + 1, by = 2,length.out = (ncol(diff_samples)))
   layout_mat <- t(layout_mat)
   layout_mat[lower.tri(layout_mat)] <- seq(n_groups + 2, by = 2,length.out = (ncol(diff_samples)))
   layout(layout_mat)
-  old_par <- par( mar=c(3.5,2,2,2) , mgp=c(2.25,0.7,0) )
+  par( mar=c(3.5,2,2,2) , mgp=c(2.25,0.7,0) )
   post_xlim <- range(apply(samples, 2, quantile, probs = c(0.001, 0.999)))
   # Some rules for making the post_xlim nice, with a preference for showing endpoints of the scale
   xlim_length <- abs(diff(post_xlim))
