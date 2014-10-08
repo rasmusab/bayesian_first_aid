@@ -2,8 +2,8 @@ context("bayes.poisson.test")
 
 
 test_that("the  jags_*_poisson_test functions returns an 'mcmc.list' objects", {
-  expect_that(jags_one_sample_poisson_test(5, 10, n.chains = 3, n.iter=100), is_a("mcmc.list"))
-  expect_that(jags_two_sample_poisson_test(5, 10, 20, 25, n.chains = 3, n.iter=100), is_a("mcmc.list"))
+  expect_that(jags_one_sample_poisson_test(5, 10, n.chains = 3, n.iter=100, progress.bar = "none"), is_a("mcmc.list"))
+  expect_that(jags_two_sample_poisson_test(5, 10, 20, 25, n.chains = 3, n.iter=100, progress.bar = "none"), is_a("mcmc.list"))
 })
 
 test_that("the bayes.poisson.test functions returns the correct 'bayes_*_poisson_test' objects", {
