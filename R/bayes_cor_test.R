@@ -47,6 +47,8 @@ cor_model_string <- "model {
     xy[i,1:2] ~ dmt(mu[], prec[ , ], nu) 
   }
 
+  xy_pred[1:2] ~ dmt(mu[], prec[ , ], nu)
+
   # JAGS parameterizes the multivariate t using precision (inverse of variance) 
   # rather than variance, therefore here inverting the covariance matrix.
   prec[1:2,1:2] <- inverse(cov[,])
@@ -81,7 +83,7 @@ jags_cor_test <- function(x, y, n.adapt= 500, n.chains=3, n.update = 100, n.iter
   inits_list = list(mu=c(mean(x, trim=0.2), mean(y, trim=0.2)), rho=cor(x, y, method="spearman"), 
                     sigma = c(mad0(x), mad0(y)), nuMinusOne = 5)
   mcmc_samples <- run_jags(cor_model_string, data = data_list, inits = inits_list, 
-                           params = c("rho", "mu", "sigma", "nu"), n.chains = n.chains, n.adapt = n.adapt,
+                           params = c("rho", "mu", "sigma", "nu", "xy_pred"), n.chains = n.chains, n.adapt = n.adapt,
                            n.update = n.update, n.iter = n.iter, thin = thin, progress.bar=progress.bar)
   mcmc_samples
 }
@@ -262,44 +264,35 @@ plot.bayes_cor_test <- function(x, ...) {
   
   ### fig 2, the scatterplot ###
   
-  # Sampling from the posterior predictive distribution
-  # picking out 1000 samples and for each sample generate 100 samples from the corresponding
-  # bivariate t distribution. (This is faster than picking out 100000 samples and generating)
-  # one bivariate t sample per sample.
-  xy_rep <- do.call(rbind, lapply(sample(1:nrow(samples_mat), 1000, replace=T), function(i) {
-    sigma1 <- samples_mat[i, "sigma[1]"]
-    sigma2 <- samples_mat[i, "sigma[2]"]
-    rho <- samples_mat[i, "rho"]
-    cov_mat <- cbind(c(sigma1^2, sigma1 * sigma2 * rho),
-                     c(sigma1 * sigma2 * rho, sigma2^2))
-    rmt(100, samples_mat[i, c("mu[1]", "mu[2]")], cov_mat, samples_mat[i, "nu"])
-  }))
   
-  x_rep <- xy_rep[,1]
-  y_rep <- xy_rep[,2]
-  
-  # Calculating the 2d density of the posterior predictive distribution x_rep and y_rep
-  dens_limits <- c(median(x_rep) - IQR(x_rep) * 5, median(x_rep) + IQR(x_rep) * 5,
-                   median(y_rep) - IQR(y_rep) * 5, median(y_rep) + IQR(y_rep) * 5)
-  bandwidth <- c(IQR(x_rep), IQR(y_rep)) / 1.349 * 0.5
-  dens_2d <- kde2d(x_rep, y_rep, n = 40, lims=dens_limits, h=bandwidth)
-  sorted_z <- sort(dens_2d$z, decreasing=TRUE)
-  post_95_limit <- sorted_z[which.min(abs(cumsum(sorted_z / sum(sorted_z)) - 0.95))]
-  post_50_limit <- sorted_z[which.min(abs(cumsum(sorted_z / sum(sorted_z)) - 0.5))]
-  
+  xy_rep <- samples_mat[,c("xy_pred[1]", "xy_pred[2]")]
+  # Use a subset of the posterior predictive to calculate higest density ellipses
+  # At most 2000 points
+  #xy_rep <- xy_rep[seq(1, nrow(xy_rep), length.out = min(nrow(xy_rep), 5000)),]
+    
+  # Find the points contained in the minimum ellipse covering 50%/95% of the points
+  # Unfortunately cov.mve doesn't return the actuall ellipse (but another ellipse).
+  # Then finding the minimum volume ellipse that contains these 50%/95% points
+  points_95_perc <-  xy_rep[cov.rob(xy_rep, quantile.used = round(nrow(xy_rep) * 0.95), method = "mve")$best, ]
+  ellipse_95_perc <- ellipsoidhull( points_95_perc)
+  # Using only the 95% points in the highest density ellipse thus the "0.5 / 0.95"
+  points_50_perc <-  points_95_perc[cov.rob(points_95_perc, quantile.used = round(nrow(points_95_perc) * 0.5 / 0.95), method = "mve")$best, ]
+  ellipse_50_perc <- ellipsoidhull( points_50_perc)
   # These messy lines calculates limits of the plot that makes sure both all the data
-  # and the density estimate is visible. Also centers the plot on the median of the data.
-  plot_xlim <- c(median(x$x) - max( abs(x$x - median(x$x))), median(x$x) + max( abs(x$x - median(x$x))))
-  plot_xlim[1] <- min(plot_xlim[1], dens_2d$x[apply(dens_2d$z > post_95_limit, 2, any)] - diff(dens_2d$x[1:2]) / 2)
-  plot_xlim[2] <- max(plot_xlim[2], dens_2d$x[apply(dens_2d$z > post_95_limit, 2, any)] + diff(dens_2d$x[1:2])/ 2)
-  plot_ylim <- c(median(x$y) - max( abs(x$y - median(x$y))), median(x$y) + max( abs(x$y - median(x$y))))
-  plot_ylim[1] <- min(plot_ylim[1], dens_2d$y[apply(dens_2d$z > post_95_limit, 1, any)] - diff(dens_2d$y[1:2])/ 2)
-  plot_ylim[2] <- max(plot_ylim[2], dens_2d$y[apply(dens_2d$z > post_95_limit, 1, any)] + diff(dens_2d$y[1:2])/ 2)
+  # and the ellipses is visible. Also centers the plot on the median of the data.
+  x_dist_from_median <- max( abs(c(x$x, points_95_perc[,1]) - median(x$x)) )
+  plot_xlim <- c(median(x$x) - x_dist_from_median, median(x$x) + x_dist_from_median)
+  y_dist_from_median <- max( abs(c(x$y, points_95_perc[,2]) - median(x$y)) )
+  plot_ylim <- c(median(x$y) - y_dist_from_median, median(x$y) + y_dist_from_median)
   
+  # Plotting  
   par(mar = c(2,2,0,0), xaxt="s", yaxt="s", bty="o")
-  plot(x$x, x$y, col="white", xlim=plot_xlim, ylim=plot_ylim)
-  .filled.contour(dens_2d$x, dens_2d$y, dens_2d$z, levels=c(0, post_95_limit, post_50_limit, max(sorted_z)), col=c(rgb(1,1,1, 0), "#bddeeb", "#87ceeb"))
-  points(x$x, x$y, pch=1, col=c(rgb(0,0,0, 1)))
+  plot(x$x, x$y, col=rgb(1,1,1, 0), xlim=plot_xlim, ylim=plot_ylim)
+  # The predict() function returns a 2d matrix defining the coordinates of
+  # the hull of the ellipse 
+  polygon(predict(ellipse_95_perc, n.out = 100), col = "#bddeeb", border = NA)
+  polygon(predict(ellipse_50_perc, n.out = 100), col = "#87ceeb", border = NA)
+  points(x$x, x$y)
   
   # Save the limits for use with the marginal plots
   scatter_lim <- par("usr")
@@ -391,7 +384,7 @@ cor_model_code <- function(x, y, xy) {
                     sigma = c(mad(x), mad(y)), nuMinusOne = 5)
   
   # The parameters to monitor.
-  params <- c("rho", "mu", "sigma", "nu")
+  params <- c("rho", "mu", "sigma", "nu", "xy_pred")
     
   # Running the model
   model <- jags.model(textConnection(model_string), data = data_list,
