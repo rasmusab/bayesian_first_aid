@@ -67,4 +67,27 @@ implemented by \code{\link{cor.test}}. It accepts the same arguments as
 \code{\link{cor.test}}. For more information regarding the model assumptions see:
 \url{http://sumsar.net/blog/2014/03/bayesian-first-aid-pearson-correlation-test/}
 }
+\examples{
+# Data from Hollander & Wolfe (1973), p. 187f.
+# This example is borrowed from the documentation for cor.test().
+
+# Assessment of tuna quality.  We compare the Hunter L measure of
+#  lightness to the averages of consumer panel scores (recoded as
+#  integer values from 1 to 6 and averaged over 80 such values) in
+#  9 lots of canned tuna.
+x <- c(44.4, 45.9, 41.9, 53.3, 44.7, 44.1, 50.7, 45.2, 60.1)
+y <- c( 2.6, 3.1, 2.5, 5.0, 3.6, 4.0, 5.2, 2.8, 3.8)
+
+# First a classical correlation test:
+cor.test(x, y)
+
+# And here is the Bayesian first aid alternative:
+bayes.cor.test(x, y)
+
+# Save the output into a variable for easy plotting and further inspection:
+fit <- bayes.cor.test(x, y)
+plot(fit)
+summary(fit)
+model.code(fit)
+}
 

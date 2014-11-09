@@ -36,6 +36,31 @@
 #'   the analysis. It can be further inspected using the functions 
 #'   \code{summary}, \code{plot}, \code{\link{diagnostics}} and 
 #'   \code{\link{model.code}}.
+#'   
+#' @examples
+#' 
+#' # Data from Hollander & Wolfe (1973), p. 187f.
+#' # This example is borrowed from the documentation for cor.test().
+#' 
+#' # Assessment of tuna quality.  We compare the Hunter L measure of
+#' #  lightness to the averages of consumer panel scores (recoded as
+#' #  integer values from 1 to 6 and averaged over 80 such values) in
+#' #  9 lots of canned tuna.
+#' x <- c(44.4, 45.9, 41.9, 53.3, 44.7, 44.1, 50.7, 45.2, 60.1)
+#' y <- c( 2.6, 3.1, 2.5, 5.0, 3.6, 4.0, 5.2, 2.8, 3.8)
+#' 
+#' # First a classical correlation test:
+#' cor.test(x, y)
+#' 
+#' # And here is the Bayesian first aid alternative:
+#' bayes.cor.test(x, y)
+#' 
+#' # Save the output into a variable for easy plotting and further inspection:
+#' fit <- bayes.cor.test(x, y)
+#' plot(fit)
+#' summary(fit)
+#' model.code(fit)
+#' 
 #' @export
 #' @rdname bayes.cor.test
 bayes.cor.test <- function(x, ...) {
@@ -213,6 +238,8 @@ print_bayes_cor_test_params <- function(object) {
   cat("mu[2]: the mean of", object$y_name, "\n")
   cat("sigma[2]: the scale of", object$y_name,"\n")
   cat("nu: the degrees-of-freedom for the bivariate t distribution\n")
+  cat("xy_pred[1]: the posterior predictive distribution of", object$x_name, "\n")
+  cat("xy_pred[2]: the posterior predictive distribution of", object$y_name, "\n")
 }
 
 #' @export
