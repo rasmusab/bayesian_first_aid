@@ -51,6 +51,13 @@ print_diagnostics_measures <- function(s) {
   cat("Rhat: the potential scale reduction factor (at convergence, Rhat=1).\n")
 }
 
+# Below shold be same as:
+#rmt(100, samples_mat[i, c("mu[1]", "mu[2]")], cov_mat, samples_mat[i, "nu"])
+
+rmt <- function(n, mu, cov_mat, nu) {
+  t(t(mvrnorm(n, rep(0, length(mu)), cov_mat) / sqrt(nu / rchisq(n, nu))) + mu)
+}
+
 # A version of mad (median absolute deviation), that guards against mad returning zero by
 # replacing 0 it by the SD instead. Also removes NAs by default.
 
