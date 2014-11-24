@@ -70,8 +70,7 @@ install.packages("devtools")
 To install Bayesian First Aid then run:
 
 ```
-library(devtools)
-install_github("rasmusab/bayesian_first_aid")
+devtools::install_github("rasmusab/bayesian_first_aid")
 ```
 
 The installation will take a couple of minutes due to the vignettes taking quite a long time to build, so please be patient :)
