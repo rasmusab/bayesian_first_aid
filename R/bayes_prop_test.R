@@ -179,7 +179,7 @@ bayes.prop.test <- function (x, n, comp.theta = NULL, alternative = NULL, cred.m
     temp_comp_val <- comp.theta
   }
   stats <- mcmc_stats(mcmc_samples, cred_mass = cred.mass, comp_val = temp_comp_val)
-  diff_stats <- mcmc_stats(create_theta_diff_matrix(as.matrix(mcmc_samples)))
+  diff_stats <- mcmc_stats(create_theta_diff_matrix(as.matrix(mcmc_samples)), cred_mass = cred.mass, comp_val = 0)
   stats <- rbind(stats, diff_stats)
   bfa_object <- list(x = x, n = n, comp_theta = comp.theta, cred_mass = cred.mass,
                      x_name = x_name, n_name = n_name, data_name = DNAME,
@@ -247,7 +247,7 @@ format_group_diffs <- function(bfa_object) {
 }
 
 
-# TODO
+
 #' @method plot bayes_prop_test
 #' @export
 plot.bayes_prop_test <- function(x, ...) {
@@ -370,7 +370,8 @@ summary.bayes_prop_test <- function(object, ...) {
   cat("\n")
   cat("'HDIlo' and 'HDIup' are the limits of a ", s[1, "HDI%"] ,"% HDI credible interval.\n", sep="")
   cat("'%<comp' and '%>comp' are the probabilities of the respective parameter being\n")
-  cat("smaller or larger than ", s[1, "comp"] ,".\n", sep="")
+  cat("smaller or larger than ", s[1, "comp"] ," (except for the theta_diff parameters where\n", sep="")
+  cat("the comparison value comp is 0.0).\n", sep="")
   
   cat("\n")
   cat("  Quantiles\n" )
