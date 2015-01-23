@@ -266,9 +266,16 @@ summary.bayes_cor_test <- function(object, ...) {
   invisible(NULL)
 }
 
+#' Summary plot of a bayes.cor.test object
+#' 
+#' Produces a histogram of the posterior of the correlation parameter rho, and a scatterplot with the data and the posterior predictive density.
+#'
+#' @param x the resulting object from a \code{\link{bayes.cor.test}} run
+#' @param xlim,ylim the limits of the scatterplot, if NULL then reasonable limits will be calculated automatically.
+#' 
 #' @method plot bayes_cor_test
 #' @export
-plot.bayes_cor_test <- function(x, ...) {
+plot.bayes_cor_test <- function(x, xlim = NULL, ylim = NULL,...) {
   stats <- x$stats
   mcmc_samples <- x$mcmc_samples
   samples_mat <- as.matrix(mcmc_samples)
@@ -317,12 +324,20 @@ plot.bayes_cor_test <- function(x, ...) {
   post_50_limit <- sorted_z[which.min(abs(cumsum(sorted_z / sum(sorted_z)) - 0.5))]
   # These messy lines calculates limits of the plot that makes sure both all the data
   # and the density estimate is visible. Also centers the plot on the median of the data.
-  plot_xlim <- c(median(x$x) - max( abs(x$x - median(x$x))), median(x$x) + max( abs(x$x - median(x$x))))
-  plot_xlim[1] <- min(plot_xlim[1], dens_2d$x[apply(dens_2d$z > post_95_limit, 2, any)] - diff(dens_2d$x[1:2]) / 2)
-  plot_xlim[2] <- max(plot_xlim[2], dens_2d$x[apply(dens_2d$z > post_95_limit, 2, any)] + diff(dens_2d$x[1:2])/ 2)
-  plot_ylim <- c(median(x$y) - max( abs(x$y - median(x$y))), median(x$y) + max( abs(x$y - median(x$y))))
-  plot_ylim[1] <- min(plot_ylim[1], dens_2d$y[apply(dens_2d$z > post_95_limit, 1, any)] - diff(dens_2d$y[1:2])/ 2)
-  plot_ylim[2] <- max(plot_ylim[2], dens_2d$y[apply(dens_2d$z > post_95_limit, 1, any)] + diff(dens_2d$y[1:2])/ 2)
+  if(is.null(xlim)) {
+    plot_xlim <- c(median(x$x) - max( abs(x$x - median(x$x))), median(x$x) + max( abs(x$x - median(x$x))))
+    plot_xlim[1] <- min(plot_xlim[1], dens_2d$x[apply(dens_2d$z > post_95_limit, 2, any)] - diff(dens_2d$x[1:2]) / 2)
+    plot_xlim[2] <- max(plot_xlim[2], dens_2d$x[apply(dens_2d$z > post_95_limit, 2, any)] + diff(dens_2d$x[1:2])/ 2)
+  } else {
+    plot_xlim <- xlim  
+  }
+  if(is.null(ylim)) {
+    plot_ylim <- c(median(x$y) - max( abs(x$y - median(x$y))), median(x$y) + max( abs(x$y - median(x$y))))
+    plot_ylim[1] <- min(plot_ylim[1], dens_2d$y[apply(dens_2d$z > post_95_limit, 1, any)] - diff(dens_2d$y[1:2])/ 2)
+    plot_ylim[2] <- max(plot_ylim[2], dens_2d$y[apply(dens_2d$z > post_95_limit, 1, any)] + diff(dens_2d$y[1:2])/ 2)    
+  } else {
+    plot_ylim <- ylim
+  }
   
 #### Code for plotting coverage ellipses, doesn't look as good though as the kernel density version.
 #### Commented out until I find a better solution...
