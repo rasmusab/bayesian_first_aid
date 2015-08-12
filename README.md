@@ -61,7 +61,7 @@ Bååth, R., (2014) Bayesian First Aid: A Package that Implements Bayesian Alter
 Installation
 --------------------
 
-This package requires a working instalation of [JAGS](http://mcmc-jags.sourceforge.net/). To install the package from github you also need the [devtools package](http://cran.r-project.org/web/packages/devtools/index.html):
+This package requires a working instalation of [JAGS](http://mcmc-jags.sourceforge.net/) ([Here is some extra guidance](https://gist.github.com/casallas/8411082) if you're on a Mac). To install the package from github you also need the [devtools package](http://cran.r-project.org/web/packages/devtools/index.html):
 
 ```
 install.packages("devtools")
