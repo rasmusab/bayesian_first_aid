@@ -2,3 +2,12 @@ BayesianFirstAid 0.1
 ==============
 
 * Initial release
+
+BayesianFirstAid 0.2
+==============
+
+* Added bayes.binom.test
+* bayes.t.test
+* bayes.cor.test
+* bayes.prop.test
+* bayes.poisson.test
