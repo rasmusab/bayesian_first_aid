@@ -203,6 +203,27 @@ create_theta_diff_matrix <- function(samples_mat) {
   theta_diffs
 }
 
+
+# TODO: Not yet incorporated.
+# Derviation of a and be from the advice from Gelman that
+# P(a + b) should be proportional to (a + b)^(-5/2)
+# Here a Pareto with parameter alpha = 1.5 is proportional to this.
+# Only difference is that we dissalow a < 1 and b < 1
+# this results in that we get a parameter that can be interpreted as the 
+# group *mode*
+hierarch_prop_model_string <- "model {
+  group_mode ~ dbeta(1, 1)
+  group_conc ~ dpar(1.5, 2)
+  a <- 1 + group_mode * (group_conc - 2) 
+  b <- 1 + (1 - group_mode) * (group_conc - 2)
+  theta_pred ~ dbeta(a, b)
+  for(i in 1:length(x)) {
+    theta[i] ~ dbeta(a, b)
+    x[i] ~ dbinom(theta[i], n[i])
+    x_pred[i] ~ dbinom(theta[i], n[i])
+  }
+}"
+
 prop_model_string <- "model {
   for(i in 1:length(x)) {
     x[i] ~ dbinom(theta[i], n[i])
