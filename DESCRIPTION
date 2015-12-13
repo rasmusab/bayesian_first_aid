@@ -1,5 +1,5 @@
 Package: BayesianFirstAid
-Title: Bayesian replacements for the most commonly used statistical tests in R.
+Title: Bayesian replacements for the most commonly used statistical tests in R
 Description: The idea with this R package is to make "replacements" for the
     most commonly used tests in R such as `t.test`, `binom.test` and
     `cor.test`. These replacements will be based on Bayesian estimation and
@@ -24,7 +24,8 @@ Depends:
 Imports:
     MASS (>= 7.3),
     mnormt (>= 1.4),
-    stringr (>= 0.6)
+    stringr (>= 0.6),
+    knitr
 URL: http://www.sumsar.net
 License: GPL-3
 LazyData: true
