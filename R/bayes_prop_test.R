@@ -5,7 +5,7 @@
 #'\code{\link{prop.test}}.
 #'
 #'Given data on the number of successes and failures \code{bayes.prop.test} 
-#'estimates \ifelse{latex}{\eqn{\theta_{1...m}}}{\eqn{\theta}₁…ₘ}, the relative
+#'estimates \ifelse{latex}{\eqn{\theta_{1...m}}}{\eqn{\theta}[1...m]}, the relative
 #'frequencies of success for each of the \eqn{m} groups. The following model is
 #'assumed for each group:
 #'
