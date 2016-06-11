@@ -28,7 +28,7 @@
 #'@param cred.mass the amount of probability mass that will be contained in 
 #'  reported credible intervals. This argument fills a similar role as 
 #'  \code{conf.level} in \code{\link{poisson.test}}.
-#'@param n.iter
+#'@param n.iter The number of iterations to run the MCMC sampling.
 #'@param progress.bar The type of progress bar. Possible values are "text", 
 #'  "gui", and "none".
 #'@param conf.level same as \code{cred.mass} and is only retained in order to 
@@ -212,7 +212,7 @@ summary.bayes_one_sample_poisson_test <- function(object, ...) {
   cat("\n")
   cat("  Quantiles\n" )
   print(s[, c("q2.5%", "q25%", "median","q75%", "q97.5%")] )
-  invisible(NULL)
+  invisible(object$stats)
 }
 
 #' @method plot bayes_one_sample_poisson_test
@@ -342,7 +342,7 @@ summary.bayes_two_sample_poisson_test <- function(object, ...) {
   cat("\n")
   cat("  Quantiles\n" )
   print(s[, c("q2.5%", "q25%", "median","q75%", "q97.5%")] )
-  invisible(NULL)
+  invisible(object$stats)
 }
 
 #' @method plot bayes_two_sample_poisson_test

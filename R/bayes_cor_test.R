@@ -263,7 +263,7 @@ summary.bayes_cor_test <- function(object, ...) {
   cat("\n")
   cat("  Quantiles\n" )
   print(s[, c("q2.5%", "q25%", "median","q75%", "q97.5%")] )
-  invisible(NULL)
+  invisible(object$stats)
 }
 
 #' Summary plot of a bayes.cor.test object

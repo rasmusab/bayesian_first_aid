@@ -182,7 +182,7 @@ summary.bayes_binom_test <- function(object, ...) {
   cat("\n")
   cat("  Quantiles\n" )
   print(s[, c("q2.5%", "q25%", "median","q75%", "q97.5%")] )
-  invisible(NULL)
+  invisible(object$stats)
 }
 
 #' @method plot bayes_binom_test
