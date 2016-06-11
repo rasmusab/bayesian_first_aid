@@ -31,11 +31,14 @@ LazyData: true
 KeepSource: true
 VignetteBuilder: knitr
 Collate:
-    'utility_functions.R'
     'generic_functions.R'
+    'utility_functions.R'
     'BayesianFirstAid-package.R'
     'bayes_binom_test.R'
     'bayes_cor_test.R'
     'bayes_poisson_test.R'
     'bayes_prop_test.R'
     'bayes_t_test.R'
+Suggests:
+    testthat
+RoxygenNote: 5.0.1
