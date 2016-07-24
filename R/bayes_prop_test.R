@@ -311,7 +311,7 @@ print.bayes_prop_test <- function(x, ...) {
   s <- format_stats(x$stats)
   
   cat("\n")
-  cat("\tBayesian First Aid propotion test\n")
+  cat("\tBayesian First Aid proportion test\n")
   cat("\n")
   cat("data: ", x$data_name, "\n", sep="")
   pad_width <- max(nchar(as.character(c(x$x, x$n)))) + 1
