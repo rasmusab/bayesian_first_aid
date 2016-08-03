@@ -23,4 +23,14 @@ test_that("bayes.binom.test with generic functions does not give an error when r
   expect_is(as.matrix(fit), "matrix")
 })
 
+test_that("setting seed with set.seed works", {
+  set.seed(123)
+  samples1 <- as.data.frame(
+    bayes.binom.test(6, 11, n.iter=100))
+  set.seed(123)
+  samples2 <- as.data.frame(
+    bayes.binom.test(6, 11, n.iter=100))
+  expect_true(all(samples1$theta == samples2$theta))
+})
+
 

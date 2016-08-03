@@ -2,6 +2,20 @@ run_jags <- function(model_string, data, inits, params, n.chains, n.adapt, n.upd
   if(!interactive()) {
     progress.bar <- "none"
   }
+  
+  # Set the random number generator and seed based on R's random state (through runif)
+  if(is.null(inits$.RNG.seed) & is.null(inits$.RNG.name)) {
+    RNGs <- c("base::Wichmann-Hill", "base::Marsaglia-Multicarry", 
+            "base::Super-Duper", "base::Mersenne-Twister")
+    init_list <- inits
+    inits <- function(chain) {
+      chain_init_list <- init_list
+      chain_init_list$.RNG.seed <- as.integer(runif(1, 0, .Machine$integer.max))
+      chain_init_list$.RNG.name <- RNGs[ ((chain - 1) %% 4) +  1 ]
+      chain_init_list
+    }
+  }
+
   jags_model <- jags.model(textConnection(model_string) , data=data , inits=inits , 
                           n.chains=n.chains , n.adapt=0, quiet=TRUE)
   adapt(jags_model, max(1, n.adapt),  progress.bar="none", end.adaptation=TRUE)
